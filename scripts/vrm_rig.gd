@@ -614,7 +614,7 @@ func _acc_parts(kind: String) -> Array:
 				["head", ToonRig.box(0.005, 0.005, 0.1), Vector3(0.066, 0.074, 0.06), Vector3.ZERO, Vector3.ONE],
 				["head", ToonRig.box(0.005, 0.005, 0.1), Vector3(-0.066, 0.074, 0.06), Vector3.ZERO, Vector3.ONE]]
 		# ---- hair styles (BNB Clashes): replace the shared base hair with a per-person cut
-		"hair_back", "hair_side", "hair_wolf", "hair_curl", "hair_thin", "hair_short", "hair_messy", "hair_spiky", \
+		"hair_back", "hair_back_full", "hair_army", "hair_side", "hair_wolf", "hair_curl", "hair_thin", "hair_short", "hair_messy", "hair_spiky", \
 		"hair_ponytail", "hair_bob", "hair_bun", "hair_long", "hair_braid":
 			return _hair_parts(kind)
 		# ---- garments (BNB Clashes): simple shapes on the bones, so modest outfits stay covered while fighting
@@ -647,10 +647,10 @@ func _acc_parts(kind: String) -> Array:
 			var jaw_y := skull.position.y + 0.012            # just above the chin
 			var front := skull.position.z + skull.size.z
 			var hw := skull.size.x / 2.0
-			for k in 9:
-				var a := (k - 4) / 4.0 * 1.25                # ear to ear around the jaw
+			for k in 13:
+				var a := (k - 6) / 6.0 * 1.25                # ear to ear around the jaw, overlapping tufts
 				var pos := Vector3(sin(a) * hw * 0.86, lerpf(jaw_y + 0.045, jaw_y, cos(a)), front - 0.03 - (1.0 - cos(a)) * 0.095)
-				tufts.append(["head", ToonRig.sph(0.014), pos, Vector3(0, a, 0), Vector3(1.0, 1.1, 0.45)])
+				tufts.append(["head", ToonRig.sph(0.016), pos, Vector3(0, a, 0), Vector3(1.6, 1.3, 0.5)])
 			return tufts + _acc_parts("mustache")
 		"mustache":
 			return [["head", ToonRig.sph(0.016), Vector3(0.016, 0.016, 0.103), Vector3(0, 0, -0.25), Vector3(1.7, 0.55, 0.6)],
@@ -686,39 +686,37 @@ func _hair_parts(kind: String) -> Array:
 		for sx in [-1.0, 1.0]:
 			out.append(blob.call(at.call(sx * 0.1, -0.12, -0.07), 0.03, 0.085, 0.06))
 	match kind:
-		"hair_back":   # slicked back: smooth cap swept to the nape
+		"hair_back_full":   # swept back over a full cap (base hair hidden)
 			out = [cap, back, blob.call(at.call(0, -0.03, -0.17), 0.09, 0.05, 0.1, Vector3(-0.3, 0, 0))]
-		"hair_side":   # side part with a sweep over one side
-			out = [cap, back, blob.call(at.call(0.05, -0.012, -0.075), 0.085, 0.035, 0.07, Vector3(0, 0, -0.3))]
-		"hair_short":  # buzz cut: close to the scalp
-			out = [blob.call(at.call(0, -0.09, -0.135), 0.112, 0.102, 0.122)]
-		"hair_thin":   # thinning: sides and back only, the crown shows through
-			out = [blob.call(at.call(0, -0.125, -0.15), 0.116, 0.07, 0.12)]
+		"hair_army", "hair_back":   # army cut: the base hair, kept short and neat
+			out = []
+		"hair_short":  # short with a little fringe at the front
+			out = [blob.call(at.call(0, -0.012, -0.035), 0.075, 0.022, 0.035, Vector3(0.4, 0, 0))]
+		"hair_thin":
+			out = []
+		"hair_side":   # side part: a sweep over one side
+			out = [blob.call(at.call(0.045, 0.0, -0.06), 0.085, 0.032, 0.07, Vector3(0, 0, -0.3))]
 		"hair_wolf":   # wolf cut: shaggy layers on top, longer flicks at the nape and sides
-			out = [cap, back]
 			for k in 5:
 				var a := (k - 2) * 0.32
-				out.append(cone.call(0.03, 0.12, at.call(sin(a) * 0.08, -0.2, -0.22 + absf(sin(a)) * 0.04), Vector3(0.5, a * 0.6, 0)))
+				out.append(cone.call(0.032, 0.13, at.call(sin(a) * 0.08, -0.2, -0.2 + absf(sin(a)) * 0.04), Vector3(0.55, a * 0.6, 0)))
 			for k in 6:
 				var a := (k - 2.5) * 0.45
-				out.append(cone.call(0.035, 0.08, at.call(sin(a) * 0.07, 0.0, -0.1 + cos(a) * 0.02), Vector3(-0.9, 0, a * 0.5)))
+				out.append(cone.call(0.035, 0.08, at.call(sin(a) * 0.07, 0.012, -0.09 + cos(a) * 0.02), Vector3(-0.9, 0, a * 0.5)))
 			for sx in [-1.0, 1.0]:
-				out.append(cone.call(0.03, 0.1, at.call(sx * 0.11, -0.12, -0.11), Vector3(0, 0, sx * -0.35)))
-		"hair_curl":   # styled back with loose curls on top
-			out = [cap, back]
+				out.append(cone.call(0.03, 0.1, at.call(sx * 0.112, -0.12, -0.1), Vector3(0, 0, sx * -0.35)))
+		"hair_curl":   # loose curls on top
 			for k in 7:
 				var a := (k - 3) * 0.33
-				out.append(blob.call(at.call(sin(a) * 0.065, 0.0 + 0.01 * cos(k * 2.1), -0.08 + cos(a) * 0.02), 0.035, 0.035, 0.035))
+				out.append(blob.call(at.call(sin(a) * 0.065, 0.012 + 0.01 * cos(k * 2.1), -0.07 + cos(a) * 0.02), 0.034, 0.034, 0.034))
 		"hair_messy":  # relaxed and unbrushed
-			out = [cap, back]
 			for k in 7:
 				var a := k * 0.9
-				out.append(cone.call(0.032, 0.075, at.call(sin(a) * 0.065, -0.005, -0.1 + cos(a) * 0.05), Vector3(sin(a) * 0.8, 0, cos(a) * 0.8)))
+				out.append(cone.call(0.032, 0.075, at.call(sin(a) * 0.065, 0.008, -0.09 + cos(a) * 0.05), Vector3(sin(a) * 0.8, 0, cos(a) * 0.8)))
 		"hair_spiky":  # comic spikes
-			out = [cap, back]
 			for k in 7:
 				var a := (k - 3) * 0.38
-				out.append(cone.call(0.03, 0.13, at.call(sin(a) * 0.065, 0.02, -0.09), Vector3(-0.35, 0, a * 0.8)))
+				out.append(cone.call(0.03, 0.13, at.call(sin(a) * 0.065, 0.025, -0.085), Vector3(-0.35, 0, a * 0.8)))
 		"hair_ponytail":   # high ponytail with a band
 			out += [cap, back, [H, ToonRig.cyl(0.03 * f, 0.03 * f, 0.035 * f), at.call(0, -0.04, -0.235), Vector3(-1.0, 0, 0), Vector3.ONE]]
 			for k in 4:

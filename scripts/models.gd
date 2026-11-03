@@ -142,7 +142,12 @@ static func register(p: Dictionary) -> void:
 				tint.merge(skin(skin_c))
 				var parts: Array = o.acc + extra
 				if style != "" and kind != "hijab":
-					tint["Hair"] = "hide"
+					# men keep the full base hair (recoloured) and get their cut on top, so nobody looks bald;
+					# women's cuts and Mubarak's swept-back look replace it
+					if female or style == "hair_back_full":
+						tint["Hair"] = "hide"
+					else:
+						tint["Hair"] = {c = hair_col * 3.0, sat = 0.0, bright = 0.42}
 					parts.append([style, hair_col])
 				if ey.size() == 3:
 					tint["EyeIris"] = {c = Color(ey[0], ey[1], ey[2]) * 2.2, sat = 1.0, bright = 1.0}

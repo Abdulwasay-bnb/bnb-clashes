@@ -485,7 +485,7 @@
    "idle": "idle_martial",
    "pose": "",
    "intro": "in_thinking",
-   "hair_style": "hair_side",
+   "hair_style": "hair_short",
    "hair_color": [
     0.09,
     0.07,
@@ -967,7 +967,7 @@
    "idle": "",
    "pose": "",
    "intro": "in_drinking",
-   "hair_style": "hair_short",
+   "hair_style": "hair_army",
    "hair_color": [
     0.09,
     0.07,
@@ -1050,7 +1050,7 @@
    "idle": "",
    "pose": "",
    "intro": "in_point",
-   "hair_style": "hair_thin",
+   "hair_style": "hair_short",
    "hair_color": [
     0.09,
     0.07,
@@ -1133,7 +1133,7 @@
    "idle": "idle_fight_c",
    "pose": "",
    "intro": "intro_warmup",
-   "hair_style": "hair_back",
+   "hair_style": "hair_wolf",
    "hair_color": [
     0.09,
     0.07,
@@ -1455,7 +1455,7 @@
    "idle": "",
    "pose": "idle_shy",
    "intro": "idle_shy",
-   "hair_style": "hair_back",
+   "hair_style": "hair_army",
    "hair_color": [
     0.09,
     0.07,
@@ -1532,7 +1532,7 @@
    "idle": "",
    "pose": "idle_nervous",
    "intro": "idle_nervous",
-   "hair_style": "hair_side",
+   "hair_style": "hair_short",
    "hair_color": [
     0.09,
     0.07,
@@ -1607,7 +1607,7 @@
    "idle": "",
    "pose": "",
    "intro": "in_shrug",
-   "hair_style": "hair_wolf",
+   "hair_style": "hair_short",
    "hair_color": [
     0.09,
     0.07,
@@ -1682,11 +1682,11 @@
    "idle": "idle_martial",
    "pose": "",
    "intro": "intro_bow",
-   "hair_style": "hair_back",
+   "hair_style": "hair_short",
    "hair_color": [
-    0.45,
-    0.45,
-    0.47
+    0.09,
+    0.07,
+    0.06
    ],
    "head": [
     1.02,
@@ -1850,7 +1850,7 @@
    "idle": "idle_martial",
    "pose": "",
    "intro": "in_tablet",
-   "hair_style": "hair_back",
+   "hair_style": "hair_back_full",
    "hair_color": [
     0.09,
     0.07,
@@ -2014,7 +2014,7 @@
    "idle": "",
    "pose": "idle_boss",
    "intro": "in_ceo",
-   "hair_style": "hair_back",
+   "hair_style": "hair_army",
    "hair_color": [
     0.09,
     0.07,
