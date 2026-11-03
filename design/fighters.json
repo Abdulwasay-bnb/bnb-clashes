@@ -1,0 +1,265 @@
+{
+ "Abdul Wasay": {
+  "style": "tao",
+  "personality": "Mixed: calm one minute, all-in the next",
+  "role": "Full-Stack AI Engineer",
+  "power": "FULL-STACK FLOW",
+  "prop": "code",
+  "quote": "Frontend, backend, AI. Pick a layer, I'll still win.",
+  "accent": "#7b4dff",
+  "outfit": "all_black"
+ },
+ "Abdul Wasay Waqas": {
+  "style": "vex",
+  "personality": "Introvert: says little, ships a lot",
+  "role": "Python Developer",
+  "power": "IMPORT ANTIGRAVITY",
+  "prop": "py",
+  "quote": "...",
+  "accent": "#3d7bd9",
+  "outfit": "casual"
+ },
+ "Amina Mughal": {
+  "style": "mara",
+  "personality": "Extremely extrovert, runs every room",
+  "role": "Project Manager",
+  "power": "STAND-UP STAMPEDE",
+  "prop": "notes",
+  "quote": "Quick sync? This'll only take a second.",
+  "accent": "#ff5fa2",
+  "outfit": "pakistani"
+ },
+ "Aqsa Altaf": {
+  "style": "sora",
+  "personality": "Extrovert, fast talker, faster coder",
+  "role": "Senior Ruby on Rails Specialist",
+  "power": "RUBY RAILSTRIKE",
+  "prop": "gem",
+  "quote": "Convention over configuration. And over you.",
+  "accent": "#e0245e",
+  "outfit": "hijab"
+ },
+ "Daniyal Zubair": {
+  "style": "lio",
+  "personality": "Creative, quiet focus, sudden flair",
+  "role": "Graphic Designer",
+  "power": "PEN TOOL PUNISHER",
+  "prop": "paint",
+  "quote": "Can we make it pop? Yes. Your guard.",
+  "accent": "#ff9f1c",
+  "outfit": "casual"
+ },
+ "Faizan Ali": {
+  "style": "lio",
+  "personality": "Chill guy, nothing fazes him",
+  "role": "Senior Frontend Developer",
+  "power": "CLOUD CHASER",
+  "prop": "smoke",
+  "quote": "Relax. It's just a CSS bug.",
+  "accent": "#7fd1ae",
+  "outfit": "casual",
+  "extras": [
+   "mustache"
+  ]
+ },
+ "Faisal Ahmed": {
+  "style": "tao",
+  "personality": "Calm commander, sees everything",
+  "role": "Head of Engineering",
+  "power": "ROOT ACCESS",
+  "prop": "keys",
+  "quote": "I don't fix bugs. I approve their removal.",
+  "accent": "#2bb3c0",
+  "outfit": "formal"
+ },
+ "Kashaf ud Duja": {
+  "style": "ember",
+  "personality": "Sweet-toned, kind, and absolutely firm",
+  "role": "HR",
+  "power": "FINAL WARNING LETTER",
+  "prop": "letters",
+  "quote": "This is a friendly reminder… that you lost.",
+  "accent": "#ff8fb8",
+  "outfit": "formal_f"
+ },
+ "Kiran Fazal": {
+  "style": "kael",
+  "personality": "Confident leader, closes every deal",
+  "role": "BD Lead Manager",
+  "power": "CLOSING THE DEAL",
+  "prop": "contract",
+  "quote": "Sign here. And here. And… down you go.",
+  "accent": "#c03fd1",
+  "outfit": "pakistani"
+ },
+ "Mahveen Khan": {
+  "style": "sora",
+  "personality": "Energetic newcomer, fearless",
+  "role": "Business Development",
+  "power": "COLD CALL COMBO",
+  "prop": "phone",
+  "quote": "Hi! Do you have five minutes? You'll need them to recover.",
+  "accent": "#ffb02e",
+  "outfit": "pakistani"
+ },
+ "Muhammad Mubarak": {
+  "style": "tao",
+  "personality": "Seasoned all-rounder, patient as a snake",
+  "role": "Project Manager",
+  "power": "VIPER SPRINT",
+  "prop": "snake",
+  "quote": "Every sprint ends with a strike.",
+  "accent": "#3fbf5a",
+  "outfit": "casual"
+ },
+ "Muhammad Saad": {
+  "style": "sora",
+  "personality": "Easygoing, always one more build",
+  "role": "Mobile App Developer",
+  "power": "PUSH NOTIFICATION",
+  "prop": "phone",
+  "quote": "You have 1 new notification: defeat.",
+  "accent": "#4f8cff",
+  "outfit": "casual"
+ },
+ "Muhammad Sufyan": {
+  "style": "bastion",
+  "personality": "Smooth talker, steady closer",
+  "role": "Senior Business Development",
+  "power": "THE UPSELL",
+  "prop": "briefcase",
+  "quote": "That was the basic package. Want premium?",
+  "accent": "#2f4f9f",
+  "outfit": "formal"
+ },
+ "Muzdalfa Naeem": {
+  "style": "mara",
+  "personality": "Bright and quick, the youngest hustle",
+  "role": "Business Development",
+  "power": "FOLLOW-UP FURY",
+  "prop": "letters",
+  "quote": "Just following up on that knockout.",
+  "accent": "#9d6bff",
+  "outfit": "pakistani"
+ },
+ "Nabeel Ahmad": {
+  "style": "bastion",
+  "personality": "Laid-back lead, always snacking",
+  "role": "Tech Team Lead",
+  "power": "SNACK ATTACK",
+  "prop": "snack",
+  "quote": "Code review after lunch. And after snacks.",
+  "accent": "#f2d45c",
+  "outfit": "casual"
+ },
+ "Muhammad Nauman Nawaz": {
+  "style": "ember",
+  "personality": "Mischievous prankster, never without a banana",
+  "role": "Engineer",
+  "power": "BANANA BARRAGE",
+  "prop": "banana",
+  "quote": "Watch your step.",
+  "accent": "#ffd23f",
+  "outfit": "formal"
+ },
+ "Sabir ud Din": {
+  "style": "kael",
+  "personality": "Chill… until someone mentions cricket",
+  "role": "Automation Expert & Full Stack",
+  "power": "HOWZAT!",
+  "prop": "ball",
+  "quote": "That was OUT. I don't care what the umpire says.",
+  "accent": "#1fa35c",
+  "outfit": "formal"
+ },
+ "Samreen Fatima": {
+  "style": "sora",
+  "personality": "Precise, tidy, pixel-perfect",
+  "role": "Frontend Developer",
+  "power": "PIXEL PERFECT",
+  "prop": "pixels",
+  "quote": "Off by one pixel. Fixed. You're next.",
+  "accent": "#00c2a8",
+  "outfit": "hijab"
+ },
+ "Sarfraz Yousaf": {
+  "style": "lio",
+  "personality": "Office comedian, unpredictable",
+  "role": "Python Developer & Comedian",
+  "power": "THE PUNCHLINE",
+  "prop": "cards",
+  "quote": "Why did the dev cross the road? To hit you.",
+  "accent": "#9b30ff",
+  "outfit": "smart"
+ },
+ "Syeda Ghazia": {
+  "style": "sora",
+  "personality": "Innocent, curious, still learning (and learning fast)",
+  "role": "Junior Full-Stack Developer",
+  "power": "HELLO, WORLD!",
+  "prop": "code",
+  "quote": "Is this… how we fight? Okay! I'll try!",
+  "accent": "#6a9bd8",
+  "outfit": "hijab"
+ },
+ "Tuaha Aamir": {
+  "style": "bastion",
+  "personality": "Introvert, rarely talks. Literally the GOAT",
+  "role": "Engineer",
+  "power": "G.O.A.T. CHARGE",
+  "prop": "goat",
+  "quote": "…",
+  "accent": "#c8c8d0",
+  "outfit": "casual"
+ },
+ "Umar Farooq": {
+  "style": "mara",
+  "personality": "Always worried, somehow always ready",
+  "role": "Business Development",
+  "power": "DEADLINE PANIC",
+  "prop": "clock",
+  "quote": "Is it due today? It's due today, isn't it?!",
+  "accent": "#ff7a3d",
+  "outfit": "formal"
+ },
+ "Usman Najeeb": {
+  "style": "ember",
+  "personality": "Dry wit, quick hands",
+  "role": "Automation Expert",
+  "power": "ASH FLICK",
+  "prop": "cigarette",
+  "quote": "Automate everything. Even your defeat.",
+  "accent": "#8a8f98",
+  "outfit": "formal"
+ },
+ "Zia Khan": {
+  "style": "tao",
+  "personality": "Veteran master, few words, deep knowledge",
+  "role": "Principal Software Engineer",
+  "power": "LEGACY CODE",
+  "prop": "runes",
+  "quote": "I wrote the code you're running on.",
+  "accent": "#d4af37",
+  "outfit": "formal"
+ },
+ "Ali": {
+  "style": "kael",
+  "personality": "Short-tempered guardian of the tea schedule",
+  "role": "Office Admin",
+  "power": "NOT BEFORE 3 PM",
+  "prop": "chai",
+  "quote": "Tea is at 3 and 5. Not again. For anyone.",
+  "accent": "#c8743a",
+  "outfit": "kurta"
+ },
+ "Hamza Khan": {
+  "style": "bastion",
+  "personality": "Visionary, unshakable, plays ten moves ahead",
+  "role": "CEO",
+  "power": "HOSTILE TAKEOVER",
+  "prop": "logo",
+  "quote": "Meeting adjourned.",
+  "accent": "#7a3fd1",
+  "outfit": "ceo"
+ }
+}

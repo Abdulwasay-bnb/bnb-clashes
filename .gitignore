@@ -1,0 +1,15 @@
+# Godot
+.godot/
+*.translation
+export_credentials.cfg
+# Builds (the web build is published on the gh-pages branch)
+build/
+# Editor / OS
+.DS_Store
+*.tmp
+
+# Mixamo animations: usable in builds, but the raw files must not be redistributed
+characters/_anims/
+
+# raw employee sheet (heights, ages): stays local, only the generated roster ships
+design/CHARACTER_SHEET.csv

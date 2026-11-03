@@ -1,0 +1,11 @@
+{
+  "name": "bnb-clashes-relay",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Room relay for BNB Clashes online matches",
+  "main": "relay.mjs",
+  "scripts": { "start": "node relay.mjs" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "ws": "^8.18.0" }
+}

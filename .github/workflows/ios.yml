@@ -1,0 +1,45 @@
+# Builds the iPhone app on a free GitHub macOS runner.
+# Input: BNBClashes-ios-xcode.zip attached to a release (made on Linux by ./build_ios.sh).
+# Output: an unsigned BNBClashes.ipa attached to the same release. Sideload it with your own
+# Apple ID (AltStore, Sideloadly or Impactor), which signs it for your device.
+name: iOS build
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag that has BNBClashes-ios-xcode.zip (e.g. v0.3.1)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  ipa:
+    runs-on: macos-14
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag }}
+    steps:
+      - name: Download the exported Xcode project
+        run: |
+          gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p BNBClashes-ios-xcode.zip
+          mkdir xcode && cd xcode && unzip -q ../BNBClashes-ios-xcode.zip && ls
+
+      - name: Build (unsigned)
+        working-directory: xcode
+        run: |
+          xcodebuild -project BNBClashes.xcodeproj -scheme BNBClashes -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/cc.xcarchive" archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" PROVISIONING_PROFILE_SPECIFIER="" | tail -n 40
+
+      - name: Package .ipa
+        run: |
+          mkdir Payload
+          cp -R "$RUNNER_TEMP/cc.xcarchive/Products/Applications/BNBClashes.app" Payload/
+          zip -qry BNBClashes.ipa Payload
+          ls -la BNBClashes.ipa
+
+      - name: Attach to the release
+        run: gh release upload "$TAG" BNBClashes.ipa -R "$GITHUB_REPOSITORY" --clobber

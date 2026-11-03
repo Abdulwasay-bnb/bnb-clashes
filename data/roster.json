@@ -1,0 +1,6425 @@
+{
+ "keys": [
+  "hipY",
+  "lift",
+  "rootRx",
+  "rootRz",
+  "yaw",
+  "hipYaw",
+  "torsoX",
+  "torsoY",
+  "torsoZ",
+  "headX",
+  "headY",
+  "lsx",
+  "lsy",
+  "lsz",
+  "le",
+  "rsx",
+  "rsy",
+  "rsz",
+  "re",
+  "lhx",
+  "lhz",
+  "lk",
+  "rhx",
+  "rhz",
+  "rk"
+ ],
+ "GG": {
+  "hipY": -0.04,
+  "lift": 0,
+  "rootRx": 0,
+  "rootRz": 0,
+  "yaw": 0,
+  "hipYaw": 0,
+  "torsoX": 0.1,
+  "torsoY": -0.25,
+  "torsoZ": 0,
+  "headX": -0.05,
+  "headY": 0,
+  "lsx": -0.85,
+  "lsy": 0,
+  "lsz": 0.2,
+  "le": -1.95,
+  "rsx": -0.6,
+  "rsy": 0,
+  "rsz": -0.25,
+  "re": -2.15,
+  "lhx": -0.42,
+  "lhz": 0.06,
+  "lk": 0.45,
+  "rhx": 0.18,
+  "rhz": -0.06,
+  "rk": 0.3
+ },
+ "CROUCH_P": {
+  "hipY": -0.37,
+  "torsoX": 0.35,
+  "hipYaw": 0,
+  "lhx": -1.05,
+  "lk": 1.9,
+  "lhz": 0.12,
+  "rhx": -0.75,
+  "rk": 1.9,
+  "rhz": -0.12
+ },
+ "SYS": {
+  "crouch": {
+   "hipY": -0.37,
+   "torsoX": 0.35,
+   "hipYaw": 0,
+   "lhx": -1.05,
+   "lk": 1.9,
+   "lhz": 0.12,
+   "rhx": -0.75,
+   "rk": 1.9,
+   "rhz": -0.12
+  },
+  "block": {
+   "lsx": -1.05,
+   "lsy": 0,
+   "lsz": 0.05,
+   "le": -2.35,
+   "rsx": -1.05,
+   "rsy": 0,
+   "rsz": -0.05,
+   "re": -2.35,
+   "torsoX": 0.2,
+   "torsoY": 0,
+   "torsoZ": 0,
+   "headX": 0.25
+  },
+  "cblockArms": {
+   "lsx": -0.7,
+   "le": -1.9,
+   "rsx": -0.7,
+   "re": -1.9,
+   "lsy": 0,
+   "rsy": 0,
+   "lsz": 0.05,
+   "rsz": -0.05,
+   "headX": 0.3,
+   "torsoY": 0
+  },
+  "hitH": {
+   "torsoX": -0.5,
+   "torsoZ": 0.1,
+   "torsoY": 0.1,
+   "headX": -0.55,
+   "lsx": -0.35,
+   "rsx": -0.25,
+   "lsy": 0,
+   "rsy": 0,
+   "le": -0.9,
+   "re": -0.7,
+   "lsz": 0.5,
+   "rsz": -0.5
+  },
+  "hitM": {
+   "torsoX": 0.65,
+   "torsoY": 0,
+   "headX": 0.35,
+   "hipY": -0.12,
+   "lsx": -0.6,
+   "rsx": -0.6,
+   "lsy": 0,
+   "rsy": 0,
+   "le": -1.6,
+   "re": -1.6,
+   "lk": 0.7,
+   "rk": 0.6
+  },
+  "hitCArms": {
+   "torsoX": 0.6,
+   "headX": 0.4,
+   "lsx": -0.4,
+   "rsx": -0.4
+  },
+  "air": {
+   "rootRx": -0.75,
+   "torsoX": -0.35,
+   "torsoY": 0,
+   "headX": -0.3,
+   "lsx": -2.5,
+   "rsx": -2.2,
+   "lsz": 0.6,
+   "rsz": -0.6,
+   "le": -0.3,
+   "re": -0.5,
+   "lhx": -0.6,
+   "lk": 1,
+   "rhx": -0.2,
+   "rk": 0.6
+  },
+  "down": {
+   "hipY": -0.8,
+   "rootRx": -1.52,
+   "torsoX": 0,
+   "torsoY": 0,
+   "headX": 0.25,
+   "lsx": -0.2,
+   "lsz": 1.1,
+   "le": -0.3,
+   "rsx": -0.2,
+   "rsz": -1.1,
+   "re": -0.4,
+   "lhx": -0.12,
+   "lhz": 0.15,
+   "lk": 0.35,
+   "rhx": -0.05,
+   "rhz": -0.15,
+   "rk": 0.7
+  },
+  "side": {
+   "lhz": 0.28,
+   "rhz": -0.28,
+   "lk": 0.6,
+   "rk": 0.6,
+   "hipY": -0.07
+  },
+  "dash": {
+   "torsoX": 0.35,
+   "hipY": -0.08
+  },
+  "bdash": {
+   "torsoX": -0.15
+  },
+  "grab": {
+   "lsx": -1.5,
+   "rsx": -1.5,
+   "lsy": 0,
+   "rsy": 0,
+   "lsz": 0.25,
+   "rsz": -0.25,
+   "le": -0.4,
+   "re": -0.4,
+   "torsoX": 0.25,
+   "torsoY": 0
+  },
+  "lift": {
+   "lsx": -2.9,
+   "rsx": -2.9,
+   "lsy": 0,
+   "rsy": 0,
+   "lsz": 0.2,
+   "rsz": -0.2,
+   "le": -0.25,
+   "re": -0.25,
+   "torsoX": -0.35,
+   "torsoY": 0,
+   "hipY": -0.08,
+   "lhx": -0.3,
+   "lk": 0.4,
+   "rhx": 0.1,
+   "rk": 0.4
+  },
+  "surgeW": {
+   "hipY": -0.3,
+   "torsoX": 0.5,
+   "torsoY": -0.9,
+   "lsx": 0.6,
+   "rsx": 0.6,
+   "lsy": 0,
+   "rsy": 0,
+   "le": -1.4,
+   "re": -1.4,
+   "lhx": -0.9,
+   "lk": 1.2,
+   "rhx": 0.1,
+   "rk": 1
+  },
+  "win": {
+   "rsx": -3,
+   "rsz": -0.25,
+   "re": -0.15,
+   "lsx": -0.15,
+   "lsz": 0.15,
+   "le": -0.4,
+   "torsoX": -0.1,
+   "torsoY": 0.1,
+   "lhx": -0.05,
+   "lk": 0.06,
+   "rhx": 0.05,
+   "rk": 0.06,
+   "hipY": 0,
+   "headX": -0.2
+  }
+ },
+ "Z": {
+  "jabLw": {
+   "torsoY": -0.35,
+   "lsx": -1,
+   "lsy": 0,
+   "le": -1.6
+  },
+  "jabL": {
+   "torsoY": -0.65,
+   "torsoX": 0.15,
+   "lsx": -1.55,
+   "lsy": 0,
+   "lsz": -0.14,
+   "le": -0.05
+  },
+  "jabMid": {
+   "torsoY": -0.6,
+   "torsoX": 0.42,
+   "hipY": -0.16,
+   "lsx": -1.25,
+   "lsy": 0,
+   "lsz": -0.14,
+   "le": -0.05,
+   "lhx": -0.75,
+   "lk": 0.95,
+   "rhx": 0.1,
+   "rk": 0.7
+  },
+  "crossRw": {
+   "torsoY": -0.4,
+   "rsx": -0.7,
+   "rsy": 0,
+   "re": -2.2
+  },
+  "crossR": {
+   "torsoY": 0.6,
+   "torsoX": 0.2,
+   "rsx": -1.55,
+   "rsy": 0,
+   "rsz": 0.14,
+   "re": -0.04,
+   "lsx": -0.8,
+   "lsy": 0,
+   "lsz": 0.1,
+   "le": -2.1,
+   "rhx": 0.35,
+   "rk": 0.1,
+   "lhx": -0.5,
+   "lk": 0.5
+  },
+  "palmR": {
+   "torsoY": 0.6,
+   "torsoX": 0.32,
+   "hipY": -0.12,
+   "rsx": -1.5,
+   "rsy": 0,
+   "rsz": 0.14,
+   "re": -0.1,
+   "lsx": -0.7,
+   "le": -2,
+   "lhx": -0.75,
+   "lk": 0.75,
+   "rhx": 0.35,
+   "rk": 0.15
+  },
+  "hookLw": {
+   "torsoY": -0.75,
+   "torsoX": 0.2,
+   "lsx": -0.5,
+   "lsy": 0,
+   "lsz": 0.7,
+   "le": -1.7
+  },
+  "hookL": {
+   "torsoY": 0.3,
+   "torsoX": 0.15,
+   "lsx": -0.1,
+   "lsy": -0.8,
+   "lsz": 1.35,
+   "le": -1.45
+  },
+  "hookRw": {
+   "torsoY": 0.7,
+   "torsoX": 0.2,
+   "rsx": -0.5,
+   "rsy": 0,
+   "rsz": -0.7,
+   "re": -1.7
+  },
+  "hookR": {
+   "torsoY": -0.35,
+   "torsoX": 0.15,
+   "rsx": -0.1,
+   "rsy": 0.8,
+   "rsz": -1.35,
+   "re": -1.45
+  },
+  "bodyHookL": {
+   "torsoY": 0.35,
+   "torsoX": 0.45,
+   "torsoZ": 0.3,
+   "hipY": -0.2,
+   "lsx": -0.6,
+   "lsy": -0.75,
+   "lsz": 1.05,
+   "le": -1.4,
+   "lhx": -0.75,
+   "lk": 1,
+   "rk": 0.85
+  },
+  "bodyHookR": {
+   "torsoY": -0.35,
+   "torsoX": 0.45,
+   "torsoZ": -0.3,
+   "hipY": -0.2,
+   "rsx": -0.6,
+   "rsy": 0.75,
+   "rsz": -1.05,
+   "re": -1.4,
+   "lhx": -0.75,
+   "lk": 1,
+   "rk": 0.85
+  },
+  "upperRw": {
+   "hipY": -0.26,
+   "torsoX": 0.45,
+   "torsoY": 0.15,
+   "rsx": -0.15,
+   "rsy": 0,
+   "rsz": -0.1,
+   "re": -1.3,
+   "lhx": -0.8,
+   "lk": 1.15,
+   "rhx": -0.1,
+   "rk": 0.95
+  },
+  "upperR": {
+   "hipY": 0.02,
+   "torsoX": -0.12,
+   "torsoY": 0.6,
+   "torsoZ": -0.12,
+   "rsx": -0.8,
+   "rsy": 0,
+   "rsz": 0.22,
+   "re": -2,
+   "lhx": -0.2,
+   "lk": 0.15,
+   "rhx": 0.2,
+   "rk": 0.1,
+   "headX": -0.15
+  },
+  "upperL": {
+   "hipY": 0.02,
+   "torsoX": -0.12,
+   "torsoY": -0.6,
+   "torsoZ": 0.12,
+   "lsx": -0.8,
+   "lsy": 0,
+   "lsz": -0.22,
+   "le": -2,
+   "lhx": -0.2,
+   "lk": 0.15,
+   "rhx": 0.2,
+   "rk": 0.1,
+   "headX": -0.15
+  },
+  "boloW": {
+   "rsx": 0.9,
+   "rsy": 0,
+   "rsz": -0.5,
+   "re": -0.3,
+   "torsoY": -0.75,
+   "hipY": -0.1
+  },
+  "overhandRw": {
+   "rsx": 0.4,
+   "rsy": 0,
+   "rsz": -0.2,
+   "re": -1.3,
+   "torsoY": -0.6,
+   "torsoX": 0
+  },
+  "overhandR": {
+   "torsoX": 0.55,
+   "torsoY": 0.6,
+   "torsoZ": -0.25,
+   "hipY": -0.12,
+   "rsx": -2.15,
+   "rsy": 0,
+   "rsz": -0.35,
+   "re": -0.45,
+   "lhx": -0.85,
+   "lk": 0.7,
+   "rhx": 0.35,
+   "rk": 0.2
+  },
+  "backfistLw": {
+   "torsoY": -0.6,
+   "lsx": -0.9,
+   "lsy": 0,
+   "lsz": -0.4,
+   "le": -2.3
+  },
+  "backfistL": {
+   "torsoY": 0.55,
+   "lsx": -0.25,
+   "lsy": -0.25,
+   "lsz": 1.45,
+   "le": -0.15
+  },
+  "chopRw": {
+   "rsx": -2.8,
+   "rsy": 0,
+   "rsz": -0.35,
+   "re": -1.4,
+   "torsoY": -0.35
+  },
+  "chopR": {
+   "rsx": -1.35,
+   "rsz": -0.65,
+   "rsy": 0.4,
+   "re": -0.25,
+   "torsoY": 0.55,
+   "torsoX": 0.25
+  },
+  "chopLw": {
+   "lsx": -2.8,
+   "lsy": 0,
+   "lsz": 0.35,
+   "le": -1.4,
+   "torsoY": 0.35
+  },
+  "chopL": {
+   "lsx": -1.35,
+   "lsz": 0.65,
+   "lsy": -0.4,
+   "le": -0.25,
+   "torsoY": -0.55,
+   "torsoX": 0.25
+  },
+  "elbowRw": {
+   "torsoY": -0.45,
+   "rsx": -0.3,
+   "rsy": 0,
+   "rsz": -0.9,
+   "re": -2.4
+  },
+  "elbowR": {
+   "torsoY": 0.8,
+   "torsoX": 0.15,
+   "rsx": -0.15,
+   "rsy": 0.9,
+   "rsz": -1.45,
+   "re": -2.5
+  },
+  "elbowL": {
+   "torsoY": -0.8,
+   "torsoX": 0.15,
+   "lsx": -0.15,
+   "lsy": -0.9,
+   "lsz": 1.45,
+   "le": -2.5
+  },
+  "upElbowR": {
+   "torsoX": -0.15,
+   "torsoY": 0.45,
+   "hipY": 0.03,
+   "rsx": -2.4,
+   "rsy": 0,
+   "rsz": -0.1,
+   "re": -2.5,
+   "lhx": -0.15,
+   "lk": 0.1
+  },
+  "spinElbowRw": {
+   "yaw": -2.2,
+   "torsoY": 0.3
+  },
+  "spinElbowR": {
+   "yaw": -4.5,
+   "torsoY": 0.5,
+   "rsx": -0.15,
+   "rsy": 0.5,
+   "rsz": -1.45,
+   "re": -2.5
+  },
+  "palm2w": {
+   "torsoX": -0.1,
+   "torsoY": 0,
+   "lsx": -0.5,
+   "rsx": -0.5,
+   "lsy": 0,
+   "rsy": 0,
+   "le": -1.8,
+   "re": -1.8,
+   "lsz": 0.35,
+   "rsz": -0.35
+  },
+  "palm2": {
+   "torsoX": 0.38,
+   "torsoY": 0,
+   "hipY": -0.16,
+   "lsx": -1.45,
+   "lsy": 0,
+   "lsz": -0.15,
+   "le": -0.1,
+   "rsx": -1.45,
+   "rsy": 0,
+   "rsz": 0.15,
+   "re": -0.1,
+   "lhx": -0.85,
+   "lk": 0.85,
+   "rhx": 0.35,
+   "rk": 0.25
+  },
+  "palmUp2": {
+   "torsoX": -0.25,
+   "torsoY": 0,
+   "hipY": 0.03,
+   "lsx": -2.4,
+   "rsx": -2.4,
+   "lsy": 0,
+   "rsy": 0,
+   "lsz": -0.05,
+   "rsz": 0.05,
+   "le": -0.3,
+   "re": -0.3,
+   "lhx": -0.2,
+   "lk": 0.15,
+   "rhx": 0.1,
+   "rk": 0.1
+  },
+  "lariatR": {
+   "torsoX": 0.35,
+   "torsoY": 0.65,
+   "rsx": -0.15,
+   "rsy": 0.2,
+   "rsz": -1.55,
+   "re": -0.05,
+   "hipY": -0.1,
+   "lhx": -0.9,
+   "lk": 0.65,
+   "rhx": 0.4,
+   "rk": 0.1
+  },
+  "axeHW": {
+   "torsoX": -0.35,
+   "torsoY": 0,
+   "lsx": -3,
+   "rsx": -3,
+   "lsy": 0,
+   "rsy": 0,
+   "le": -0.6,
+   "re": -0.6,
+   "lsz": -0.1,
+   "rsz": 0.1,
+   "hipY": 0.03
+  },
+  "axeH": {
+   "torsoX": 0.8,
+   "torsoY": 0,
+   "hipY": -0.25,
+   "lsx": -1.1,
+   "rsx": -1.1,
+   "lsy": 0,
+   "rsy": 0,
+   "lsz": -0.1,
+   "rsz": 0.1,
+   "le": -0.2,
+   "re": -0.2,
+   "lhx": -0.9,
+   "lk": 0.9,
+   "rhx": 0.2,
+   "rk": 0.6
+  },
+  "headbutt": {
+   "torsoX": 0.75,
+   "torsoY": 0,
+   "headX": 0.6,
+   "hipY": -0.1,
+   "lsx": -1,
+   "rsx": -1,
+   "le": -0.8,
+   "re": -0.8,
+   "lsz": 0.2,
+   "rsz": -0.2,
+   "lhx": -0.7,
+   "lk": 0.6
+  },
+  "shoulder": {
+   "torsoX": 0.5,
+   "torsoY": -1.05,
+   "hipY": -0.15,
+   "lsx": -0.4,
+   "lsy": 0,
+   "lsz": 0.15,
+   "le": -1.4,
+   "rsx": -0.6,
+   "re": -1.8,
+   "lhx": -0.95,
+   "lk": 0.8,
+   "rhx": 0.55,
+   "rk": 0.2
+  },
+  "lunge": {
+   "hipY": -0.15,
+   "torsoX": 0.55,
+   "torsoY": 0.6,
+   "rsx": -1.65,
+   "rsy": 0,
+   "rsz": 0.12,
+   "re": -0.05,
+   "lsx": -0.4,
+   "le": -1.6,
+   "lhx": -1,
+   "lk": 0.7,
+   "rhx": 0.6,
+   "rk": 0.1
+  },
+  "snapLw": {
+   "lhx": -1.3,
+   "lhz": 0,
+   "lk": 1.7,
+   "torsoX": 0,
+   "rk": 0.35
+  },
+  "snapL": {
+   "lhx": -1.5,
+   "lhz": 0,
+   "lk": 0.1,
+   "torsoX": -0.15,
+   "rhx": 0.05,
+   "rk": 0.2
+  },
+  "teepLw": {
+   "lhx": -1.45,
+   "lhz": 0,
+   "lk": 1.9,
+   "torsoX": -0.05
+  },
+  "teepL": {
+   "lhx": -1.6,
+   "lhz": 0,
+   "lk": 0.02,
+   "torsoX": -0.4,
+   "rhx": 0.1,
+   "rk": 0.25,
+   "hipY": -0.03
+  },
+  "frontRw": {
+   "rhx": -1.3,
+   "rhz": 0,
+   "rk": 1.8,
+   "torsoX": 0
+  },
+  "frontR": {
+   "rhx": -1.65,
+   "rhz": 0,
+   "rk": 0.04,
+   "torsoX": -0.35,
+   "lhx": 0.05,
+   "lk": 0.2
+  },
+  "roundRw": {
+   "yaw": 0.35,
+   "rhx": -1,
+   "rhz": -0.55,
+   "rk": 1.7,
+   "lhx": -0.1,
+   "lk": 0.2
+  },
+  "roundRh": {
+   "yaw": 0.95,
+   "hipYaw": 0.25,
+   "rhx": -0.35,
+   "rhz": -1.8,
+   "rk": 0.08,
+   "torsoZ": -0.6,
+   "torsoX": -0.1,
+   "lhx": 0,
+   "lhz": 0.1,
+   "lk": 0.15,
+   "lsx": -0.4,
+   "lsz": 0.55,
+   "le": -1.4
+  },
+  "roundRm": {
+   "yaw": 0.9,
+   "hipYaw": 0.25,
+   "rhx": -0.4,
+   "rhz": -1.35,
+   "rk": 0.08,
+   "torsoZ": -0.4,
+   "torsoX": 0,
+   "lhx": 0,
+   "lhz": 0.1,
+   "lk": 0.15,
+   "lsx": -0.5,
+   "lsz": 0.45,
+   "le": -1.5
+  },
+  "roundLw": {
+   "yaw": -0.35,
+   "lhx": -1,
+   "lhz": 0.55,
+   "lk": 1.7,
+   "rhx": -0.1,
+   "rk": 0.2
+  },
+  "roundLh": {
+   "yaw": -0.95,
+   "hipYaw": -0.25,
+   "lhx": -0.35,
+   "lhz": 1.8,
+   "lk": 0.08,
+   "torsoZ": 0.6,
+   "torsoX": -0.1,
+   "rhx": 0,
+   "rhz": -0.1,
+   "rk": 0.15,
+   "rsx": -0.4,
+   "rsz": -0.55,
+   "re": -1.4
+  },
+  "sideRw": {
+   "yaw": 1.35,
+   "rhx": -1.3,
+   "rhz": -0.6,
+   "rk": 2,
+   "torsoZ": -0.2
+  },
+  "sideR": {
+   "yaw": 1.55,
+   "rhx": -0.1,
+   "rhz": -1.5,
+   "rk": 0.04,
+   "torsoZ": -0.6,
+   "torsoY": 0,
+   "lhx": 0,
+   "lk": 0.25,
+   "headY": -1.2
+  },
+  "axeRw": {
+   "rhx": -2.6,
+   "rhz": -0.2,
+   "rk": 0.05,
+   "torsoX": -0.45
+  },
+  "axeR": {
+   "rhx": -0.95,
+   "rhz": 0,
+   "rk": 0.05,
+   "torsoX": 0.2,
+   "hipY": -0.06
+  },
+  "spinRw": {
+   "yaw": -2.3,
+   "rhx": -0.3,
+   "rk": 0.7,
+   "torsoX": 0.2
+  },
+  "spinHeelR": {
+   "yaw": -4.45,
+   "rhx": -0.3,
+   "rhz": -1.7,
+   "rk": 0.05,
+   "torsoZ": -0.5,
+   "lhx": 0,
+   "lk": 0.15
+  },
+  "backKickR": {
+   "yaw": -3.14,
+   "rhx": 1.45,
+   "rhz": 0,
+   "rk": 0.08,
+   "torsoX": 0.55,
+   "lhx": -0.1,
+   "lk": 0.25
+  },
+  "kneeRw": {
+   "rhx": -0.7,
+   "rhz": 0,
+   "rk": 1.7,
+   "torsoX": 0.15
+  },
+  "kneeR": {
+   "rhx": -1.95,
+   "rhz": 0,
+   "rk": 2.3,
+   "torsoX": -0.2,
+   "hipY": 0.02,
+   "lsx": -1.25,
+   "rsx": -1.25,
+   "lsy": 0,
+   "rsy": 0,
+   "le": -0.9,
+   "re": -0.9,
+   "lsz": -0.15,
+   "rsz": 0.15
+  },
+  "flyKneeW": {
+   "lift": 0.15,
+   "rhx": -0.8,
+   "rk": 1.8,
+   "lhx": 0.3,
+   "lk": 1.2,
+   "torsoX": 0.1
+  },
+  "flyKnee": {
+   "lift": 0.5,
+   "rhx": -1.95,
+   "rk": 2.4,
+   "lhx": 0.45,
+   "lk": 1.7,
+   "torsoX": -0.25,
+   "lsx": -1.3,
+   "rsx": -1.3,
+   "lsy": 0,
+   "rsy": 0,
+   "le": -0.8,
+   "re": -0.8
+  },
+  "jumpKickW": {
+   "lift": 0.12,
+   "hipY": -0.15,
+   "lhx": -1,
+   "lk": 1.6,
+   "rhx": -0.4,
+   "rk": 1.4,
+   "torsoX": 0.2
+  },
+  "jumpKick": {
+   "lift": 0.55,
+   "rhx": -1.85,
+   "rhz": 0,
+   "rk": 0.08,
+   "lhx": -0.7,
+   "lk": 1.9,
+   "torsoX": -0.4,
+   "lsx": -0.6,
+   "rsx": 0.3,
+   "re": -0.6
+  },
+  "shinL": {
+   "hipY": -0.3,
+   "torsoX": 0.25,
+   "hipYaw": 0,
+   "lhx": -1.05,
+   "lk": 0.05,
+   "lhz": 0.18,
+   "rhx": -0.75,
+   "rk": 1.9,
+   "rhz": -0.12
+  },
+  "lowKickRw": {
+   "yaw": 0.3,
+   "rhx": -0.7,
+   "rhz": -0.4,
+   "rk": 1.3
+  },
+  "lowKickR": {
+   "yaw": 1.05,
+   "hipY": -0.12,
+   "rhx": -0.45,
+   "rhz": -0.7,
+   "rk": 0.1,
+   "torsoZ": -0.35,
+   "lhx": -0.3,
+   "lk": 0.6
+  },
+  "d1": {
+   "hipY": -0.37,
+   "torsoX": 0.35,
+   "hipYaw": 0,
+   "lhx": -1.05,
+   "lk": 1.9,
+   "lhz": 0.12,
+   "rhx": -0.75,
+   "rk": 1.9,
+   "rhz": -0.12,
+   "lsx": -1.45,
+   "lsy": 0,
+   "lsz": -0.14,
+   "le": -0.1,
+   "torsoY": -0.5
+  },
+  "sweepRw": {
+   "hipY": -0.45,
+   "torsoX": 0.5,
+   "hipYaw": 0,
+   "lhx": -1.05,
+   "lk": 1.9,
+   "lhz": 0.12,
+   "rhx": -0.75,
+   "rk": 1.9,
+   "rhz": -0.12,
+   "yaw": -0.6
+  },
+  "sweepR": {
+   "hipY": -0.55,
+   "yaw": -2.3,
+   "hipYaw": 0,
+   "rhx": -1.45,
+   "rhz": -0.6,
+   "rk": 0,
+   "lhx": -1.3,
+   "lk": 2.3,
+   "lhz": 0.2,
+   "torsoX": 0.7,
+   "torsoY": 0.3,
+   "lsx": -0.9,
+   "lsz": 0.5,
+   "le": -0.3,
+   "rsx": -0.3,
+   "re": -0.6
+  },
+  "dropkickW": {
+   "lift": 0.3,
+   "rootRx": -0.5,
+   "lhx": -1.6,
+   "rhx": -1.5,
+   "lk": 2,
+   "rk": 2,
+   "torsoX": 0
+  },
+  "dropkick": {
+   "lift": 0.65,
+   "rootRx": -1.35,
+   "lhx": -0.15,
+   "rhx": -0.1,
+   "lk": 0.1,
+   "rk": 0.1,
+   "lhz": 0.1,
+   "rhz": -0.1,
+   "lsx": -2.5,
+   "rsx": -2.5,
+   "lsy": 0,
+   "rsy": 0,
+   "le": -0.3,
+   "re": -0.3,
+   "torsoX": 0,
+   "torsoY": 0
+  },
+  "meiaLuaW": {
+   "yaw": -2,
+   "torsoX": 0.5,
+   "hipY": -0.15,
+   "rhx": -0.4,
+   "rk": 0.8
+  },
+  "meiaLua": {
+   "yaw": -4.3,
+   "torsoX": 0.55,
+   "hipY": -0.1,
+   "rhx": -0.55,
+   "rhz": -1.65,
+   "rk": 0,
+   "lhx": -0.5,
+   "lk": 0.8,
+   "lsx": -1.2,
+   "lsz": 0.3,
+   "rsx": -0.2,
+   "rsz": -0.5
+  },
+  "compassoW": {
+   "yaw": -1.8,
+   "torsoX": 1,
+   "hipY": -0.3,
+   "lsx": -1.5,
+   "rsx": -1.5,
+   "lsy": 0,
+   "rsy": 0,
+   "le": 0,
+   "re": 0
+  },
+  "compasso": {
+   "yaw": -4.4,
+   "torsoX": 1.3,
+   "hipY": -0.3,
+   "lsx": -1.65,
+   "rsx": -1.65,
+   "lsy": 0,
+   "rsy": 0,
+   "lsz": 0,
+   "rsz": 0,
+   "le": 0,
+   "re": 0,
+   "rhx": -0.2,
+   "rhz": -1.75,
+   "rk": 0,
+   "lhx": -0.95,
+   "lk": 1.35
+  },
+  "auW": {
+   "rootRz": 0.5,
+   "hipY": -0.15,
+   "lsz": 1.6,
+   "lsx": -0.3,
+   "le": -0.2,
+   "lhz": 0.4,
+   "lk": 0.6
+  },
+  "au": {
+   "rootRz": 1.35,
+   "lift": 0.2,
+   "hipY": 0.1,
+   "torsoX": 0,
+   "torsoY": 0,
+   "lsx": -0.2,
+   "lsz": 2.6,
+   "le": 0,
+   "rsx": -0.2,
+   "rsz": -0.5,
+   "re": -0.3,
+   "lhx": 0,
+   "lhz": 0.9,
+   "lk": 0.1,
+   "rhx": -0.3,
+   "rhz": -1.6,
+   "rk": 0
+  },
+  "galeW": {
+   "yaw": -3.1,
+   "hipY": -0.1,
+   "lhx": -0.6,
+   "lk": 1.6,
+   "torsoX": -0.1
+  },
+  "gale": {
+   "yaw": -0.2,
+   "lift": 0.25,
+   "rhx": -1.9,
+   "rhz": -0.4,
+   "rk": 0.05,
+   "lhx": -0.4,
+   "lk": 1.5,
+   "torsoX": -0.45,
+   "torsoY": 0.8,
+   "lsx": -0.3,
+   "lsz": 0.9,
+   "le": -0.5,
+   "rsx": -0.3,
+   "rsz": -0.9,
+   "re": -0.5
+  },
+  "crane": {
+   "lhx": -1.45,
+   "lhz": 0.1,
+   "lk": 2.1,
+   "rhx": 0.05,
+   "rk": 0.15,
+   "hipY": 0,
+   "hipYaw": 0,
+   "lsx": -0.6,
+   "lsz": 0.6,
+   "le": -1.5,
+   "rsx": -0.3,
+   "rsz": -0.6,
+   "re": -1.2,
+   "torsoX": -0.05,
+   "torsoY": -0.2
+  },
+  "sway": {
+   "torsoX": -0.55,
+   "torsoZ": 0.15,
+   "hipY": -0.08,
+   "headX": 0.3,
+   "lhx": -0.6,
+   "lk": 0.75,
+   "rhx": 0.35,
+   "rk": 0.5
+  },
+  "hand": {
+   "hipY": 0.26,
+   "lift": 0,
+   "rootRx": 3.08,
+   "rootRz": 0,
+   "yaw": 0,
+   "hipYaw": 0,
+   "torsoX": 0,
+   "torsoY": 0,
+   "torsoZ": 0,
+   "headX": -0.7,
+   "headY": 0,
+   "lsx": -3.05,
+   "lsy": 0,
+   "lsz": 0.3,
+   "le": 0,
+   "rsx": -3.05,
+   "rsy": 0,
+   "rsz": -0.3,
+   "re": 0,
+   "lhx": -0.15,
+   "lhz": 0.6,
+   "lk": 0.5,
+   "rhx": 0.25,
+   "rhz": -0.6,
+   "rk": 0.5
+  },
+  "handScissor": {
+   "hipY": 0.26,
+   "lift": 0,
+   "rootRx": 3.08,
+   "rootRz": 0,
+   "yaw": 0,
+   "hipYaw": 0,
+   "torsoX": 0,
+   "torsoY": 0,
+   "torsoZ": 0,
+   "headX": -0.7,
+   "headY": 0,
+   "lsx": -3.05,
+   "lsy": 0,
+   "lsz": 0.3,
+   "le": 0,
+   "rsx": -3.05,
+   "rsy": 0,
+   "rsz": -0.3,
+   "re": 0,
+   "lhx": -1.3,
+   "lhz": 0.2,
+   "lk": 0.1,
+   "rhx": 1,
+   "rhz": -0.2,
+   "rk": 0.1
+  },
+  "handHeel": {
+   "hipY": 0.26,
+   "lift": 0,
+   "rootRx": 3.08,
+   "rootRz": 0,
+   "yaw": 0,
+   "hipYaw": 0,
+   "torsoX": 0,
+   "torsoY": 0,
+   "torsoZ": 0,
+   "headX": -0.7,
+   "headY": 0,
+   "lsx": -3.05,
+   "lsy": 0,
+   "lsz": 0.3,
+   "le": 0,
+   "rsx": -3.05,
+   "rsy": 0,
+   "rsz": -0.3,
+   "re": 0,
+   "lhx": -1.6,
+   "lhz": 0.1,
+   "lk": 0,
+   "rhx": -1.6,
+   "rhz": -0.1,
+   "rk": 0
+  }
+ },
+ "RAW_ROSTER": [
+  {
+   "id": "vex",
+   "name": "VEX-9",
+   "title": "Rogue Combat Android",
+   "origin": "Orbital Foundry 9",
+   "style": "Servo Arts — precise pokes, rail-dash pressure",
+   "diff": 2,
+   "scale": 1,
+   "speed": 1.1,
+   "power": 0.95,
+   "hp": 170,
+   "quote": "Opponent catalogued. Weaknesses: all of them.",
+   "look": {
+    "skin": 10135218,
+    "accent": 3073791,
+    "top": {
+     "type": "armor",
+     "color": 2765120,
+     "color2": 13161180
+    },
+    "bottom": {
+     "type": "pants",
+     "color": 1777705,
+     "color2": 3073791,
+     "stripe": 1
+    },
+    "gloves": {
+     "type": "metal",
+     "color": 14279402
+    },
+    "feet": {
+     "type": "boots",
+     "color": 1119516
+    },
+    "body": {
+     "w": 1.05
+    },
+    "extras": [
+     "helmet",
+     "core",
+     "forearmLines"
+    ]
+   },
+   "guard": {
+    "hipY": -0.03,
+    "torsoX": 0.05,
+    "torsoY": -0.2,
+    "lsx": -1,
+    "lsz": 0.1,
+    "le": -1.6,
+    "rsx": -0.8,
+    "rsz": -0.15,
+    "re": -1.8,
+    "lhx": -0.3,
+    "lk": 0.3,
+    "rhx": 0.2,
+    "rk": 0.2
+   },
+   "win": {
+    "rsx": -1.4,
+    "rsz": -0.6,
+    "re": -2.4,
+    "lsx": -0.2,
+    "lsz": 0.1,
+    "le": -0.2,
+    "torsoX": 0,
+    "torsoY": 0,
+    "headX": -0.1,
+    "lhx": 0,
+    "lk": 0.05,
+    "rhx": 0,
+    "rk": 0.05,
+    "hipY": 0
+   },
+   "throwName": "Circuit Breaker",
+   "throwOpts": {
+    "tt": "slam"
+   },
+   "surge": {
+    "n": "OVERCLOCK CASCADE",
+    "p": {
+     "torsoX": 0.38,
+     "torsoY": 0,
+     "hipY": -0.16,
+     "lsx": -1.45,
+     "lsy": 0,
+     "lsz": -0.15,
+     "le": -0.1,
+     "rsx": -1.45,
+     "rsy": 0,
+     "rsz": 0.15,
+     "re": -0.1,
+     "lhx": -0.85,
+     "lk": 0.85,
+     "rhx": 0.35,
+     "rk": 0.25
+    }
+   },
+   "moves": {
+    "1": {
+     "n": "Piston Jab",
+     "s": 10,
+     "a": 2,
+     "r": 14,
+     "d": 5,
+     "l": "high",
+     "hit": 8,
+     "blk": 1,
+     "p": {
+      "torsoY": -0.65,
+      "torsoX": 0.15,
+      "lsx": -1.55,
+      "lsy": 0,
+      "lsz": -0.14,
+      "le": -0.05
+     },
+     "w": {
+      "torsoY": -0.35,
+      "lsx": -1,
+      "lsy": 0,
+      "le": -1.6
+     },
+     "next": {
+      "2": "1,2"
+     }
+    },
+    "2": {
+     "n": "Ram Straight",
+     "s": 12,
+     "a": 2,
+     "r": 16,
+     "d": 11,
+     "l": "high",
+     "hit": 7,
+     "blk": -1,
+     "p": {
+      "torsoY": 0.6,
+      "torsoX": 0.2,
+      "rsx": -1.55,
+      "rsy": 0,
+      "rsz": 0.14,
+      "re": -0.04,
+      "lsx": -0.8,
+      "lsy": 0,
+      "lsz": 0.1,
+      "le": -2.1,
+      "rhx": 0.35,
+      "rk": 0.1,
+      "lhx": -0.5,
+      "lk": 0.5
+     },
+     "w": {
+      "torsoY": -0.4,
+      "rsx": -0.7,
+      "rsy": 0,
+      "re": -2.2
+     },
+     "next": {
+      "4": "2,4"
+     }
+    },
+    "3": {
+     "n": "Calibration Kick",
+     "s": 13,
+     "a": 3,
+     "r": 18,
+     "d": 12,
+     "l": "mid",
+     "hit": 5,
+     "blk": -6,
+     "p": {
+      "lhx": -1.5,
+      "lhz": 0,
+      "lk": 0.1,
+      "torsoX": -0.15,
+      "rhx": 0.05,
+      "rk": 0.2
+     },
+     "w": {
+      "lhx": -1.3,
+      "lhz": 0,
+      "lk": 1.7,
+      "torsoX": 0,
+      "rk": 0.35
+     },
+     "next": {
+      "2": "3,2"
+     }
+    },
+    "4": {
+     "n": "Arc Roundhouse",
+     "s": 15,
+     "a": 3,
+     "r": 20,
+     "d": 16,
+     "l": "high",
+     "hit": 8,
+     "blk": -7,
+     "p": {
+      "yaw": 0.95,
+      "hipYaw": 0.25,
+      "rhx": -0.35,
+      "rhz": -1.8,
+      "rk": 0.08,
+      "torsoZ": -0.6,
+      "torsoX": -0.1,
+      "lhx": 0,
+      "lhz": 0.1,
+      "lk": 0.15,
+      "lsx": -0.4,
+      "lsz": 0.55,
+      "le": -1.4
+     },
+     "w": {
+      "yaw": 0.35,
+      "rhx": -1,
+      "rhz": -0.55,
+      "rk": 1.7,
+      "lhx": -0.1,
+      "lk": 0.2
+     }
+    },
+    "14": {
+     "n": "Overcharge Palm",
+     "s": 18,
+     "a": 3,
+     "r": 22,
+     "d": 20,
+     "l": "mid",
+     "kd": 1,
+     "armor": 1,
+     "blk": -8,
+     "p": {
+      "torsoX": 0.38,
+      "torsoY": 0,
+      "hipY": -0.16,
+      "lsx": -1.45,
+      "lsy": 0,
+      "lsz": -0.15,
+      "le": -0.1,
+      "rsx": -1.45,
+      "rsy": 0,
+      "rsz": 0.15,
+      "re": -0.1,
+      "lhx": -0.85,
+      "lk": 0.85,
+      "rhx": 0.35,
+      "rk": 0.25
+     },
+     "w": {
+      "torsoX": -0.1,
+      "torsoY": 0,
+      "lsx": -0.5,
+      "rsx": -0.5,
+      "lsy": 0,
+      "rsy": 0,
+      "le": -1.8,
+      "re": -1.8,
+      "lsz": 0.35,
+      "rsz": -0.35
+     }
+    },
+    "1,2": {
+     "n": "Piston Cross",
+     "s": 11,
+     "a": 2,
+     "r": 17,
+     "d": 10,
+     "l": "high",
+     "hit": 6,
+     "blk": -3,
+     "p": {
+      "torsoY": 0.6,
+      "torsoX": 0.2,
+      "rsx": -1.55,
+      "rsy": 0,
+      "rsz": 0.14,
+      "re": -0.04,
+      "lsx": -0.8,
+      "lsy": 0,
+      "lsz": 0.1,
+      "le": -2.1,
+      "rhx": 0.35,
+      "rk": 0.1,
+      "lhx": -0.5,
+      "lk": 0.5
+     },
+     "w": {
+      "torsoY": -0.4,
+      "rsx": -0.7,
+      "rsy": 0,
+      "re": -2.2
+     },
+     "next": {
+      "1": "1,2,1"
+     }
+    },
+    "1,2,1": {
+     "n": "Servo Hook",
+     "s": 13,
+     "a": 3,
+     "r": 22,
+     "d": 14,
+     "l": "high",
+     "kd": 1,
+     "blk": -8,
+     "p": {
+      "torsoY": 0.3,
+      "torsoX": 0.15,
+      "lsx": -0.1,
+      "lsy": -0.8,
+      "lsz": 1.35,
+      "le": -1.45
+     },
+     "w": {
+      "torsoY": -0.75,
+      "torsoX": 0.2,
+      "lsx": -0.5,
+      "lsy": 0,
+      "lsz": 0.7,
+      "le": -1.7
+     }
+    },
+    "2,4": {
+     "n": "Ram Arc Kick",
+     "s": 16,
+     "a": 3,
+     "r": 22,
+     "d": 16,
+     "l": "high",
+     "kd": 1,
+     "blk": -10,
+     "p": {
+      "yaw": 0.95,
+      "hipYaw": 0.25,
+      "rhx": -0.35,
+      "rhz": -1.8,
+      "rk": 0.08,
+      "torsoZ": -0.6,
+      "torsoX": -0.1,
+      "lhx": 0,
+      "lhz": 0.1,
+      "lk": 0.15,
+      "lsx": -0.4,
+      "lsz": 0.55,
+      "le": -1.4
+     },
+     "w": {
+      "yaw": 0.35,
+      "rhx": -1,
+      "rhz": -0.55,
+      "rk": 1.7,
+      "lhx": -0.1,
+      "lk": 0.2
+     }
+    },
+    "3,2": {
+     "n": "Hammer Servo",
+     "s": 16,
+     "a": 3,
+     "r": 20,
+     "d": 15,
+     "l": "mid",
+     "hit": 6,
+     "blk": -9,
+     "p": {
+      "torsoX": 0.55,
+      "torsoY": 0.6,
+      "torsoZ": -0.25,
+      "hipY": -0.12,
+      "rsx": -2.15,
+      "rsy": 0,
+      "rsz": -0.35,
+      "re": -0.45,
+      "lhx": -0.85,
+      "lk": 0.7,
+      "rhx": 0.35,
+      "rk": 0.2
+     },
+     "w": {
+      "rsx": 0.4,
+      "rsy": 0,
+      "rsz": -0.2,
+      "re": -1.3,
+      "torsoY": -0.6,
+      "torsoX": 0
+     }
+    },
+    "f4": {
+     "n": "Hydraulic Side Kick",
+     "s": 16,
+     "a": 3,
+     "r": 20,
+     "d": 16,
+     "l": "mid",
+     "hit": 10,
+     "blk": -2,
+     "push": 0.2,
+     "rg": 1.3,
+     "p": {
+      "yaw": 1.55,
+      "rhx": -0.1,
+      "rhz": -1.5,
+      "rk": 0.04,
+      "torsoZ": -0.6,
+      "torsoY": 0,
+      "lhx": 0,
+      "lk": 0.25,
+      "headY": -1.2
+     },
+     "w": {
+      "yaw": 1.35,
+      "rhx": -1.3,
+      "rhz": -0.6,
+      "rk": 2,
+      "torsoZ": -0.2
+     }
+    },
+    "df1": {
+     "n": "Diagnostic Jab",
+     "s": 13,
+     "a": 2,
+     "r": 16,
+     "d": 10,
+     "l": "mid",
+     "hit": 6,
+     "blk": 1,
+     "p": {
+      "torsoY": -0.6,
+      "torsoX": 0.42,
+      "hipY": -0.16,
+      "lsx": -1.25,
+      "lsy": 0,
+      "lsz": -0.14,
+      "le": -0.05,
+      "lhx": -0.75,
+      "lk": 0.95,
+      "rhx": 0.1,
+      "rk": 0.7
+     }
+    },
+    "df2": {
+     "n": "Uplink Uppercut",
+     "s": 15,
+     "a": 3,
+     "r": 20,
+     "d": 14,
+     "l": "mid",
+     "launch": 1,
+     "blk": -13,
+     "p": {
+      "hipY": 0.02,
+      "torsoX": -0.12,
+      "torsoY": 0.6,
+      "torsoZ": -0.12,
+      "rsx": -0.8,
+      "rsy": 0,
+      "rsz": 0.22,
+      "re": -2,
+      "lhx": -0.2,
+      "lk": 0.15,
+      "rhx": 0.2,
+      "rk": 0.1,
+      "headX": -0.15
+     },
+     "w": {
+      "hipY": -0.26,
+      "torsoX": 0.45,
+      "torsoY": 0.15,
+      "rsx": -0.15,
+      "rsy": 0,
+      "rsz": -0.1,
+      "re": -1.3,
+      "lhx": -0.8,
+      "lk": 1.15,
+      "rhx": -0.1,
+      "rk": 0.95
+     }
+    },
+    "b1": {
+     "n": "Static Backfist",
+     "s": 12,
+     "a": 2,
+     "r": 16,
+     "d": 10,
+     "l": "high",
+     "hit": 8,
+     "blk": 2,
+     "p": {
+      "torsoY": 0.55,
+      "lsx": -0.25,
+      "lsy": -0.25,
+      "lsz": 1.45,
+      "le": -0.15
+     },
+     "w": {
+      "torsoY": -0.6,
+      "lsx": -0.9,
+      "lsy": 0,
+      "lsz": -0.4,
+      "le": -2.3
+     }
+    },
+    "b4": {
+     "n": "Pivot Spin Heel",
+     "s": 19,
+     "a": 3,
+     "r": 22,
+     "d": 22,
+     "l": "high",
+     "kd": 1,
+     "hom": 1,
+     "blk": -4,
+     "p": {
+      "yaw": -4.45,
+      "rhx": -0.3,
+      "rhz": -1.7,
+      "rk": 0.05,
+      "torsoZ": -0.5,
+      "lhx": 0,
+      "lk": 0.15
+     },
+     "w": {
+      "yaw": -2.3,
+      "rhx": -0.3,
+      "rk": 0.7,
+      "torsoX": 0.2
+     }
+    },
+    "d3": {
+     "n": "Scan Low",
+     "s": 16,
+     "a": 3,
+     "r": 19,
+     "d": 9,
+     "l": "low",
+     "hit": 3,
+     "blk": -12,
+     "low": 1,
+     "p": {
+      "hipY": -0.3,
+      "torsoX": 0.25,
+      "hipYaw": 0,
+      "lhx": -1.05,
+      "lk": 0.05,
+      "lhz": 0.18,
+      "rhx": -0.75,
+      "rk": 1.9,
+      "rhz": -0.12
+     }
+    },
+    "d4": {
+     "n": "Gyro Sweep",
+     "s": 22,
+     "a": 4,
+     "r": 30,
+     "d": 16,
+     "l": "low",
+     "kd": 1,
+     "blk": -23,
+     "low": 1,
+     "rg": 1.25,
+     "p": {
+      "hipY": -0.55,
+      "yaw": -2.3,
+      "hipYaw": 0,
+      "rhx": -1.45,
+      "rhz": -0.6,
+      "rk": 0,
+      "lhx": -1.3,
+      "lk": 2.3,
+      "lhz": 0.2,
+      "torsoX": 0.7,
+      "torsoY": 0.3,
+      "lsx": -0.9,
+      "lsz": 0.5,
+      "le": -0.3,
+      "rsx": -0.3,
+      "re": -0.6
+     },
+     "w": {
+      "hipY": -0.45,
+      "torsoX": 0.5,
+      "hipYaw": 0,
+      "lhx": -1.05,
+      "lk": 1.9,
+      "lhz": 0.12,
+      "rhx": -0.75,
+      "rk": 1.9,
+      "rhz": -0.12,
+      "yaw": -0.6
+     }
+    },
+    "uf4": {
+     "n": "Ion Jump Kick",
+     "s": 15,
+     "a": 3,
+     "r": 22,
+     "d": 15,
+     "l": "mid",
+     "launch": 1,
+     "jump": 1,
+     "blk": -12,
+     "p": {
+      "lift": 0.55,
+      "rhx": -1.85,
+      "rhz": 0,
+      "rk": 0.08,
+      "lhx": -0.7,
+      "lk": 1.9,
+      "torsoX": -0.4,
+      "lsx": -0.6,
+      "rsx": 0.3,
+      "re": -0.6
+     },
+     "w": {
+      "lift": 0.12,
+      "hipY": -0.15,
+      "lhx": -1,
+      "lk": 1.6,
+      "rhx": -0.4,
+      "rk": 1.4,
+      "torsoX": 0.2
+     }
+    },
+    "ws2": {
+     "n": "Rising Coil",
+     "s": 14,
+     "a": 3,
+     "r": 20,
+     "d": 16,
+     "l": "mid",
+     "launch": 1,
+     "blk": -12,
+     "p": {
+      "hipY": 0.02,
+      "torsoX": -0.12,
+      "torsoY": 0.6,
+      "torsoZ": -0.12,
+      "rsx": -0.8,
+      "rsy": 0,
+      "rsz": 0.22,
+      "re": -2,
+      "lhx": -0.2,
+      "lk": 0.15,
+      "rhx": 0.2,
+      "rk": 0.1,
+      "headX": -0.15
+     }
+    },
+    "ws4": {
+     "n": "Rising Servo Kick",
+     "s": 12,
+     "a": 3,
+     "r": 18,
+     "d": 14,
+     "l": "mid",
+     "hit": 6,
+     "blk": -6,
+     "p": {
+      "rhx": -1.65,
+      "rhz": 0,
+      "rk": 0.04,
+      "torsoX": -0.35,
+      "lhx": 0.05,
+      "lk": 0.2
+     },
+     "w": {
+      "rhx": -1.3,
+      "rhz": 0,
+      "rk": 1.8,
+      "torsoX": 0
+     }
+    },
+    "ff2": {
+     "n": "Rail Lunge",
+     "sig": 1,
+     "s": 16,
+     "a": 3,
+     "r": 20,
+     "d": 17,
+     "l": "mid",
+     "launch": 1,
+     "blk": -9,
+     "mv": 0.06,
+     "p": {
+      "hipY": -0.15,
+      "torsoX": 0.55,
+      "torsoY": 0.6,
+      "rsx": -1.65,
+      "rsy": 0,
+      "rsz": 0.12,
+      "re": -0.05,
+      "lsx": -0.4,
+      "le": -1.6,
+      "lhx": -1,
+      "lk": 0.7,
+      "rhx": 0.6,
+      "rk": 0.1
+     },
+     "w": {
+      "torsoY": -0.4,
+      "rsx": -0.7,
+      "rsy": 0,
+      "re": -2.2
+     }
+    }
+   }
+  },
+  {
+   "id": "bastion",
+   "name": "BASTION",
+   "title": "Harbor Heavyweight",
+   "origin": "Port Kessel Docks",
+   "style": "Dock Brawling — slow, armored, devastating",
+   "diff": 1,
+   "scale": 1.14,
+   "speed": 0.85,
+   "power": 1.22,
+   "hp": 195,
+   "quote": "I have lifted cargo heavier than your ambition.",
+   "look": {
+    "skin": 8015414,
+    "hair": 1709072,
+    "accent": 16738859,
+    "hairStyle": "bald",
+    "top": {
+     "type": "tank",
+     "color": 9182493
+    },
+    "bottom": {
+     "type": "pants",
+     "color": 3817290
+    },
+    "gloves": {
+     "type": "mma",
+     "color": 2236962
+    },
+    "feet": {
+     "type": "boots",
+     "color": 3811871
+    },
+    "body": {
+     "w": 1.3,
+     "chest": 1.2,
+     "arm": 1.35,
+     "leg": 1.2,
+     "fist": 1.35
+    },
+    "extras": [
+     "beard",
+     "belt"
+    ]
+   },
+   "guard": {
+    "hipY": -0.1,
+    "torsoX": 0.25,
+    "torsoY": -0.15,
+    "lsx": -0.6,
+    "lsz": 0.35,
+    "le": -1.6,
+    "rsx": -0.4,
+    "rsz": -0.35,
+    "re": -1.7,
+    "lhx": -0.5,
+    "lhz": 0.2,
+    "lk": 0.7,
+    "rhx": 0.25,
+    "rhz": -0.2,
+    "rk": 0.5
+   },
+   "win": {
+    "lsx": -0.2,
+    "lsz": 1.4,
+    "le": -1.9,
+    "rsx": -0.2,
+    "rsz": -1.4,
+    "re": -1.9,
+    "torsoX": -0.1,
+    "torsoY": 0,
+    "hipY": -0.05,
+    "headX": -0.2
+   },
+   "throwName": "Cargo Toss",
+   "throwOpts": {
+    "d": 34
+   },
+   "surge": {
+    "n": "DRYDOCK DEMOLITION",
+    "p": {
+     "torsoX": 0.8,
+     "torsoY": 0,
+     "hipY": -0.25,
+     "lsx": -1.1,
+     "rsx": -1.1,
+     "lsy": 0,
+     "rsy": 0,
+     "lsz": -0.1,
+     "rsz": 0.1,
+     "le": -0.2,
+     "re": -0.2,
+     "lhx": -0.9,
+     "lk": 0.9,
+     "rhx": 0.2,
+     "rk": 0.6
+    },
+    "w": {
+     "torsoX": -0.35,
+     "torsoY": 0,
+     "lsx": -3,
+     "rsx": -3,
+     "lsy": 0,
+     "rsy": 0,
+     "le": -0.6,
+     "re": -0.6,
+     "lsz": -0.1,
+     "rsz": 0.1,
+     "hipY": 0.03
+    }
+   },
+   "moves": {
+    "1": {
+     "n": "Brick Jab",
+     "s": 11,
+     "a": 2,
+     "r": 15,
+     "d": 7,
+     "l": "high",
+     "hit": 7,
+     "blk": 0,
+     "p": {
+      "torsoY": -0.65,
+      "torsoX": 0.15,
+      "lsx": -1.55,
+      "lsy": 0,
+      "lsz": -0.14,
+      "le": -0.05
+     },
+     "w": {
+      "torsoY": -0.35,
+      "lsx": -1,
+      "lsy": 0,
+      "le": -1.6
+     },
+     "next": {
+      "2": "1,2"
+     }
+    },
+    "2": {
+     "n": "Wrecking Straight",
+     "s": 13,
+     "a": 2,
+     "r": 18,
+     "d": 15,
+     "l": "high",
+     "hit": 6,
+     "blk": -3,
+     "p": {
+      "torsoY": 0.6,
+      "torsoX": 0.2,
+      "rsx": -1.55,
+      "rsy": 0,
+      "rsz": 0.14,
+      "re": -0.04,
+      "lsx": -0.8,
+      "lsy": 0,
+      "lsz": 0.1,
+      "le": -2.1,
+      "rhx": 0.35,
+      "rk": 0.1,
+      "lhx": -0.5,
+      "lk": 0.5
+     },
+     "w": {
+      "torsoY": -0.4,
+      "rsx": -0.7,
+      "rsy": 0,
+      "re": -2.2
+     }
+    },
+    "3": {
+     "n": "Boot Kick",
+     "s": 15,
+     "a": 3,
+     "r": 20,
+     "d": 15,
+     "l": "mid",
+     "hit": 5,
+     "blk": -7,
+     "push": 0.12,
+     "p": {
+      "lhx": -1.6,
+      "lhz": 0,
+      "lk": 0.02,
+      "torsoX": -0.4,
+      "rhx": 0.1,
+      "rk": 0.25,
+      "hipY": -0.03
+     },
+     "w": {
+      "lhx": -1.45,
+      "lhz": 0,
+      "lk": 1.9,
+      "torsoX": -0.05
+     }
+    },
+    "4": {
+     "n": "Stomp Roundhouse",
+     "s": 17,
+     "a": 3,
+     "r": 22,
+     "d": 19,
+     "l": "high",
+     "hit": 6,
+     "blk": -8,
+     "p": {
+      "yaw": 0.95,
+      "hipYaw": 0.25,
+      "rhx": -0.35,
+      "rhz": -1.8,
+      "rk": 0.08,
+      "torsoZ": -0.6,
+      "torsoX": -0.1,
+      "lhx": 0,
+      "lhz": 0.1,
+      "lk": 0.15,
+      "lsx": -0.4,
+      "lsz": 0.55,
+      "le": -1.4
+     },
+     "w": {
+      "yaw": 0.35,
+      "rhx": -1,
+      "rhz": -0.55,
+      "rk": 1.7,
+      "lhx": -0.1,
+      "lk": 0.2
+     }
+    },
+    "23": {
+     "n": "Harbor Headbutt",
+     "s": 12,
+     "a": 2,
+     "r": 18,
+     "d": 14,
+     "l": "high",
+     "hit": 9,
+     "blk": -4,
+     "rg": 0.9,
+     "p": {
+      "torsoX": 0.75,
+      "torsoY": 0,
+      "headX": 0.6,
+      "hipY": -0.1,
+      "lsx": -1,
+      "rsx": -1,
+      "le": -0.8,
+      "re": -0.8,
+      "lsz": 0.2,
+      "rsz": -0.2,
+      "lhx": -0.7,
+      "lk": 0.6
+     }
+    },
+    "1,2": {
+     "n": "Brick Haymaker",
+     "s": 14,
+     "a": 3,
+     "r": 20,
+     "d": 16,
+     "l": "high",
+     "hit": 8,
+     "blk": -6,
+     "p": {
+      "torsoY": -0.35,
+      "torsoX": 0.15,
+      "rsx": -0.1,
+      "rsy": 0.8,
+      "rsz": -1.35,
+      "re": -1.45
+     },
+     "w": {
+      "torsoY": 0.7,
+      "torsoX": 0.2,
+      "rsx": -0.5,
+      "rsy": 0,
+      "rsz": -0.7,
+      "re": -1.7
+     }
+    },
+    "f2": {
+     "n": "Hammer Hook",
+     "s": 17,
+     "a": 3,
+     "r": 22,
+     "d": 20,
+     "l": "mid",
+     "hit": 12,
+     "blk": -9,
+     "push": 0.16,
+     "p": {
+      "torsoX": 0.55,
+      "torsoY": 0.6,
+      "torsoZ": -0.25,
+      "hipY": -0.12,
+      "rsx": -2.15,
+      "rsy": 0,
+      "rsz": -0.35,
+      "re": -0.45,
+      "lhx": -0.85,
+      "lk": 0.7,
+      "rhx": 0.35,
+      "rk": 0.2
+     },
+     "w": {
+      "rsx": 0.4,
+      "rsy": 0,
+      "rsz": -0.2,
+      "re": -1.3,
+      "torsoY": -0.6,
+      "torsoX": 0
+     }
+    },
+    "df1": {
+     "n": "Gut Punch",
+     "s": 14,
+     "a": 2,
+     "r": 17,
+     "d": 12,
+     "l": "mid",
+     "hit": 5,
+     "blk": -2,
+     "p": {
+      "torsoY": 0.35,
+      "torsoX": 0.45,
+      "torsoZ": 0.3,
+      "hipY": -0.2,
+      "lsx": -0.6,
+      "lsy": -0.75,
+      "lsz": 1.05,
+      "le": -1.4,
+      "lhx": -0.75,
+      "lk": 1,
+      "rk": 0.85
+     },
+     "next": {
+      "2": "df1,2"
+     }
+    },
+    "df1,2": {
+     "n": "Gut Check Smash",
+     "s": 16,
+     "a": 3,
+     "r": 22,
+     "d": 17,
+     "l": "mid",
+     "kd": 1,
+     "blk": -11,
+     "p": {
+      "hipY": 0.02,
+      "torsoX": -0.12,
+      "torsoY": 0.6,
+      "torsoZ": -0.12,
+      "rsx": -0.8,
+      "rsy": 0,
+      "rsz": 0.22,
+      "re": -2,
+      "lhx": -0.2,
+      "lk": 0.15,
+      "rhx": 0.2,
+      "rk": 0.1,
+      "headX": -0.15
+     },
+     "w": {
+      "hipY": -0.26,
+      "torsoX": 0.45,
+      "torsoY": 0.15,
+      "rsx": -0.15,
+      "rsy": 0,
+      "rsz": -0.1,
+      "re": -1.3,
+      "lhx": -0.8,
+      "lk": 1.15,
+      "rhx": -0.1,
+      "rk": 0.95
+     }
+    },
+    "df2": {
+     "n": "Crane Uppercut",
+     "s": 16,
+     "a": 3,
+     "r": 22,
+     "d": 18,
+     "l": "mid",
+     "launch": 1,
+     "blk": -14,
+     "p": {
+      "hipY": 0.02,
+      "torsoX": -0.12,
+      "torsoY": 0.6,
+      "torsoZ": -0.12,
+      "rsx": -0.8,
+      "rsy": 0,
+      "rsz": 0.22,
+      "re": -2,
+      "lhx": -0.2,
+      "lk": 0.15,
+      "rhx": 0.2,
+      "rk": 0.1,
+      "headX": -0.15
+     },
+     "w": {
+      "hipY": -0.26,
+      "torsoX": 0.45,
+      "torsoY": 0.15,
+      "rsx": -0.15,
+      "rsy": 0,
+      "rsz": -0.1,
+      "re": -1.3,
+      "lhx": -0.8,
+      "lk": 1.15,
+      "rhx": -0.1,
+      "rk": 0.95
+     }
+    },
+    "b2": {
+     "n": "Sledge Backhand",
+     "s": 18,
+     "a": 3,
+     "r": 22,
+     "d": 22,
+     "l": "high",
+     "kd": 1,
+     "hom": 1,
+     "blk": -5,
+     "p": {
+      "rsx": -1.35,
+      "rsz": -0.65,
+      "rsy": 0.4,
+      "re": -0.25,
+      "torsoY": 0.55,
+      "torsoX": 0.25
+     },
+     "w": {
+      "rsx": -2.8,
+      "rsy": 0,
+      "rsz": -0.35,
+      "re": -1.4,
+      "torsoY": -0.35
+     }
+    },
+    "d3": {
+     "n": "Shin Breaker",
+     "s": 17,
+     "a": 3,
+     "r": 20,
+     "d": 11,
+     "l": "low",
+     "hit": 2,
+     "blk": -13,
+     "low": 1,
+     "p": {
+      "hipY": -0.3,
+      "torsoX": 0.25,
+      "hipYaw": 0,
+      "lhx": -1.05,
+      "lk": 0.05,
+      "lhz": 0.18,
+      "rhx": -0.75,
+      "rk": 1.9,
+      "rhz": -0.12
+     }
+    },
+    "d4": {
+     "n": "Anchor Sweep",
+     "s": 23,
+     "a": 4,
+     "r": 30,
+     "d": 18,
+     "l": "low",
+     "kd": 1,
+     "blk": -24,
+     "low": 1,
+     "rg": 1.25,
+     "p": {
+      "hipY": -0.55,
+      "yaw": -2.3,
+      "hipYaw": 0,
+      "rhx": -1.45,
+      "rhz": -0.6,
+      "rk": 0,
+      "lhx": -1.3,
+      "lk": 2.3,
+      "lhz": 0.2,
+      "torsoX": 0.7,
+      "torsoY": 0.3,
+      "lsx": -0.9,
+      "lsz": 0.5,
+      "le": -0.3,
+      "rsx": -0.3,
+      "re": -0.6
+     },
+     "w": {
+      "hipY": -0.45,
+      "torsoX": 0.5,
+      "hipYaw": 0,
+      "lhx": -1.05,
+      "lk": 1.9,
+      "lhz": 0.12,
+      "rhx": -0.75,
+      "rk": 1.9,
+      "rhz": -0.12,
+      "yaw": -0.6
+     }
+    },
+    "f12": {
+     "n": "Double Axe Handle",
+     "s": 20,
+     "a": 3,
+     "r": 24,
+     "d": 26,
+     "l": "mid",
+     "kd": 1,
+     "blk": -12,
+     "p": {
+      "torsoX": 0.8,
+      "torsoY": 0,
+      "hipY": -0.25,
+      "lsx": -1.1,
+      "rsx": -1.1,
+      "lsy": 0,
+      "rsy": 0,
+      "lsz": -0.1,
+      "rsz": 0.1,
+      "le": -0.2,
+      "re": -0.2,
+      "lhx": -0.9,
+      "lk": 0.9,
+      "rhx": 0.2,
+      "rk": 0.6
+     },
+     "w": {
+      "torsoX": -0.35,
+      "torsoY": 0,
+      "lsx": -3,
+      "rsx": -3,
+      "lsy": 0,
+      "rsy": 0,
+      "le": -0.6,
+      "re": -0.6,
+      "lsz": -0.1,
+      "rsz": 0.1,
+      "hipY": 0.03
+     }
+    },
+    "ws1": {
+     "n": "Rising Brick",
+     "s": 11,
+     "a": 2,
+     "r": 15,
+     "d": 10,
+     "l": "mid",
+     "hit": 6,
+     "blk": -2,
+     "p": {
+      "torsoY": -0.6,
+      "torsoX": 0.42,
+      "hipY": -0.16,
+      "lsx": -1.25,
+      "lsy": 0,
+      "lsz": -0.14,
+      "le": -0.05,
+      "lhx": -0.75,
+      "lk": 0.95,
+      "rhx": 0.1,
+      "rk": 0.7
+     }
+    },
+    "ws2": {
+     "n": "Rising Hammer",
+     "s": 15,
+     "a": 3,
+     "r": 20,
+     "d": 18,
+     "l": "mid",
+     "launch": 1,
+     "blk": -13,
+     "p": {
+      "hipY": 0.02,
+      "torsoX": -0.12,
+      "torsoY": 0.6,
+      "torsoZ": -0.12,
+      "rsx": -0.8,
+      "rsy": 0,
+      "rsz": 0.22,
+      "re": -2,
+      "lhx": -0.2,
+      "lk": 0.15,
+      "rhx": 0.2,
+      "rk": 0.1,
+      "headX": -0.15
+     }
+    },
+    "ff2": {
+     "n": "Freight Train",
+     "sig": 1,
+     "s": 20,
+     "a": 4,
+     "r": 24,
+     "d": 26,
+     "l": "mid",
+     "kd": 1,
+     "armor": 1,
+     "blk": -10,
+     "mv": 0.07,
+     "push": 0.2,
+     "p": {
+      "torsoX": 0.5,
+      "torsoY": -1.05,
+      "hipY": -0.15,
+      "lsx": -0.4,
+      "lsy": 0,
+      "lsz": 0.15,
+      "le": -1.4,
+      "rsx": -0.6,
+      "re": -1.8,
+      "lhx": -0.95,
+      "lk": 0.8,
+      "rhx": 0.55,
+      "rk": 0.2
+     }
+    }
+   }
+  },
+  {
+   "id": "sora",
+   "name": "SORA HAYAME",
+   "title": "Wind-Step Kickboxer",
+   "origin": "Hayame Dojo, Kobe",
+   "style": "Taekwondo — fast kicks, Crane stance, slippery sidesteps",
+   "diff": 2,
+   "scale": 0.96,
+   "speed": 1.18,
+   "power": 0.9,
+   "hp": 165,
+   "sideBonus": 1.3,
+   "quote": "You were standing exactly where my heel wanted to be.",
+   "look": {
+    "skin": 15386788,
+    "hair": 1381146,
+    "accent": 8188570,
+    "hairStyle": "ponytail",
+    "top": {
+     "type": "gi",
+     "color": 16053492,
+     "color2": 1381146
+    },
+    "beltColor": 1118481,
+    "bottom": {
+     "type": "pants",
+     "color": 2895723
+    },
+    "gloves": {
+     "type": "none"
+    },
+    "feet": {
+     "type": "bare"
+    },
+    "body": {
+     "w": 0.9,
+     "fem": true,
+     "arm": 0.92,
+     "leg": 0.98
+    },
+    "extras": [
+     "headband"
+    ]
+   },
+   "guard": {
+    "hipY": -0.02,
+    "torsoX": -0.05,
+    "torsoY": -0.55,
+    "hipYaw": -0.35,
+    "lsx": -0.6,
+    "lsz": 0.1,
+    "le": -1.3,
+    "rsx": -0.3,
+    "rsz": -0.2,
+    "re": -1.6,
+    "lhx": -0.25,
+    "lk": 0.25,
+    "rhx": 0.3,
+    "rk": 0.15
+   },
+   "win": {
+    "lhx": -1.45,
+    "lhz": 0.1,
+    "lk": 2.1,
+    "rhx": 0.05,
+    "rk": 0.15,
+    "hipY": 0,
+    "hipYaw": 0,
+    "lsx": -0.6,
+    "lsz": 0.6,
+    "le": -1.5,
+    "rsx": -0.3,
+    "rsz": -0.6,
+    "re": -1.2,
+    "torsoX": -0.05,
+    "torsoY": -0.2
+   },
+   "throwName": "Shoulder Wheel",
+   "surge": {
+    "n": "HUNDRED-WIND TEMPEST",
+    "p": {
+     "yaw": -0.2,
+     "lift": 0.25,
+     "rhx": -1.9,
+     "rhz": -0.4,
+     "rk": 0.05,
+     "lhx": -0.4,
+     "lk": 1.5,
+     "torsoX": -0.45,
+     "torsoY": 0.8,
+     "lsx": -0.3,
+     "lsz": 0.9,
+     "le": -0.5,
+     "rsx": -0.3,
+     "rsz": -0.9,
+     "re": -0.5
+    },
+    "w": {
+     "yaw": -3.1,
+     "hipY": -0.1,
+     "lhx": -0.6,
+     "lk": 1.6,
+     "torsoX": -0.1
+    }
+   },
+   "stances": {
+    "CRN": {
+     "name": "Crane",
+     "p": {
+      "lhx": -1.45,
+      "lhz": 0.1,
+      "lk": 2.1,
+      "rhx": 0.05,
+      "rk": 0.15,
+      "hipY": 0,
+      "hipYaw": 0,
+      "lsx": -0.6,
+      "lsz": 0.6,
+      "le": -1.5,
+      "rsx": -0.3,
+      "rsz": -0.6,
+      "re": -1.2,
+      "torsoX": -0.05,
+      "torsoY": -0.2
+     },
+     "dur": 45
+    }
+   },
+   "moves": {
+    "1": {
+     "n": "Lead Jab",
+     "s": 10,
+     "a": 2,
+     "r": 14,
+     "d": 5,
+     "l": "high",
+     "hit": 8,
+     "blk": 1,
+     "p": {
+      "torsoY": -0.65,
+      "torsoX": 0.15,
+      "lsx": -1.55,
+      "lsy": 0,
+      "lsz": -0.14,
+      "le": -0.05
+     },
+     "w": {
+      "torsoY": -0.35,
+      "lsx": -1,
+      "lsy": 0,
+      "le": -1.6
+     },
+     "next": {
+      "4": "1,4"
+     }
+    },
+    "2": {
+     "n": "Rear Straight",
+     "s": 12,
+     "a": 2,
+     "r": 16,
+     "d": 10,
+     "l": "high",
+     "hit": 7,
+     "blk": -1,
+     "p": {
+      "torsoY": 0.6,
+      "torsoX": 0.2,
+      "rsx": -1.55,
+      "rsy": 0,
+      "rsz": 0.14,
+      "re": -0.04,
+      "lsx": -0.8,
+      "lsy": 0,
+      "lsz": 0.1,
+      "le": -2.1,
+      "rhx": 0.35,
+      "rk": 0.1,
+      "lhx": -0.5,
+      "lk": 0.5
+     },
+     "w": {
+      "torsoY": -0.4,
+      "rsx": -0.7,
+      "rsy": 0,
+      "re": -2.2
+     }
+    },
+    "3": {
+     "n": "Snap Kick",
+     "s": 12,
+     "a": 3,
+     "r": 16,
+     "d": 11,
+     "l": "mid",
+     "hit": 5,
+     "blk": -5,
+     "p": {
+      "lhx": -1.5,
+      "lhz": 0,
+      "lk": 0.1,
+      "torsoX": -0.15,
+      "rhx": 0.05,
+      "rk": 0.2
+     },
+     "w": {
+      "lhx": -1.3,
+      "lhz": 0,
+      "lk": 1.7,
+      "torsoX": 0,
+      "rk": 0.35
+     },
+     "next": {
+      "3": "3,3"
+     }
+    },
+    "4": {
+     "n": "Whip Roundhouse",
+     "s": 14,
+     "a": 3,
+     "r": 19,
+     "d": 15,
+     "l": "high",
+     "hit": 8,
+     "blk": -6,
+     "p": {
+      "yaw": 0.95,
+      "hipYaw": 0.25,
+      "rhx": -0.35,
+      "rhz": -1.8,
+      "rk": 0.08,
+      "torsoZ": -0.6,
+      "torsoX": -0.1,
+      "lhx": 0,
+      "lhz": 0.1,
+      "lk": 0.15,
+      "lsx": -0.4,
+      "lsz": 0.55,
+      "le": -1.4
+     },
+     "w": {
+      "yaw": 0.35,
+      "rhx": -1,
+      "rhz": -0.55,
+      "rk": 1.7,
+      "lhx": -0.1,
+      "lk": 0.2
+     }
+    },
+    "1,4": {
+     "n": "Jab Whip Kick",
+     "s": 14,
+     "a": 3,
+     "r": 20,
+     "d": 14,
+     "l": "high",
+     "hit": 7,
+     "blk": -8,
+     "p": {
+      "yaw": 0.95,
+      "hipYaw": 0.25,
+      "rhx": -0.35,
+      "rhz": -1.8,
+      "rk": 0.08,
+      "torsoZ": -0.6,
+      "torsoX": -0.1,
+      "lhx": 0,
+      "lhz": 0.1,
+      "lk": 0.15,
+      "lsx": -0.4,
+      "lsz": 0.55,
+      "le": -1.4
+     },
+     "w": {
+      "yaw": 0.35,
+      "rhx": -1,
+      "rhz": -0.55,
+      "rk": 1.7,
+      "lhx": -0.1,
+      "lk": 0.2
+     }
+    },
+    "3,3": {
+     "n": "Double Snap",
+     "s": 13,
+     "a": 3,
+     "r": 18,
+     "d": 12,
+     "l": "high",
+     "hit": 6,
+     "blk": -6,
+     "p": {
+      "yaw": -0.95,
+      "hipYaw": -0.25,
+      "lhx": -0.35,
+      "lhz": 1.8,
+      "lk": 0.08,
+      "torsoZ": 0.6,
+      "torsoX": -0.1,
+      "rhx": 0,
+      "rhz": -0.1,
+      "rk": 0.15,
+      "rsx": -0.4,
+      "rsz": -0.55,
+      "re": -1.4
+     },
+     "w": {
+      "yaw": -0.35,
+      "lhx": -1,
+      "lhz": 0.55,
+      "lk": 1.7,
+      "rhx": -0.1,
+      "rk": 0.2
+     },
+     "next": {
+      "4": "3,3,4"
+     }
+    },
+    "3,3,4": {
+     "n": "Triple Gale",
+     "s": 15,
+     "a": 3,
+     "r": 24,
+     "d": 18,
+     "l": "mid",
+     "kd": 1,
+     "blk": -10,
+     "p": {
+      "yaw": 0.9,
+      "hipYaw": 0.25,
+      "rhx": -0.4,
+      "rhz": -1.35,
+      "rk": 0.08,
+      "torsoZ": -0.4,
+      "torsoX": 0,
+      "lhx": 0,
+      "lhz": 0.1,
+      "lk": 0.15,
+      "lsx": -0.5,
+      "lsz": 0.45,
+      "le": -1.5
+     },
+     "w": {
+      "yaw": 0.35,
+      "rhx": -1,
+      "rhz": -0.55,
+      "rk": 1.7,
+      "lhx": -0.1,
+      "lk": 0.2
+     }
+    },
+    "f4": {
+     "n": "Axe Kick",
+     "s": 19,
+     "a": 3,
+     "r": 22,
+     "d": 20,
+     "l": "mid",
+     "kd": 1,
+     "blk": -6,
+     "p": {
+      "rhx": -0.95,
+      "rhz": 0,
+      "rk": 0.05,
+      "torsoX": 0.2,
+      "hipY": -0.06
+     },
+     "w": {
+      "rhx": -2.6,
+      "rhz": -0.2,
+      "rk": 0.05,
+      "torsoX": -0.45
+     }
+    },
+    "df3": {
+     "n": "Push Kick",
+     "s": 14,
+     "a": 3,
+     "r": 18,
+     "d": 13,
+     "l": "mid",
+     "hit": 8,
+     "blk": -3,
+     "push": 0.2,
+     "p": {
+      "lhx": -1.6,
+      "lhz": 0,
+      "lk": 0.02,
+      "torsoX": -0.4,
+      "rhx": 0.1,
+      "rk": 0.25,
+      "hipY": -0.03
+     },
+     "w": {
+      "lhx": -1.45,
+      "lhz": 0,
+      "lk": 1.9,
+      "torsoX": -0.05
+     }
+    },
+    "uf4": {
+     "n": "Skyhook Kick",
+     "s": 15,
+     "a": 3,
+     "r": 22,
+     "d": 15,
+     "l": "mid",
+     "launch": 1,
+     "jump": 1,
+     "blk": -12,
+     "p": {
+      "lift": 0.55,
+      "rhx": -1.85,
+      "rhz": 0,
+      "rk": 0.08,
+      "lhx": -0.7,
+      "lk": 1.9,
+      "torsoX": -0.4,
+      "lsx": -0.6,
+      "rsx": 0.3,
+      "re": -0.6
+     },
+     "w": {
+      "lift": 0.12,
+      "hipY": -0.15,
+      "lhx": -1,
+      "lk": 1.6,
+      "rhx": -0.4,
+      "rk": 1.4,
+      "torsoX": 0.2
+     }
+    },
+    "b4": {
+     "n": "Spin Back Kick",
+     "s": 18,
+     "a": 3,
+     "r": 22,
+     "d": 21,
+     "l": "mid",
+     "kd": 1,
+     "hom": 1,
+     "blk": -8,
+     "p": {
+      "yaw": -3.14,
+      "rhx": 1.45,
+      "rhz": 0,
+      "rk": 0.08,
+      "torsoX": 0.55,
+      "lhx": -0.1,
+      "lk": 0.25
+     },
+     "w": {
+      "yaw": -2.3,
+      "rhx": -0.3,
+      "rk": 0.7,
+      "torsoX": 0.2
+     }
+    },
+    "d3": {
+     "n": "Low Snap",
+     "s": 15,
+     "a": 3,
+     "r": 18,
+     "d": 8,
+     "l": "low",
+     "hit": 3,
+     "blk": -11,
+     "low": 1,
+     "p": {
+      "hipY": -0.3,
+      "torsoX": 0.25,
+      "hipYaw": 0,
+      "lhx": -1.05,
+      "lk": 0.05,
+      "lhz": 0.18,
+      "rhx": -0.75,
+      "rk": 1.9,
+      "rhz": -0.12
+     }
+    },
+    "d4": {
+     "n": "Crescent Sweep",
+     "s": 21,
+     "a": 4,
+     "r": 28,
+     "d": 15,
+     "l": "low",
+     "kd": 1,
+     "blk": -22,
+     "low": 1,
+     "rg": 1.25,
+     "p": {
+      "hipY": -0.55,
+      "yaw": -2.3,
+      "hipYaw": 0,
+      "rhx": -1.45,
+      "rhz": -0.6,
+      "rk": 0,
+      "lhx": -1.3,
+      "lk": 2.3,
+      "lhz": 0.2,
+      "torsoX": 0.7,
+      "torsoY": 0.3,
+      "lsx": -0.9,
+      "lsz": 0.5,
+      "le": -0.3,
+      "rsx": -0.3,
+      "re": -0.6
+     },
+     "w": {
+      "hipY": -0.45,
+      "torsoX": 0.5,
+      "hipYaw": 0,
+      "lhx": -1.05,
+      "lk": 1.9,
+      "lhz": 0.12,
+      "rhx": -0.75,
+      "rk": 1.9,
+      "rhz": -0.12,
+      "yaw": -0.6
+     }
+    },
+    "b3": {
+     "n": "Rising Crane",
+     "trans": 1,
+     "r": 14,
+     "st": "CRN",
+     "keys": [
+      [
+       9,
+       {
+        "lhx": -1.45,
+        "lhz": 0.1,
+        "lk": 2.1,
+        "rhx": 0.05,
+        "rk": 0.15,
+        "hipY": 0,
+        "hipYaw": 0,
+        "lsx": -0.6,
+        "lsz": 0.6,
+        "le": -1.5,
+        "rsx": -0.3,
+        "rsz": -0.6,
+        "re": -1.2,
+        "torsoX": -0.05,
+        "torsoY": -0.2
+       }
+      ]
+     ]
+    },
+    "CRN:1": {
+     "n": "Crane Beak",
+     "s": 10,
+     "a": 2,
+     "r": 15,
+     "d": 8,
+     "l": "high",
+     "hit": 6,
+     "blk": 1,
+     "p": {
+      "torsoY": -0.65,
+      "torsoX": 0.15,
+      "lsx": -1.55,
+      "lsy": 0,
+      "lsz": -0.14,
+      "le": -0.05
+     }
+    },
+    "CRN:3": {
+     "n": "Crane Snap",
+     "s": 11,
+     "a": 3,
+     "r": 18,
+     "d": 13,
+     "l": "mid",
+     "hit": 6,
+     "blk": -4,
+     "p": {
+      "lhx": -1.5,
+      "lhz": 0,
+      "lk": 0.1,
+      "torsoX": -0.15,
+      "rhx": 0.05,
+      "rk": 0.2
+     }
+    },
+    "CRN:4": {
+     "n": "Crane Heel",
+     "s": 16,
+     "a": 3,
+     "r": 22,
+     "d": 20,
+     "l": "high",
+     "kd": 1,
+     "blk": -9,
+     "p": {
+      "yaw": -0.95,
+      "hipYaw": -0.25,
+      "lhx": -0.35,
+      "lhz": 1.8,
+      "lk": 0.08,
+      "torsoZ": 0.6,
+      "torsoX": -0.1,
+      "rhx": 0,
+      "rhz": -0.1,
+      "rk": 0.15,
+      "rsx": -0.4,
+      "rsz": -0.55,
+      "re": -1.4
+     }
+    },
+    "ws3": {
+     "n": "Rising Lift Kick",
+     "s": 14,
+     "a": 3,
+     "r": 20,
+     "d": 14,
+     "l": "mid",
+     "launch": 1,
+     "blk": -13,
+     "p": {
+      "rhx": -1.65,
+      "rhz": 0,
+      "rk": 0.04,
+      "torsoX": -0.35,
+      "lhx": 0.05,
+      "lk": 0.2
+     }
+    },
+    "ws4": {
+     "n": "Rising Whip",
+     "s": 12,
+     "a": 3,
+     "r": 18,
+     "d": 14,
+     "l": "mid",
+     "hit": 6,
+     "blk": -6,
+     "p": {
+      "yaw": 0.9,
+      "hipYaw": 0.25,
+      "rhx": -0.4,
+      "rhz": -1.35,
+      "rk": 0.08,
+      "torsoZ": -0.4,
+      "torsoX": 0,
+      "lhx": 0,
+      "lhz": 0.1,
+      "lk": 0.15,
+      "lsx": -0.5,
+      "lsz": 0.45,
+      "le": -1.5
+     }
+    },
+    "ff4": {
+     "n": "Gale Crescent",
+     "sig": 1,
+     "s": 15,
+     "a": 4,
+     "r": 22,
+     "d": 18,
+     "l": "mid",
+     "kd": 1,
+     "hom": 1,
+     "blk": -6,
+     "mv": 0.045,
+     "rg": 1.3,
+     "p": {
+      "yaw": -0.2,
+      "lift": 0.25,
+      "rhx": -1.9,
+      "rhz": -0.4,
+      "rk": 0.05,
+      "lhx": -0.4,
+      "lk": 1.5,
+      "torsoX": -0.45,
+      "torsoY": 0.8,
+      "lsx": -0.3,
+      "lsz": 0.9,
+      "le": -0.5,
+      "rsx": -0.3,
+      "rsz": -0.9,
+      "re": -0.5
+     },
+     "w": {
+      "yaw": -3.1,
+      "hipY": -0.1,
+      "lhx": -0.6,
+      "lk": 1.6,
+      "torsoX": -0.1
+     }
+    }
+   }
+  },
+  {
+   "id": "ember",
+   "name": "EMBER CRUZ",
+   "title": "Masked Luchadora",
+   "origin": "Arena Sol, Guadalajara",
+   "style": "Lucha Libre — chops, dropkicks, two command throws",
+   "diff": 2,
+   "scale": 1,
+   "speed": 1,
+   "power": 1.05,
+   "hp": 178,
+   "quote": "The mask stays on. Your dignity does not.",
+   "look": {
+    "skin": 13209187,
+    "hair": 5904922,
+    "accent": 16756782,
+    "maskColor": 8003491,
+    "hairStyle": "ponytail",
+    "top": {
+     "type": "leotard",
+     "color": 8003491
+    },
+    "bottom": {
+     "type": "pants",
+     "color": 8003491,
+     "color2": 16742938,
+     "stripe": 1
+    },
+    "gloves": {
+     "type": "mma",
+     "color": 16747546
+    },
+    "feet": {
+     "type": "boots",
+     "color": 16765286
+    },
+    "body": {
+     "fem": true,
+     "w": 0.98
+    },
+    "extras": [
+     "mask",
+     "belt"
+    ]
+   },
+   "guard": {
+    "hipY": -0.18,
+    "torsoX": 0.45,
+    "torsoY": -0.1,
+    "lsx": -1,
+    "lsz": 0.45,
+    "le": -0.9,
+    "rsx": -1,
+    "rsz": -0.45,
+    "re": -0.9,
+    "lhx": -0.7,
+    "lhz": 0.25,
+    "lk": 1,
+    "rhx": -0.2,
+    "rhz": -0.25,
+    "rk": 0.8
+   },
+   "win": {
+    "lsx": -0.3,
+    "lsz": 2.4,
+    "le": -0.3,
+    "rsx": -0.3,
+    "rsz": -2.4,
+    "re": -0.3,
+    "torsoX": -0.15,
+    "torsoY": 0,
+    "hipY": 0,
+    "lhx": -0.1,
+    "lk": 0.1,
+    "rhx": 0.05,
+    "rk": 0.1,
+    "headX": -0.25
+   },
+   "throwName": "Hip Toss",
+   "surge": {
+    "n": "SOLAR FLARE PILEDRIVER",
+    "p": {
+     "torsoX": 0.35,
+     "torsoY": 0.65,
+     "rsx": -0.15,
+     "rsy": 0.2,
+     "rsz": -1.55,
+     "re": -0.05,
+     "hipY": -0.1,
+     "lhx": -0.9,
+     "lk": 0.65,
+     "rhx": 0.4,
+     "rk": 0.1
+    },
+    "w": {
+     "rsx": -2.8,
+     "rsy": 0,
+     "rsz": -0.35,
+     "re": -1.4,
+     "torsoY": -0.35
+    }
+   },
+   "moves": {
+    "1": {
+     "n": "Slap Jab",
+     "s": 10,
+     "a": 2,
+     "r": 14,
+     "d": 5,
+     "l": "high",
+     "hit": 8,
+     "blk": 1,
+     "p": {
+      "torsoY": -0.65,
+      "torsoX": 0.15,
+      "lsx": -1.55,
+      "lsy": 0,
+      "lsz": -0.14,
+      "le": -0.05
+     },
+     "w": {
+      "torsoY": -0.35,
+      "lsx": -1,
+      "lsy": 0,
+      "le": -1.6
+     },
+     "next": {
+      "2": "1,2"
+     }
+    },
+    "2": {
+     "n": "Knife-Edge Chop",
+     "s": 13,
+     "a": 3,
+     "r": 18,
+     "d": 12,
+     "l": "high",
+     "hit": 7,
+     "blk": -3,
+     "p": {
+      "rsx": -1.35,
+      "rsz": -0.65,
+      "rsy": 0.4,
+      "re": -0.25,
+      "torsoY": 0.55,
+      "torsoX": 0.25
+     },
+     "w": {
+      "rsx": -2.8,
+      "rsy": 0,
+      "rsz": -0.35,
+      "re": -1.4,
+      "torsoY": -0.35
+     }
+    },
+    "3": {
+     "n": "Toe Kick",
+     "s": 14,
+     "a": 3,
+     "r": 18,
+     "d": 12,
+     "l": "mid",
+     "hit": 6,
+     "blk": -6,
+     "p": {
+      "lhx": -1.5,
+      "lhz": 0,
+      "lk": 0.1,
+      "torsoX": -0.15,
+      "rhx": 0.05,
+      "rk": 0.2
+     },
+     "w": {
+      "lhx": -1.3,
+      "lhz": 0,
+      "lk": 1.7,
+      "torsoX": 0,
+      "rk": 0.35
+     }
+    },
+    "4": {
+     "n": "Big Boot",
+     "s": 16,
+     "a": 3,
+     "r": 21,
+     "d": 17,
+     "l": "mid",
+     "hit": 9,
+     "blk": -8,
+     "push": 0.15,
+     "p": {
+      "rhx": -1.65,
+      "rhz": 0,
+      "rk": 0.04,
+      "torsoX": -0.35,
+      "lhx": 0.05,
+      "lk": 0.2
+     },
+     "w": {
+      "rhx": -1.3,
+      "rhz": 0,
+      "rk": 1.8,
+      "torsoX": 0
+     }
+    },
+    "1,2": {
+     "n": "Slap Chop",
+     "s": 12,
+     "a": 2,
+     "r": 18,
+     "d": 11,
+     "l": "high",
+     "hit": 6,
+     "blk": -4,
+     "p": {
+      "rsx": -1.35,
+      "rsz": -0.65,
+      "rsy": 0.4,
+      "re": -0.25,
+      "torsoY": 0.55,
+      "torsoX": 0.25
+     },
+     "w": {
+      "rsx": -2.8,
+      "rsy": 0,
+      "rsz": -0.35,
+      "re": -1.4,
+      "torsoY": -0.35
+     }
+    },
+    "b1": {
+     "n": "Chop Flurry",
+     "s": 12,
+     "a": 2,
+     "r": 12,
+     "d": 7,
+     "l": "high",
+     "hit": 6,
+     "blk": -2,
+     "p": {
+      "lsx": -1.35,
+      "lsz": 0.65,
+      "lsy": -0.4,
+      "le": -0.25,
+      "torsoY": -0.55,
+      "torsoX": 0.25
+     },
+     "w": {
+      "lsx": -2.8,
+      "lsy": 0,
+      "lsz": 0.35,
+      "le": -1.4,
+      "torsoY": 0.35
+     },
+     "auto": "b1+"
+    },
+    "b1+": {
+     "n": "Chop Flurry (2)",
+     "hidden": 1,
+     "s": 9,
+     "a": 2,
+     "r": 18,
+     "d": 9,
+     "l": "high",
+     "hit": 4,
+     "blk": -5,
+     "p": {
+      "rsx": -1.35,
+      "rsz": -0.65,
+      "rsy": 0.4,
+      "re": -0.25,
+      "torsoY": 0.55,
+      "torsoX": 0.25
+     },
+     "w": {
+      "rsx": -2.8,
+      "rsy": 0,
+      "rsz": -0.35,
+      "re": -1.4,
+      "torsoY": -0.35
+     }
+    },
+    "df1": {
+     "n": "Running Forearm",
+     "s": 14,
+     "a": 3,
+     "r": 17,
+     "d": 12,
+     "l": "mid",
+     "hit": 5,
+     "blk": -1,
+     "p": {
+      "torsoY": 0.8,
+      "torsoX": 0.15,
+      "rsx": -0.15,
+      "rsy": 0.9,
+      "rsz": -1.45,
+      "re": -2.5
+     },
+     "w": {
+      "torsoY": -0.45,
+      "rsx": -0.3,
+      "rsy": 0,
+      "rsz": -0.9,
+      "re": -2.4
+     }
+    },
+    "df2": {
+     "n": "Rising Elbow",
+     "s": 15,
+     "a": 3,
+     "r": 20,
+     "d": 15,
+     "l": "mid",
+     "launch": 1,
+     "blk": -13,
+     "p": {
+      "torsoX": -0.15,
+      "torsoY": 0.45,
+      "hipY": 0.03,
+      "rsx": -2.4,
+      "rsy": 0,
+      "rsz": -0.1,
+      "re": -2.5,
+      "lhx": -0.15,
+      "lk": 0.1
+     },
+     "w": {
+      "hipY": -0.26,
+      "torsoX": 0.45,
+      "torsoY": 0.15,
+      "rsx": -0.15,
+      "rsy": 0,
+      "rsz": -0.1,
+      "re": -1.3,
+      "lhx": -0.8,
+      "lk": 1.15,
+      "rhx": -0.1,
+      "rk": 0.95
+     }
+    },
+    "f2": {
+     "n": "Lariat",
+     "s": 18,
+     "a": 3,
+     "r": 22,
+     "d": 22,
+     "l": "high",
+     "kd": 1,
+     "blk": -6,
+     "mv": 0.03,
+     "p": {
+      "torsoX": 0.35,
+      "torsoY": 0.65,
+      "rsx": -0.15,
+      "rsy": 0.2,
+      "rsz": -1.55,
+      "re": -0.05,
+      "hipY": -0.1,
+      "lhx": -0.9,
+      "lk": 0.65,
+      "rhx": 0.4,
+      "rk": 0.1
+     },
+     "w": {
+      "rsx": -2.8,
+      "rsy": 0,
+      "rsz": -0.35,
+      "re": -1.4,
+      "torsoY": -0.35
+     }
+    },
+    "b4": {
+     "n": "Enzuigiri",
+     "s": 19,
+     "a": 3,
+     "r": 24,
+     "d": 20,
+     "l": "high",
+     "kd": 1,
+     "hom": 1,
+     "blk": -7,
+     "p": {
+      "yaw": -4.45,
+      "rhx": -0.3,
+      "rhz": -1.7,
+      "rk": 0.05,
+      "torsoZ": -0.5,
+      "lhx": 0,
+      "lk": 0.15
+     },
+     "w": {
+      "yaw": -2.3,
+      "rhx": -0.3,
+      "rk": 0.7,
+      "torsoX": 0.2
+     }
+    },
+    "d3": {
+     "n": "Low Toe Kick",
+     "s": 15,
+     "a": 3,
+     "r": 19,
+     "d": 9,
+     "l": "low",
+     "hit": 3,
+     "blk": -12,
+     "low": 1,
+     "p": {
+      "hipY": -0.3,
+      "torsoX": 0.25,
+      "hipYaw": 0,
+      "lhx": -1.05,
+      "lk": 0.05,
+      "lhz": 0.18,
+      "rhx": -0.75,
+      "rk": 1.9,
+      "rhz": -0.12
+     }
+    },
+    "d4": {
+     "n": "Leg Sweep",
+     "s": 22,
+     "a": 4,
+     "r": 30,
+     "d": 16,
+     "l": "low",
+     "kd": 1,
+     "blk": -23,
+     "low": 1,
+     "rg": 1.25,
+     "p": {
+      "hipY": -0.55,
+      "yaw": -2.3,
+      "hipYaw": 0,
+      "rhx": -1.45,
+      "rhz": -0.6,
+      "rk": 0,
+      "lhx": -1.3,
+      "lk": 2.3,
+      "lhz": 0.2,
+      "torsoX": 0.7,
+      "torsoY": 0.3,
+      "lsx": -0.9,
+      "lsz": 0.5,
+      "le": -0.3,
+      "rsx": -0.3,
+      "re": -0.6
+     },
+     "w": {
+      "hipY": -0.45,
+      "torsoX": 0.5,
+      "hipYaw": 0,
+      "lhx": -1.05,
+      "lk": 1.9,
+      "lhz": 0.12,
+      "rhx": -0.75,
+      "rk": 1.9,
+      "rhz": -0.12,
+      "yaw": -0.6
+     }
+    },
+    "f34": {
+     "n": "Dropkick",
+     "s": 22,
+     "a": 4,
+     "r": 26,
+     "d": 24,
+     "l": "mid",
+     "kd": 1,
+     "jump": 1,
+     "blk": -16,
+     "mv": 0.04,
+     "rg": 1.25,
+     "p": {
+      "lift": 0.65,
+      "rootRx": -1.35,
+      "lhx": -0.15,
+      "rhx": -0.1,
+      "lk": 0.1,
+      "rk": 0.1,
+      "lhz": 0.1,
+      "rhz": -0.1,
+      "lsx": -2.5,
+      "rsx": -2.5,
+      "lsy": 0,
+      "rsy": 0,
+      "le": -0.3,
+      "re": -0.3,
+      "torsoX": 0,
+      "torsoY": 0
+     },
+     "w": {
+      "lift": 0.3,
+      "rootRx": -0.5,
+      "lhx": -1.6,
+      "rhx": -1.5,
+      "lk": 2,
+      "rk": 2,
+      "torsoX": 0
+     }
+    },
+    "ws2": {
+     "n": "Rising Elbow Lift",
+     "s": 14,
+     "a": 3,
+     "r": 20,
+     "d": 15,
+     "l": "mid",
+     "launch": 1,
+     "blk": -12,
+     "p": {
+      "torsoX": -0.15,
+      "torsoY": 0.45,
+      "hipY": 0.03,
+      "rsx": -2.4,
+      "rsy": 0,
+      "rsz": -0.1,
+      "re": -2.5,
+      "lhx": -0.15,
+      "lk": 0.1
+     }
+    },
+    "ws4": {
+     "n": "Rising Boot",
+     "s": 13,
+     "a": 3,
+     "r": 18,
+     "d": 14,
+     "l": "mid",
+     "hit": 6,
+     "blk": -6,
+     "p": {
+      "rhx": -1.65,
+      "rhz": 0,
+      "rk": 0.04,
+      "torsoX": -0.35,
+      "lhx": 0.05,
+      "lk": 0.2
+     }
+    },
+    "df12": {
+     "n": "Tornado Slam",
+     "s": 16,
+     "a": 2,
+     "r": 26,
+     "d": 32,
+     "l": "throw",
+     "throw": 1,
+     "cmd": 1,
+     "tt": "slam",
+     "rg": 1,
+     "p": {
+      "lsx": -1.5,
+      "rsx": -1.5,
+      "lsy": 0,
+      "rsy": 0,
+      "lsz": 0.25,
+      "rsz": -0.25,
+      "le": -0.4,
+      "re": -0.4,
+      "torsoX": 0.25,
+      "torsoY": 0
+     }
+    },
+    "ff1": {
+     "n": "Volcán Suplex",
+     "sig": 1,
+     "s": 14,
+     "a": 3,
+     "r": 28,
+     "d": 36,
+     "l": "throw",
+     "throw": 1,
+     "cmd": 1,
+     "tt": "over",
+     "mv": 0.05,
+     "rg": 1.15,
+     "p": {
+      "lsx": -1.5,
+      "rsx": -1.5,
+      "lsy": 0,
+      "rsy": 0,
+      "lsz": 0.25,
+      "rsz": -0.25,
+      "le": -0.4,
+      "re": -0.4,
+      "torsoX": 0.25,
+      "torsoY": 0
+     }
+    }
+   }
+  },
+  {
+   "id": "mara",
+   "name": "MARA OKONKWO",
+   "title": "Undisputed Southpaw Queen",
+   "origin": "Lagos • Brooklyn",
+   "style": "Boxing — fastest hands, sway, punishing hooks",
+   "diff": 2,
+   "scale": 0.98,
+   "speed": 1.12,
+   "power": 1,
+   "hp": 168,
+   "quote": "Twelve rounds? I only needed one.",
+   "look": {
+    "skin": 5913128,
+    "hair": 920330,
+    "accent": 16764762,
+    "hairStyle": "braids",
+    "top": {
+     "type": "bra",
+     "color": 14692410
+    },
+    "bottom": {
+     "type": "shorts",
+     "color": 14692410
+    },
+    "gloves": {
+     "type": "boxing",
+     "color": 13902384
+    },
+    "feet": {
+     "type": "boots",
+     "color": 15921906
+    },
+    "body": {
+     "fem": true,
+     "w": 0.95,
+     "arm": 1.05
+    },
+    "extras": [
+     "belt"
+    ]
+   },
+   "guard": {
+    "hipY": -0.12,
+    "torsoX": 0.3,
+    "torsoY": -0.2,
+    "headX": 0.3,
+    "lsx": -0.75,
+    "lsz": 0.05,
+    "le": -2.4,
+    "rsx": -0.75,
+    "rsz": -0.05,
+    "re": -2.4,
+    "lhx": -0.55,
+    "lk": 0.7,
+    "rhx": 0.1,
+    "rk": 0.55
+   },
+   "win": {
+    "lsx": -2.9,
+    "lsz": 0.4,
+    "le": -0.4,
+    "rsx": -2.9,
+    "rsz": -0.4,
+    "re": -0.4,
+    "torsoX": -0.1,
+    "torsoY": 0,
+    "hipY": 0,
+    "lhx": -0.05,
+    "lk": 0.06,
+    "rhx": 0.05,
+    "rk": 0.06,
+    "headX": -0.25
+   },
+   "throwName": "Clinch Toss",
+   "throwOpts": {
+    "d": 28
+   },
+   "surge": {
+    "n": "KNOCKOUT CONSTELLATION",
+    "p": {
+     "hipY": 0.02,
+     "torsoX": -0.12,
+     "torsoY": 0.6,
+     "torsoZ": -0.12,
+     "rsx": -0.8,
+     "rsy": 0,
+     "rsz": 0.22,
+     "re": -2,
+     "lhx": -0.2,
+     "lk": 0.15,
+     "rhx": 0.2,
+     "rk": 0.1,
+     "headX": -0.15
+    },
+    "w": {
+     "rsx": 0.9,
+     "rsy": 0,
+     "rsz": -0.5,
+     "re": -0.3,
+     "torsoY": -0.75,
+     "hipY": -0.1
+    }
+   },
+   "stances": {
+    "SWY": {
+     "name": "Sway",
+     "p": {
+      "torsoX": -0.55,
+      "torsoZ": 0.15,
+      "hipY": -0.08,
+      "headX": 0.3,
+      "lhx": -0.6,
+      "lk": 0.75,
+      "rhx": 0.35,
+      "rk": 0.5
+     },
+     "dur": 30,
+     "low": 1
+    }
+   },
+   "moves": {
+    "1": {
+     "n": "Snap Jab",
+     "s": 9,
+     "a": 2,
+     "r": 13,
+     "d": 5,
+     "l": "high",
+     "hit": 8,
+     "blk": 1,
+     "p": {
+      "torsoY": -0.65,
+      "torsoX": 0.15,
+      "lsx": -1.55,
+      "lsy": 0,
+      "lsz": -0.14,
+      "le": -0.05
+     },
+     "w": {
+      "torsoY": -0.35,
+      "lsx": -1,
+      "lsy": 0,
+      "le": -1.6
+     },
+     "next": {
+      "1": "1,1",
+      "2": "1,2"
+     }
+    },
+    "2": {
+     "n": "Power Cross",
+     "s": 12,
+     "a": 2,
+     "r": 16,
+     "d": 12,
+     "l": "high",
+     "hit": 7,
+     "blk": -1,
+     "p": {
+      "torsoY": 0.6,
+      "torsoX": 0.2,
+      "rsx": -1.55,
+      "rsy": 0,
+      "rsz": 0.14,
+      "re": -0.04,
+      "lsx": -0.8,
+      "lsy": 0,
+      "lsz": 0.1,
+      "le": -2.1,
+      "rhx": 0.35,
+      "rk": 0.1,
+      "lhx": -0.5,
+      "lk": 0.5
+     },
+     "w": {
+      "torsoY": -0.4,
+      "rsx": -0.7,
+      "rsy": 0,
+      "re": -2.2
+     },
+     "next": {
+      "1": "2,1"
+     }
+    },
+    "3": {
+     "n": "Lead Body Hook",
+     "s": 13,
+     "a": 3,
+     "r": 17,
+     "d": 12,
+     "l": "mid",
+     "hit": 5,
+     "blk": -4,
+     "p": {
+      "torsoY": 0.35,
+      "torsoX": 0.45,
+      "torsoZ": 0.3,
+      "hipY": -0.2,
+      "lsx": -0.6,
+      "lsy": -0.75,
+      "lsz": 1.05,
+      "le": -1.4,
+      "lhx": -0.75,
+      "lk": 1,
+      "rk": 0.85
+     },
+     "next": {
+      "2": "3,2"
+     }
+    },
+    "4": {
+     "n": "Body Shovel",
+     "s": 15,
+     "a": 3,
+     "r": 18,
+     "d": 14,
+     "l": "mid",
+     "hit": 6,
+     "blk": -3,
+     "p": {
+      "torsoY": -0.35,
+      "torsoX": 0.45,
+      "torsoZ": -0.3,
+      "hipY": -0.2,
+      "rsx": -0.6,
+      "rsy": 0.75,
+      "rsz": -1.05,
+      "re": -1.4,
+      "lhx": -0.75,
+      "lk": 1,
+      "rk": 0.85
+     }
+    },
+    "1,1": {
+     "n": "Double Jab",
+     "s": 9,
+     "a": 2,
+     "r": 14,
+     "d": 5,
+     "l": "high",
+     "hit": 7,
+     "blk": 1,
+     "p": {
+      "torsoY": -0.65,
+      "torsoX": 0.15,
+      "lsx": -1.55,
+      "lsy": 0,
+      "lsz": -0.14,
+      "le": -0.05
+     },
+     "next": {
+      "2": "1,2"
+     }
+    },
+    "1,2": {
+     "n": "Jab-Cross",
+     "s": 11,
+     "a": 2,
+     "r": 16,
+     "d": 10,
+     "l": "high",
+     "hit": 6,
+     "blk": -2,
+     "p": {
+      "torsoY": 0.6,
+      "torsoX": 0.2,
+      "rsx": -1.55,
+      "rsy": 0,
+      "rsz": 0.14,
+      "re": -0.04,
+      "lsx": -0.8,
+      "lsy": 0,
+      "lsz": 0.1,
+      "le": -2.1,
+      "rhx": 0.35,
+      "rk": 0.1,
+      "lhx": -0.5,
+      "lk": 0.5
+     },
+     "w": {
+      "torsoY": -0.4,
+      "rsx": -0.7,
+      "rsy": 0,
+      "re": -2.2
+     },
+     "next": {
+      "1": "1,2,1"
+     }
+    },
+    "1,2,1": {
+     "n": "Hook Finisher",
+     "s": 13,
+     "a": 3,
+     "r": 20,
+     "d": 14,
+     "l": "high",
+     "kd": 1,
+     "blk": -7,
+     "p": {
+      "torsoY": 0.3,
+      "torsoX": 0.15,
+      "lsx": -0.1,
+      "lsy": -0.8,
+      "lsz": 1.35,
+      "le": -1.45
+     },
+     "w": {
+      "torsoY": -0.75,
+      "torsoX": 0.2,
+      "lsx": -0.5,
+      "lsy": 0,
+      "lsz": 0.7,
+      "le": -1.7
+     }
+    },
+    "2,1": {
+     "n": "Cross-Hook",
+     "s": 14,
+     "a": 3,
+     "r": 20,
+     "d": 14,
+     "l": "high",
+     "hit": 5,
+     "blk": -6,
+     "p": {
+      "torsoY": 0.3,
+      "torsoX": 0.15,
+      "lsx": -0.1,
+      "lsy": -0.8,
+      "lsz": 1.35,
+      "le": -1.45
+     },
+     "w": {
+      "torsoY": -0.75,
+      "torsoX": 0.2,
+      "lsx": -0.5,
+      "lsy": 0,
+      "lsz": 0.7,
+      "le": -1.7
+     }
+    },
+    "3,2": {
+     "n": "Body-Head Hook",
+     "s": 14,
+     "a": 3,
+     "r": 20,
+     "d": 14,
+     "l": "high",
+     "kd": 1,
+     "blk": -8,
+     "p": {
+      "torsoY": -0.35,
+      "torsoX": 0.15,
+      "rsx": -0.1,
+      "rsy": 0.8,
+      "rsz": -1.35,
+      "re": -1.45
+     },
+     "w": {
+      "torsoY": 0.7,
+      "torsoX": 0.2,
+      "rsx": -0.5,
+      "rsy": 0,
+      "rsz": -0.7,
+      "re": -1.7
+     }
+    },
+    "df1": {
+     "n": "Liver Shot",
+     "s": 13,
+     "a": 2,
+     "r": 16,
+     "d": 11,
+     "l": "mid",
+     "hit": 6,
+     "blk": 0,
+     "p": {
+      "torsoY": 0.35,
+      "torsoX": 0.45,
+      "torsoZ": 0.3,
+      "hipY": -0.2,
+      "lsx": -0.6,
+      "lsy": -0.75,
+      "lsz": 1.05,
+      "le": -1.4,
+      "lhx": -0.75,
+      "lk": 1,
+      "rk": 0.85
+     }
+    },
+    "df2": {
+     "n": "Corkscrew Uppercut",
+     "s": 14,
+     "a": 3,
+     "r": 20,
+     "d": 15,
+     "l": "mid",
+     "launch": 1,
+     "blk": -13,
+     "p": {
+      "hipY": 0.02,
+      "torsoX": -0.12,
+      "torsoY": 0.6,
+      "torsoZ": -0.12,
+      "rsx": -0.8,
+      "rsy": 0,
+      "rsz": 0.22,
+      "re": -2,
+      "lhx": -0.2,
+      "lk": 0.15,
+      "rhx": 0.2,
+      "rk": 0.1,
+      "headX": -0.15
+     },
+     "w": {
+      "hipY": -0.26,
+      "torsoX": 0.45,
+      "torsoY": 0.15,
+      "rsx": -0.15,
+      "rsy": 0,
+      "rsz": -0.1,
+      "re": -1.3,
+      "lhx": -0.8,
+      "lk": 1.15,
+      "rhx": -0.1,
+      "rk": 0.95
+     }
+    },
+    "b2": {
+     "n": "Check Hook",
+     "s": 14,
+     "a": 3,
+     "r": 18,
+     "d": 13,
+     "l": "high",
+     "hit": 4,
+     "blk": -1,
+     "chl": 1,
+     "bk": 0.02,
+     "p": {
+      "torsoY": -0.35,
+      "torsoX": 0.15,
+      "rsx": -0.1,
+      "rsy": 0.8,
+      "rsz": -1.35,
+      "re": -1.45
+     },
+     "w": {
+      "torsoY": 0.7,
+      "torsoX": 0.2,
+      "rsx": -0.5,
+      "rsy": 0,
+      "rsz": -0.7,
+      "re": -1.7
+     }
+    },
+    "f2": {
+     "n": "Overhand Bomb",
+     "s": 17,
+     "a": 3,
+     "r": 22,
+     "d": 20,
+     "l": "high",
+     "kd": 1,
+     "blk": -9,
+     "p": {
+      "torsoX": 0.55,
+      "torsoY": 0.6,
+      "torsoZ": -0.25,
+      "hipY": -0.12,
+      "rsx": -2.15,
+      "rsy": 0,
+      "rsz": -0.35,
+      "re": -0.45,
+      "lhx": -0.85,
+      "lk": 0.7,
+      "rhx": 0.35,
+      "rk": 0.2
+     },
+     "w": {
+      "rsx": 0.4,
+      "rsy": 0,
+      "rsz": -0.2,
+      "re": -1.3,
+      "torsoY": -0.6,
+      "torsoX": 0
+     }
+    },
+    "d3": {
+     "n": "Stomp Low",
+     "s": 17,
+     "a": 3,
+     "r": 20,
+     "d": 10,
+     "l": "low",
+     "hit": 2,
+     "blk": -12,
+     "low": 1,
+     "p": {
+      "hipY": -0.3,
+      "torsoX": 0.25,
+      "hipYaw": 0,
+      "lhx": -1.05,
+      "lk": 0.05,
+      "lhz": 0.18,
+      "rhx": -0.75,
+      "rk": 1.9,
+      "rhz": -0.12
+     }
+    },
+    "d2": {
+     "n": "Dig Uppercut",
+     "s": 15,
+     "a": 3,
+     "r": 18,
+     "d": 12,
+     "l": "mid",
+     "hit": 6,
+     "blk": -6,
+     "low": 1,
+     "p": {
+      "hipY": 0.02,
+      "torsoX": -0.12,
+      "torsoY": 0.6,
+      "torsoZ": -0.12,
+      "rsx": -0.8,
+      "rsy": 0,
+      "rsz": 0.22,
+      "re": -2,
+      "lhx": -0.2,
+      "lk": 0.15,
+      "rhx": 0.2,
+      "rk": 0.1,
+      "headX": -0.15
+     },
+     "w": {
+      "hipY": -0.26,
+      "torsoX": 0.45,
+      "torsoY": 0.15,
+      "rsx": -0.15,
+      "rsy": 0,
+      "rsz": -0.1,
+      "re": -1.3,
+      "lhx": -0.8,
+      "lk": 1.15,
+      "rhx": -0.1,
+      "rk": 0.95
+     }
+    },
+    "b3": {
+     "n": "Sway Back",
+     "trans": 1,
+     "r": 8,
+     "st": "SWY",
+     "low": 1,
+     "keys": [
+      [
+       6,
+       {
+        "torsoX": -0.55,
+        "torsoZ": 0.15,
+        "hipY": -0.08,
+        "headX": 0.3,
+        "lhx": -0.6,
+        "lk": 0.75,
+        "rhx": 0.35,
+        "rk": 0.5
+       }
+      ]
+     ]
+    },
+    "SWY:1": {
+     "n": "Sway Jab",
+     "s": 10,
+     "a": 2,
+     "r": 14,
+     "d": 7,
+     "l": "high",
+     "hit": 6,
+     "blk": 2,
+     "p": {
+      "torsoY": -0.65,
+      "torsoX": 0.15,
+      "lsx": -1.55,
+      "lsy": 0,
+      "lsz": -0.14,
+      "le": -0.05
+     }
+    },
+    "SWY:2": {
+     "n": "Sway Uppercut",
+     "s": 13,
+     "a": 3,
+     "r": 20,
+     "d": 15,
+     "l": "mid",
+     "launch": 1,
+     "blk": -12,
+     "p": {
+      "hipY": 0.02,
+      "torsoX": -0.12,
+      "torsoY": 0.6,
+      "torsoZ": -0.12,
+      "rsx": -0.8,
+      "rsy": 0,
+      "rsz": 0.22,
+      "re": -2,
+      "lhx": -0.2,
+      "lk": 0.15,
+      "rhx": 0.2,
+      "rk": 0.1,
+      "headX": -0.15
+     }
+    },
+    "SWY:4": {
+     "n": "Sway Body Blow",
+     "s": 13,
+     "a": 3,
+     "r": 18,
+     "d": 13,
+     "l": "mid",
+     "hit": 6,
+     "blk": -4,
+     "p": {
+      "torsoY": -0.35,
+      "torsoX": 0.45,
+      "torsoZ": -0.3,
+      "hipY": -0.2,
+      "rsx": -0.6,
+      "rsy": 0.75,
+      "rsz": -1.05,
+      "re": -1.4,
+      "lhx": -0.75,
+      "lk": 1,
+      "rk": 0.85
+     }
+    },
+    "ws2": {
+     "n": "Rising Upper",
+     "s": 13,
+     "a": 3,
+     "r": 20,
+     "d": 15,
+     "l": "mid",
+     "launch": 1,
+     "blk": -12,
+     "p": {
+      "hipY": 0.02,
+      "torsoX": -0.12,
+      "torsoY": 0.6,
+      "torsoZ": -0.12,
+      "rsx": -0.8,
+      "rsy": 0,
+      "rsz": 0.22,
+      "re": -2,
+      "lhx": -0.2,
+      "lk": 0.15,
+      "rhx": 0.2,
+      "rk": 0.1,
+      "headX": -0.15
+     }
+    },
+    "ff2": {
+     "n": "Bolo Bomb",
+     "sig": 1,
+     "s": 17,
+     "a": 3,
+     "r": 22,
+     "d": 24,
+     "l": "mid",
+     "kd": 1,
+     "armor": 1,
+     "blk": -9,
+     "mv": 0.04,
+     "p": {
+      "hipY": 0.02,
+      "torsoX": -0.12,
+      "torsoY": 0.6,
+      "torsoZ": -0.12,
+      "rsx": -0.8,
+      "rsy": 0,
+      "rsz": 0.22,
+      "re": -2,
+      "lhx": -0.2,
+      "lk": 0.15,
+      "rhx": 0.2,
+      "rk": 0.1,
+      "headX": -0.15
+     },
+     "w": {
+      "rsx": 0.9,
+      "rsy": 0,
+      "rsz": -0.5,
+      "re": -0.3,
+      "torsoY": -0.75,
+      "hipY": -0.1
+     }
+    }
+   }
+  },
+  {
+   "id": "lio",
+   "name": "LIO FERRAZ",
+   "title": "Roda Rebel",
+   "origin": "Salvador, Bahia",
+   "style": "Capoeira — spinning kicks, handstand stance, evasive",
+   "diff": 3,
+   "scale": 1,
+   "speed": 1.08,
+   "power": 0.98,
+   "hp": 170,
+   "quote": "Fighting is just dancing with someone who forgot the rhythm.",
+   "look": {
+    "skin": 11565136,
+    "hair": 2759184,
+    "accent": 4054148,
+    "hairStyle": "locs",
+    "top": {
+     "type": "shirtless",
+     "color": 11565136
+    },
+    "bottom": {
+     "type": "pants",
+     "color": 15790320
+    },
+    "gloves": {
+     "type": "none"
+    },
+    "feet": {
+     "type": "bare"
+    },
+    "body": {
+     "w": 1,
+     "arm": 0.95,
+     "leg": 1
+    },
+    "extras": [
+     "belt",
+     "sash"
+    ]
+   },
+   "guard": {
+    "hipY": -0.2,
+    "torsoX": 0.3,
+    "torsoY": -0.3,
+    "lsx": -1.1,
+    "lsz": 0.2,
+    "le": -1.9,
+    "rsx": 0.3,
+    "rsz": -0.5,
+    "re": -0.4,
+    "lhx": -0.8,
+    "lk": 1.1,
+    "lhz": 0.2,
+    "rhx": 0.5,
+    "rk": 0.7,
+    "rhz": -0.2
+   },
+   "win": {
+    "hipY": 0.26,
+    "lift": 0,
+    "rootRx": 3.08,
+    "rootRz": 0,
+    "yaw": 0,
+    "hipYaw": 0,
+    "torsoX": 0,
+    "torsoY": 0,
+    "torsoZ": 0,
+    "headX": -0.7,
+    "headY": 0,
+    "lsx": -3.05,
+    "lsy": 0,
+    "lsz": 0.3,
+    "le": 0,
+    "rsx": -3.05,
+    "rsy": 0,
+    "rsz": -0.3,
+    "re": 0,
+    "lhx": -0.15,
+    "lhz": 0.6,
+    "lk": 0.5,
+    "rhx": 0.25,
+    "rhz": -0.6,
+    "rk": 0.5
+   },
+   "throwName": "Vingativa",
+   "surge": {
+    "n": "CARNIVAL STORM",
+    "p": {
+     "yaw": -4.3,
+     "torsoX": 0.55,
+     "hipY": -0.1,
+     "rhx": -0.55,
+     "rhz": -1.65,
+     "rk": 0,
+     "lhx": -0.5,
+     "lk": 0.8,
+     "lsx": -1.2,
+     "lsz": 0.3,
+     "rsx": -0.2,
+     "rsz": -0.5
+    },
+    "w": {
+     "yaw": -2,
+     "torsoX": 0.5,
+     "hipY": -0.15,
+     "rhx": -0.4,
+     "rk": 0.8
+    }
+   },
+   "stances": {
+    "HND": {
+     "name": "Handstand",
+     "p": {
+      "hipY": 0.26,
+      "lift": 0,
+      "rootRx": 3.08,
+      "rootRz": 0,
+      "yaw": 0,
+      "hipYaw": 0,
+      "torsoX": 0,
+      "torsoY": 0,
+      "torsoZ": 0,
+      "headX": -0.7,
+      "headY": 0,
+      "lsx": -3.05,
+      "lsy": 0,
+      "lsz": 0.3,
+      "le": 0,
+      "rsx": -3.05,
+      "rsy": 0,
+      "rsz": -0.3,
+      "re": 0,
+      "lhx": -0.15,
+      "lhz": 0.6,
+      "lk": 0.5,
+      "rhx": 0.25,
+      "rhz": -0.6,
+      "rk": 0.5
+     },
+     "dur": 50,
+     "low": 1
+    }
+   },
+   "moves": {
+    "1": {
+     "n": "Feint Jab",
+     "s": 11,
+     "a": 2,
+     "r": 14,
+     "d": 5,
+     "l": "high",
+     "hit": 7,
+     "blk": 1,
+     "p": {
+      "torsoY": -0.65,
+      "torsoX": 0.15,
+      "lsx": -1.55,
+      "lsy": 0,
+      "lsz": -0.14,
+      "le": -0.05
+     },
+     "w": {
+      "torsoY": -0.35,
+      "lsx": -1,
+      "lsy": 0,
+      "le": -1.6
+     },
+     "next": {
+      "3": "1,3"
+     }
+    },
+    "2": {
+     "n": "Palm Push",
+     "s": 14,
+     "a": 2,
+     "r": 18,
+     "d": 12,
+     "l": "mid",
+     "hit": 8,
+     "blk": -2,
+     "push": 0.18,
+     "p": {
+      "torsoY": 0.6,
+      "torsoX": 0.32,
+      "hipY": -0.12,
+      "rsx": -1.5,
+      "rsy": 0,
+      "rsz": 0.14,
+      "re": -0.1,
+      "lsx": -0.7,
+      "le": -2,
+      "lhx": -0.75,
+      "lk": 0.75,
+      "rhx": 0.35,
+      "rk": 0.15
+     },
+     "w": {
+      "torsoY": -0.4,
+      "rsx": -0.7,
+      "rsy": 0,
+      "re": -2.2
+     }
+    },
+    "3": {
+     "n": "Martelo",
+     "s": 15,
+     "a": 3,
+     "r": 20,
+     "d": 15,
+     "l": "high",
+     "hit": 7,
+     "blk": -7,
+     "p": {
+      "yaw": -0.95,
+      "hipYaw": -0.25,
+      "lhx": -0.35,
+      "lhz": 1.8,
+      "lk": 0.08,
+      "torsoZ": 0.6,
+      "torsoX": -0.1,
+      "rhx": 0,
+      "rhz": -0.1,
+      "rk": 0.15,
+      "rsx": -0.4,
+      "rsz": -0.55,
+      "re": -1.4
+     },
+     "w": {
+      "yaw": -0.35,
+      "lhx": -1,
+      "lhz": 0.55,
+      "lk": 1.7,
+      "rhx": -0.1,
+      "rk": 0.2
+     }
+    },
+    "4": {
+     "n": "Meia Lua",
+     "s": 18,
+     "a": 4,
+     "r": 22,
+     "d": 18,
+     "l": "high",
+     "kd": 1,
+     "hom": 1,
+     "blk": -6,
+     "rg": 1.25,
+     "p": {
+      "yaw": -4.3,
+      "torsoX": 0.55,
+      "hipY": -0.1,
+      "rhx": -0.55,
+      "rhz": -1.65,
+      "rk": 0,
+      "lhx": -0.5,
+      "lk": 0.8,
+      "lsx": -1.2,
+      "lsz": 0.3,
+      "rsx": -0.2,
+      "rsz": -0.5
+     },
+     "w": {
+      "yaw": -2,
+      "torsoX": 0.5,
+      "hipY": -0.15,
+      "rhx": -0.4,
+      "rk": 0.8
+     }
+    },
+    "1,3": {
+     "n": "Feint Martelo",
+     "s": 15,
+     "a": 3,
+     "r": 20,
+     "d": 14,
+     "l": "high",
+     "hit": 6,
+     "blk": -8,
+     "p": {
+      "yaw": -0.95,
+      "hipYaw": -0.25,
+      "lhx": -0.35,
+      "lhz": 1.8,
+      "lk": 0.08,
+      "torsoZ": 0.6,
+      "torsoX": -0.1,
+      "rhx": 0,
+      "rhz": -0.1,
+      "rk": 0.15,
+      "rsx": -0.4,
+      "rsz": -0.55,
+      "re": -1.4
+     },
+     "w": {
+      "yaw": -0.35,
+      "lhx": -1,
+      "lhz": 0.55,
+      "lk": 1.7,
+      "rhx": -0.1,
+      "rk": 0.2
+     }
+    },
+    "f4": {
+     "n": "Queixada",
+     "s": 16,
+     "a": 3,
+     "r": 21,
+     "d": 17,
+     "l": "high",
+     "kd": 1,
+     "blk": -8,
+     "p": {
+      "yaw": 0.95,
+      "hipYaw": 0.25,
+      "rhx": -0.35,
+      "rhz": -1.8,
+      "rk": 0.08,
+      "torsoZ": -0.6,
+      "torsoX": -0.1,
+      "lhx": 0,
+      "lhz": 0.1,
+      "lk": 0.15,
+      "lsx": -0.4,
+      "lsz": 0.55,
+      "le": -1.4
+     },
+     "w": {
+      "yaw": 0.35,
+      "rhx": -1,
+      "rhz": -0.55,
+      "rk": 1.7,
+      "lhx": -0.1,
+      "lk": 0.2
+     }
+    },
+    "df3": {
+     "n": "Bênção",
+     "s": 14,
+     "a": 3,
+     "r": 18,
+     "d": 13,
+     "l": "mid",
+     "hit": 8,
+     "blk": -4,
+     "push": 0.2,
+     "p": {
+      "lhx": -1.6,
+      "lhz": 0,
+      "lk": 0.02,
+      "torsoX": -0.4,
+      "rhx": 0.1,
+      "rk": 0.25,
+      "hipY": -0.03
+     },
+     "w": {
+      "lhx": -1.45,
+      "lhz": 0,
+      "lk": 1.9,
+      "torsoX": -0.05
+     }
+    },
+    "df2": {
+     "n": "Rising Palm",
+     "s": 15,
+     "a": 3,
+     "r": 20,
+     "d": 13,
+     "l": "mid",
+     "launch": 1,
+     "blk": -13,
+     "p": {
+      "torsoX": -0.25,
+      "torsoY": 0,
+      "hipY": 0.03,
+      "lsx": -2.4,
+      "rsx": -2.4,
+      "lsy": 0,
+      "rsy": 0,
+      "lsz": -0.05,
+      "rsz": 0.05,
+      "le": -0.3,
+      "re": -0.3,
+      "lhx": -0.2,
+      "lk": 0.15,
+      "rhx": 0.1,
+      "rk": 0.1
+     },
+     "w": {
+      "torsoX": -0.1,
+      "torsoY": 0,
+      "lsx": -0.5,
+      "rsx": -0.5,
+      "lsy": 0,
+      "rsy": 0,
+      "le": -1.8,
+      "re": -1.8,
+      "lsz": 0.35,
+      "rsz": -0.35
+     }
+    },
+    "b4": {
+     "n": "Compasso",
+     "s": 20,
+     "a": 3,
+     "r": 22,
+     "d": 22,
+     "l": "mid",
+     "kd": 1,
+     "hom": 1,
+     "low": 1,
+     "blk": -10,
+     "rg": 1.25,
+     "p": {
+      "yaw": -4.4,
+      "torsoX": 1.3,
+      "hipY": -0.3,
+      "lsx": -1.65,
+      "rsx": -1.65,
+      "lsy": 0,
+      "rsy": 0,
+      "lsz": 0,
+      "rsz": 0,
+      "le": 0,
+      "re": 0,
+      "rhx": -0.2,
+      "rhz": -1.75,
+      "rk": 0,
+      "lhx": -0.95,
+      "lk": 1.35
+     },
+     "w": {
+      "yaw": -1.8,
+      "torsoX": 1,
+      "hipY": -0.3,
+      "lsx": -1.5,
+      "rsx": -1.5,
+      "lsy": 0,
+      "rsy": 0,
+      "le": 0,
+      "re": 0
+     }
+    },
+    "uf4": {
+     "n": "Aú Kick",
+     "s": 18,
+     "a": 4,
+     "r": 24,
+     "d": 16,
+     "l": "mid",
+     "launch": 1,
+     "jump": 1,
+     "blk": -14,
+     "p": {
+      "rootRz": 1.35,
+      "lift": 0.2,
+      "hipY": 0.1,
+      "torsoX": 0,
+      "torsoY": 0,
+      "lsx": -0.2,
+      "lsz": 2.6,
+      "le": 0,
+      "rsx": -0.2,
+      "rsz": -0.5,
+      "re": -0.3,
+      "lhx": 0,
+      "lhz": 0.9,
+      "lk": 0.1,
+      "rhx": -0.3,
+      "rhz": -1.6,
+      "rk": 0
+     },
+     "w": {
+      "rootRz": 0.5,
+      "hipY": -0.15,
+      "lsz": 1.6,
+      "lsx": -0.3,
+      "le": -0.2,
+      "lhz": 0.4,
+      "lk": 0.6
+     }
+    },
+    "d3": {
+     "n": "Rasteira",
+     "s": 20,
+     "a": 4,
+     "r": 28,
+     "d": 15,
+     "l": "low",
+     "kd": 1,
+     "blk": -20,
+     "low": 1,
+     "rg": 1.25,
+     "p": {
+      "hipY": -0.55,
+      "yaw": -2.3,
+      "hipYaw": 0,
+      "rhx": -1.45,
+      "rhz": -0.6,
+      "rk": 0,
+      "lhx": -1.3,
+      "lk": 2.3,
+      "lhz": 0.2,
+      "torsoX": 0.7,
+      "torsoY": 0.3,
+      "lsx": -0.9,
+      "lsz": 0.5,
+      "le": -0.3,
+      "rsx": -0.3,
+      "re": -0.6
+     },
+     "w": {
+      "hipY": -0.45,
+      "torsoX": 0.5,
+      "hipYaw": 0,
+      "lhx": -1.05,
+      "lk": 1.9,
+      "lhz": 0.12,
+      "rhx": -0.75,
+      "rk": 1.9,
+      "rhz": -0.12,
+      "yaw": -0.6
+     }
+    },
+    "d4": {
+     "n": "Ground Spin Kick",
+     "s": 16,
+     "a": 3,
+     "r": 19,
+     "d": 9,
+     "l": "low",
+     "hit": 3,
+     "blk": -12,
+     "low": 1,
+     "p": {
+      "hipY": -0.3,
+      "torsoX": 0.25,
+      "hipYaw": 0,
+      "lhx": -1.05,
+      "lk": 0.05,
+      "lhz": 0.18,
+      "rhx": -0.75,
+      "rk": 1.9,
+      "rhz": -0.12
+     }
+    },
+    "b3": {
+     "n": "Bananeira",
+     "trans": 1,
+     "r": 16,
+     "st": "HND",
+     "low": 1,
+     "keys": [
+      [
+       12,
+       {
+        "hipY": 0.26,
+        "lift": 0,
+        "rootRx": 3.08,
+        "rootRz": 0,
+        "yaw": 0,
+        "hipYaw": 0,
+        "torsoX": 0,
+        "torsoY": 0,
+        "torsoZ": 0,
+        "headX": -0.7,
+        "headY": 0,
+        "lsx": -3.05,
+        "lsy": 0,
+        "lsz": 0.3,
+        "le": 0,
+        "rsx": -3.05,
+        "rsy": 0,
+        "rsz": -0.3,
+        "re": 0,
+        "lhx": -0.15,
+        "lhz": 0.6,
+        "lk": 0.5,
+        "rhx": 0.25,
+        "rhz": -0.6,
+        "rk": 0.5
+       }
+      ]
+     ]
+    },
+    "HND:3": {
+     "n": "Tesoura Drop",
+     "s": 14,
+     "a": 3,
+     "r": 22,
+     "d": 18,
+     "l": "mid",
+     "kd": 1,
+     "blk": -12,
+     "low": 1,
+     "p": {
+      "hipY": 0.26,
+      "lift": 0,
+      "rootRx": 3.08,
+      "rootRz": 0,
+      "yaw": 0,
+      "hipYaw": 0,
+      "torsoX": 0,
+      "torsoY": 0,
+      "torsoZ": 0,
+      "headX": -0.7,
+      "headY": 0,
+      "lsx": -3.05,
+      "lsy": 0,
+      "lsz": 0.3,
+      "le": 0,
+      "rsx": -3.05,
+      "rsy": 0,
+      "rsz": -0.3,
+      "re": 0,
+      "lhx": -1.3,
+      "lhz": 0.2,
+      "lk": 0.1,
+      "rhx": 1,
+      "rhz": -0.2,
+      "rk": 0.1
+     }
+    },
+    "HND:4": {
+     "n": "Heel Bomb",
+     "s": 16,
+     "a": 3,
+     "r": 22,
+     "d": 16,
+     "l": "mid",
+     "launch": 1,
+     "blk": -14,
+     "low": 1,
+     "p": {
+      "hipY": 0.26,
+      "lift": 0,
+      "rootRx": 3.08,
+      "rootRz": 0,
+      "yaw": 0,
+      "hipYaw": 0,
+      "torsoX": 0,
+      "torsoY": 0,
+      "torsoZ": 0,
+      "headX": -0.7,
+      "headY": 0,
+      "lsx": -3.05,
+      "lsy": 0,
+      "lsz": 0.3,
+      "le": 0,
+      "rsx": -3.05,
+      "rsy": 0,
+      "rsz": -0.3,
+      "re": 0,
+      "lhx": -1.6,
+      "lhz": 0.1,
+      "lk": 0,
+      "rhx": -1.6,
+      "rhz": -0.1,
+      "rk": 0
+     }
+    },
+    "ws4": {
+     "n": "Rising Armada",
+     "s": 14,
+     "a": 3,
+     "r": 20,
+     "d": 15,
+     "l": "mid",
+     "hit": 6,
+     "blk": -6,
+     "p": {
+      "yaw": 0.9,
+      "hipYaw": 0.25,
+      "rhx": -0.4,
+      "rhz": -1.35,
+      "rk": 0.08,
+      "torsoZ": -0.4,
+      "torsoX": 0,
+      "lhx": 0,
+      "lhz": 0.1,
+      "lk": 0.15,
+      "lsx": -0.5,
+      "lsz": 0.45,
+      "le": -1.5
+     },
+     "w": {
+      "yaw": 0.35,
+      "rhx": -1,
+      "rhz": -0.55,
+      "rk": 1.7,
+      "lhx": -0.1,
+      "lk": 0.2
+     }
+    },
+    "ff3": {
+     "n": "Martelo Voador",
+     "sig": 1,
+     "s": 16,
+     "a": 3,
+     "r": 22,
+     "d": 18,
+     "l": "mid",
+     "launch": 1,
+     "jump": 1,
+     "mv": 0.05,
+     "blk": -11,
+     "p": {
+      "lift": 0.55,
+      "rhx": -1.85,
+      "rhz": 0,
+      "rk": 0.08,
+      "lhx": -0.7,
+      "lk": 1.9,
+      "torsoX": -0.4,
+      "lsx": -0.6,
+      "rsx": 0.3,
+      "re": -0.6
+     },
+     "w": {
+      "lift": 0.12,
+      "hipY": -0.15,
+      "lhx": -1,
+      "lk": 1.6,
+      "rhx": -0.4,
+      "rk": 1.4,
+      "torsoX": 0.2
+     }
+    }
+   }
+  },
+  {
+   "id": "tao",
+   "name": "TAO REN",
+   "title": "The Last Iron Monk",
+   "origin": "Wudang Foothills",
+   "style": "Kung Fu — chain punches, palms, iron-body charge",
+   "diff": 2,
+   "scale": 0.97,
+   "speed": 1.05,
+   "power": 0.97,
+   "hp": 168,
+   "quote": "You struck the wind. The wind does not bruise.",
+   "look": {
+    "skin": 14727306,
+    "hair": 12105912,
+    "accent": 13936192,
+    "hairStyle": "topknot",
+    "top": {
+     "type": "gi",
+     "color": 8002074,
+     "color2": 13936192
+    },
+    "beltColor": 13936192,
+    "bottom": {
+     "type": "pants",
+     "color": 1315860
+    },
+    "gloves": {
+     "type": "none"
+    },
+    "feet": {
+     "type": "shoes",
+     "color": 1315860
+    },
+    "body": {
+     "w": 0.95
+    },
+    "extras": [
+     "longbeard",
+     "mustache"
+    ]
+   },
+   "guard": {
+    "hipY": -0.25,
+    "torsoX": 0.05,
+    "torsoY": -0.4,
+    "lsx": -1.3,
+    "lsz": 0,
+    "le": -0.6,
+    "rsx": -0.7,
+    "rsz": -0.2,
+    "re": -1.9,
+    "lhx": -0.6,
+    "lhz": 0.45,
+    "lk": 1,
+    "rhx": 0.1,
+    "rhz": -0.45,
+    "rk": 0.9
+   },
+   "win": {
+    "lsx": -1.3,
+    "lsz": -0.35,
+    "le": -1.9,
+    "rsx": -1.3,
+    "rsz": 0.35,
+    "re": -1.9,
+    "torsoX": 0.5,
+    "torsoY": 0,
+    "headX": 0.3,
+    "hipY": -0.02,
+    "lhx": 0,
+    "lk": 0.05,
+    "rhx": 0,
+    "rk": 0.05
+   },
+   "throwName": "Joint-Lock Spin",
+   "surge": {
+    "n": "NINE DRAGON PALM",
+    "p": {
+     "torsoX": 0.38,
+     "torsoY": 0,
+     "hipY": -0.16,
+     "lsx": -1.45,
+     "lsy": 0,
+     "lsz": -0.15,
+     "le": -0.1,
+     "rsx": -1.45,
+     "rsy": 0,
+     "rsz": 0.15,
+     "re": -0.1,
+     "lhx": -0.85,
+     "lk": 0.85,
+     "rhx": 0.35,
+     "rk": 0.25
+    },
+    "w": {
+     "torsoX": -0.1,
+     "torsoY": 0,
+     "lsx": -0.5,
+     "rsx": -0.5,
+     "lsy": 0,
+     "rsy": 0,
+     "le": -1.8,
+     "re": -1.8,
+     "lsz": 0.35,
+     "rsz": -0.35
+    }
+   },
+   "moves": {
+    "1": {
+     "n": "Mantis Jab",
+     "s": 10,
+     "a": 2,
+     "r": 14,
+     "d": 5,
+     "l": "high",
+     "hit": 8,
+     "blk": 1,
+     "p": {
+      "torsoY": -0.65,
+      "torsoX": 0.15,
+      "lsx": -1.55,
+      "lsy": 0,
+      "lsz": -0.14,
+      "le": -0.05
+     },
+     "w": {
+      "torsoY": -0.35,
+      "lsx": -1,
+      "lsy": 0,
+      "le": -1.6
+     },
+     "next": {
+      "1": "1,1"
+     }
+    },
+    "2": {
+     "n": "Tiger Palm",
+     "s": 14,
+     "a": 3,
+     "r": 18,
+     "d": 14,
+     "l": "mid",
+     "hit": 8,
+     "blk": -2,
+     "push": 0.18,
+     "p": {
+      "torsoY": 0.6,
+      "torsoX": 0.32,
+      "hipY": -0.12,
+      "rsx": -1.5,
+      "rsy": 0,
+      "rsz": 0.14,
+      "re": -0.1,
+      "lsx": -0.7,
+      "le": -2,
+      "lhx": -0.75,
+      "lk": 0.75,
+      "rhx": 0.35,
+      "rk": 0.15
+     },
+     "w": {
+      "torsoY": -0.4,
+      "rsx": -0.7,
+      "rsy": 0,
+      "re": -2.2
+     }
+    },
+    "3": {
+     "n": "Crane Kick",
+     "s": 14,
+     "a": 3,
+     "r": 18,
+     "d": 12,
+     "l": "mid",
+     "hit": 5,
+     "blk": -5,
+     "p": {
+      "lhx": -1.5,
+      "lhz": 0,
+      "lk": 0.1,
+      "torsoX": -0.15,
+      "rhx": 0.05,
+      "rk": 0.2
+     },
+     "w": {
+      "lhx": -1.3,
+      "lhz": 0,
+      "lk": 1.7,
+      "torsoX": 0,
+      "rk": 0.35
+     }
+    },
+    "4": {
+     "n": "Phoenix Kick",
+     "s": 16,
+     "a": 3,
+     "r": 20,
+     "d": 16,
+     "l": "high",
+     "hit": 8,
+     "blk": -6,
+     "p": {
+      "yaw": 0.95,
+      "hipYaw": 0.25,
+      "rhx": -0.35,
+      "rhz": -1.8,
+      "rk": 0.08,
+      "torsoZ": -0.6,
+      "torsoX": -0.1,
+      "lhx": 0,
+      "lhz": 0.1,
+      "lk": 0.15,
+      "lsx": -0.4,
+      "lsz": 0.55,
+      "le": -1.4
+     },
+     "w": {
+      "yaw": 0.35,
+      "rhx": -1,
+      "rhz": -0.55,
+      "rk": 1.7,
+      "lhx": -0.1,
+      "lk": 0.2
+     }
+    },
+    "1,1": {
+     "n": "Chain Punch",
+     "s": 9,
+     "a": 2,
+     "r": 14,
+     "d": 5,
+     "l": "high",
+     "hit": 7,
+     "blk": 1,
+     "p": {
+      "torsoY": 0.6,
+      "torsoX": 0.2,
+      "rsx": -1.55,
+      "rsy": 0,
+      "rsz": 0.14,
+      "re": -0.04,
+      "lsx": -0.8,
+      "lsy": 0,
+      "lsz": 0.1,
+      "le": -2.1,
+      "rhx": 0.35,
+      "rk": 0.1,
+      "lhx": -0.5,
+      "lk": 0.5
+     },
+     "next": {
+      "1": "1,1,1"
+     }
+    },
+    "1,1,1": {
+     "n": "Chain Finisher",
+     "s": 11,
+     "a": 2,
+     "r": 18,
+     "d": 9,
+     "l": "mid",
+     "hit": 4,
+     "blk": -4,
+     "p": {
+      "torsoY": -0.6,
+      "torsoX": 0.42,
+      "hipY": -0.16,
+      "lsx": -1.25,
+      "lsy": 0,
+      "lsz": -0.14,
+      "le": -0.05,
+      "lhx": -0.75,
+      "lk": 0.95,
+      "rhx": 0.1,
+      "rk": 0.7
+     }
+    },
+    "df1": {
+     "n": "Snake Strike",
+     "s": 12,
+     "a": 2,
+     "r": 15,
+     "d": 9,
+     "l": "mid",
+     "hit": 6,
+     "blk": 2,
+     "p": {
+      "torsoY": -0.6,
+      "torsoX": 0.42,
+      "hipY": -0.16,
+      "lsx": -1.25,
+      "lsy": 0,
+      "lsz": -0.14,
+      "le": -0.05,
+      "lhx": -0.75,
+      "lk": 0.95,
+      "rhx": 0.1,
+      "rk": 0.7
+     }
+    },
+    "df2": {
+     "n": "Dragon Palm",
+     "s": 15,
+     "a": 3,
+     "r": 20,
+     "d": 14,
+     "l": "mid",
+     "launch": 1,
+     "blk": -13,
+     "p": {
+      "torsoX": -0.25,
+      "torsoY": 0,
+      "hipY": 0.03,
+      "lsx": -2.4,
+      "rsx": -2.4,
+      "lsy": 0,
+      "rsy": 0,
+      "lsz": -0.05,
+      "rsz": 0.05,
+      "le": -0.3,
+      "re": -0.3,
+      "lhx": -0.2,
+      "lk": 0.15,
+      "rhx": 0.1,
+      "rk": 0.1
+     },
+     "w": {
+      "torsoX": -0.1,
+      "torsoY": 0,
+      "lsx": -0.5,
+      "rsx": -0.5,
+      "lsy": 0,
+      "rsy": 0,
+      "le": -1.8,
+      "re": -1.8,
+      "lsz": 0.35,
+      "rsz": -0.35
+     }
+    },
+    "d1": {
+     "n": "Low Mantis",
+     "s": 11,
+     "a": 2,
+     "r": 15,
+     "d": 6,
+     "l": "low",
+     "hit": 4,
+     "blk": -6,
+     "low": 1,
+     "p": {
+      "hipY": -0.37,
+      "torsoX": 0.35,
+      "hipYaw": 0,
+      "lhx": -1.05,
+      "lk": 1.9,
+      "lhz": 0.12,
+      "rhx": -0.75,
+      "rk": 1.9,
+      "rhz": -0.12,
+      "lsx": -1.45,
+      "lsy": 0,
+      "lsz": -0.14,
+      "le": -0.1,
+      "torsoY": -0.5
+     }
+    },
+    "d3": {
+     "n": "Iron Broom",
+     "s": 21,
+     "a": 4,
+     "r": 28,
+     "d": 16,
+     "l": "low",
+     "kd": 1,
+     "blk": -21,
+     "low": 1,
+     "rg": 1.25,
+     "p": {
+      "hipY": -0.55,
+      "yaw": -2.3,
+      "hipYaw": 0,
+      "rhx": -1.45,
+      "rhz": -0.6,
+      "rk": 0,
+      "lhx": -1.3,
+      "lk": 2.3,
+      "lhz": 0.2,
+      "torsoX": 0.7,
+      "torsoY": 0.3,
+      "lsx": -0.9,
+      "lsz": 0.5,
+      "le": -0.3,
+      "rsx": -0.3,
+      "re": -0.6
+     },
+     "w": {
+      "hipY": -0.45,
+      "torsoX": 0.5,
+      "hipYaw": 0,
+      "lhx": -1.05,
+      "lk": 1.9,
+      "lhz": 0.12,
+      "rhx": -0.75,
+      "rk": 1.9,
+      "rhz": -0.12,
+      "yaw": -0.6
+     }
+    },
+    "b1": {
+     "n": "Spinning Backfist",
+     "s": 14,
+     "a": 2,
+     "r": 18,
+     "d": 14,
+     "l": "high",
+     "hit": 6,
+     "blk": -3,
+     "hom": 1,
+     "p": {
+      "torsoY": 0.55,
+      "lsx": -0.25,
+      "lsy": -0.25,
+      "lsz": 1.45,
+      "le": -0.15
+     },
+     "w": {
+      "torsoY": -0.6,
+      "lsx": -0.9,
+      "lsy": 0,
+      "lsz": -0.4,
+      "le": -2.3
+     }
+    },
+    "b4": {
+     "n": "Butterfly Kick",
+     "s": 19,
+     "a": 3,
+     "r": 22,
+     "d": 20,
+     "l": "high",
+     "kd": 1,
+     "hom": 1,
+     "jump": 1,
+     "blk": -6,
+     "p": {
+      "yaw": -4.45,
+      "rhx": -0.3,
+      "rhz": -1.7,
+      "rk": 0.05,
+      "torsoZ": -0.5,
+      "lhx": 0,
+      "lk": 0.15,
+      "lift": 0.35
+     },
+     "w": {
+      "yaw": -2.3,
+      "rhx": -0.3,
+      "rk": 0.7,
+      "torsoX": 0.2
+     }
+    },
+    "f12": {
+     "n": "Twin Dragon Palm",
+     "s": 16,
+     "a": 3,
+     "r": 22,
+     "d": 20,
+     "l": "mid",
+     "kd": 1,
+     "blk": -6,
+     "push": 0.2,
+     "p": {
+      "torsoX": 0.38,
+      "torsoY": 0,
+      "hipY": -0.16,
+      "lsx": -1.45,
+      "lsy": 0,
+      "lsz": -0.15,
+      "le": -0.1,
+      "rsx": -1.45,
+      "rsy": 0,
+      "rsz": 0.15,
+      "re": -0.1,
+      "lhx": -0.85,
+      "lk": 0.85,
+      "rhx": 0.35,
+      "rk": 0.25
+     },
+     "w": {
+      "torsoX": -0.1,
+      "torsoY": 0,
+      "lsx": -0.5,
+      "rsx": -0.5,
+      "lsy": 0,
+      "rsy": 0,
+      "le": -1.8,
+      "re": -1.8,
+      "lsz": 0.35,
+      "rsz": -0.35
+     }
+    },
+    "ws1": {
+     "n": "Rising Palms",
+     "s": 12,
+     "a": 2,
+     "r": 16,
+     "d": 12,
+     "l": "mid",
+     "hit": 6,
+     "blk": -3,
+     "p": {
+      "torsoX": 0.38,
+      "torsoY": 0,
+      "hipY": -0.16,
+      "lsx": -1.45,
+      "lsy": 0,
+      "lsz": -0.15,
+      "le": -0.1,
+      "rsx": -1.45,
+      "rsy": 0,
+      "rsz": 0.15,
+      "re": -0.1,
+      "lhx": -0.85,
+      "lk": 0.85,
+      "rhx": 0.35,
+      "rk": 0.25
+     }
+    },
+    "ws2": {
+     "n": "Rising Dragon",
+     "s": 14,
+     "a": 3,
+     "r": 20,
+     "d": 15,
+     "l": "mid",
+     "launch": 1,
+     "blk": -12,
+     "p": {
+      "torsoX": -0.25,
+      "torsoY": 0,
+      "hipY": 0.03,
+      "lsx": -2.4,
+      "rsx": -2.4,
+      "lsy": 0,
+      "rsy": 0,
+      "lsz": -0.05,
+      "rsz": 0.05,
+      "le": -0.3,
+      "re": -0.3,
+      "lhx": -0.2,
+      "lk": 0.15,
+      "rhx": 0.1,
+      "rk": 0.1
+     }
+    },
+    "ff2": {
+     "n": "Iron Mountain",
+     "sig": 1,
+     "s": 18,
+     "a": 3,
+     "r": 22,
+     "d": 24,
+     "l": "mid",
+     "kd": 1,
+     "armor": 1,
+     "blk": -8,
+     "mv": 0.06,
+     "push": 0.25,
+     "p": {
+      "torsoX": 0.5,
+      "torsoY": -1.05,
+      "hipY": -0.15,
+      "lsx": -0.4,
+      "lsy": 0,
+      "lsz": 0.15,
+      "le": -1.4,
+      "rsx": -0.6,
+      "re": -1.8,
+      "lhx": -0.95,
+      "lk": 0.8,
+      "rhx": 0.55,
+      "rk": 0.2
+     }
+    }
+   }
+  },
+  {
+   "id": "kael",
+   "name": "KAEL VARGA",
+   "title": "The Eight-Limbed Storm",
+   "origin": "Lumpinee Circuit",
+   "style": "Muay Thai — elbows, knees, brutal body kicks",
+   "diff": 1,
+   "scale": 1.03,
+   "speed": 1,
+   "power": 1.08,
+   "hp": 175,
+   "quote": "Elbows, knees, shins. Pick which one you want to wake up from.",
+   "look": {
+    "skin": 12884588,
+    "hair": 1709072,
+    "accent": 15087942,
+    "hairStyle": "buzz",
+    "top": {
+     "type": "shirtless",
+     "color": 12884588
+    },
+    "bottom": {
+     "type": "shorts",
+     "color": 1920728
+    },
+    "gloves": {
+     "type": "wraps",
+     "color": 15921906
+    },
+    "feet": {
+     "type": "wraps"
+    },
+    "body": {
+     "w": 1.05,
+     "arm": 1.05,
+     "leg": 1.05
+    },
+    "extras": [
+     "mongkol",
+     "armbands"
+    ]
+   },
+   "guard": {
+    "hipY": -0.02,
+    "torsoX": -0.05,
+    "torsoY": -0.1,
+    "lsx": -1.15,
+    "lsz": 0.25,
+    "le": -2,
+    "rsx": -1,
+    "rsz": -0.25,
+    "re": -2.2,
+    "lhx": -0.2,
+    "lk": 0.2,
+    "rhx": 0.2,
+    "rk": 0.2
+   },
+   "win": {
+    "lsx": -1.2,
+    "lsz": -0.3,
+    "le": -2.2,
+    "rsx": -1.2,
+    "rsz": 0.3,
+    "re": -2.2,
+    "torsoX": 0.35,
+    "torsoY": 0,
+    "headX": 0.3,
+    "hipY": 0,
+    "lhx": 0,
+    "lk": 0.05,
+    "rhx": 0,
+    "rk": 0.05
+   },
+   "throwName": "Plum Clinch Throw",
+   "surge": {
+    "n": "MONSOON BARRAGE",
+    "p": {
+     "lift": 0.5,
+     "rhx": -1.95,
+     "rk": 2.4,
+     "lhx": 0.45,
+     "lk": 1.7,
+     "torsoX": -0.25,
+     "lsx": -1.3,
+     "rsx": -1.3,
+     "lsy": 0,
+     "rsy": 0,
+     "le": -0.8,
+     "re": -0.8
+    },
+    "w": {
+     "lift": 0.15,
+     "rhx": -0.8,
+     "rk": 1.8,
+     "lhx": 0.3,
+     "lk": 1.2,
+     "torsoX": 0.1
+    }
+   },
+   "moves": {
+    "1": {
+     "n": "Jab",
+     "s": 10,
+     "a": 2,
+     "r": 14,
+     "d": 5,
+     "l": "high",
+     "hit": 8,
+     "blk": 1,
+     "p": {
+      "torsoY": -0.65,
+      "torsoX": 0.15,
+      "lsx": -1.55,
+      "lsy": 0,
+      "lsz": -0.14,
+      "le": -0.05
+     },
+     "w": {
+      "torsoY": -0.35,
+      "lsx": -1,
+      "lsy": 0,
+      "le": -1.6
+     },
+     "next": {
+      "2": "1,2"
+     }
+    },
+    "2": {
+     "n": "Spear Elbow",
+     "s": 12,
+     "a": 3,
+     "r": 16,
+     "d": 13,
+     "l": "high",
+     "hit": 9,
+     "blk": -2,
+     "rg": 0.92,
+     "p": {
+      "torsoY": 0.8,
+      "torsoX": 0.15,
+      "rsx": -0.15,
+      "rsy": 0.9,
+      "rsz": -1.45,
+      "re": -2.5
+     },
+     "w": {
+      "torsoY": -0.45,
+      "rsx": -0.3,
+      "rsy": 0,
+      "rsz": -0.9,
+      "re": -2.4
+     }
+    },
+    "3": {
+     "n": "Teep",
+     "s": 13,
+     "a": 3,
+     "r": 18,
+     "d": 12,
+     "l": "mid",
+     "hit": 8,
+     "blk": -2,
+     "push": 0.22,
+     "p": {
+      "lhx": -1.6,
+      "lhz": 0,
+      "lk": 0.02,
+      "torsoX": -0.4,
+      "rhx": 0.1,
+      "rk": 0.25,
+      "hipY": -0.03
+     },
+     "w": {
+      "lhx": -1.45,
+      "lhz": 0,
+      "lk": 1.9,
+      "torsoX": -0.05
+     }
+    },
+    "4": {
+     "n": "Body Roundhouse",
+     "s": 16,
+     "a": 3,
+     "r": 20,
+     "d": 18,
+     "l": "mid",
+     "hit": 7,
+     "blk": -7,
+     "p": {
+      "yaw": 0.9,
+      "hipYaw": 0.25,
+      "rhx": -0.4,
+      "rhz": -1.35,
+      "rk": 0.08,
+      "torsoZ": -0.4,
+      "torsoX": 0,
+      "lhx": 0,
+      "lhz": 0.1,
+      "lk": 0.15,
+      "lsx": -0.5,
+      "lsz": 0.45,
+      "le": -1.5
+     },
+     "w": {
+      "yaw": 0.35,
+      "rhx": -1,
+      "rhz": -0.55,
+      "rk": 1.7,
+      "lhx": -0.1,
+      "lk": 0.2
+     }
+    },
+    "1,2": {
+     "n": "Jab-Cross",
+     "s": 11,
+     "a": 2,
+     "r": 17,
+     "d": 11,
+     "l": "high",
+     "hit": 6,
+     "blk": -3,
+     "p": {
+      "torsoY": 0.6,
+      "torsoX": 0.2,
+      "rsx": -1.55,
+      "rsy": 0,
+      "rsz": 0.14,
+      "re": -0.04,
+      "lsx": -0.8,
+      "lsy": 0,
+      "lsz": 0.1,
+      "le": -2.1,
+      "rhx": 0.35,
+      "rk": 0.1,
+      "lhx": -0.5,
+      "lk": 0.5
+     },
+     "w": {
+      "torsoY": -0.4,
+      "rsx": -0.7,
+      "rsy": 0,
+      "re": -2.2
+     },
+     "next": {
+      "4": "1,2,4"
+     }
+    },
+    "1,2,4": {
+     "n": "Jab-Cross-Kick",
+     "s": 16,
+     "a": 3,
+     "r": 22,
+     "d": 18,
+     "l": "mid",
+     "kd": 1,
+     "blk": -9,
+     "p": {
+      "yaw": 0.9,
+      "hipYaw": 0.25,
+      "rhx": -0.4,
+      "rhz": -1.35,
+      "rk": 0.08,
+      "torsoZ": -0.4,
+      "torsoX": 0,
+      "lhx": 0,
+      "lhz": 0.1,
+      "lk": 0.15,
+      "lsx": -0.5,
+      "lsz": 0.45,
+      "le": -1.5
+     },
+     "w": {
+      "yaw": 0.35,
+      "rhx": -1,
+      "rhz": -0.55,
+      "rk": 1.7,
+      "lhx": -0.1,
+      "lk": 0.2
+     }
+    },
+    "f4": {
+     "n": "Head Roundhouse",
+     "s": 17,
+     "a": 3,
+     "r": 22,
+     "d": 21,
+     "l": "high",
+     "kd": 1,
+     "blk": -6,
+     "p": {
+      "yaw": 0.95,
+      "hipYaw": 0.25,
+      "rhx": -0.35,
+      "rhz": -1.8,
+      "rk": 0.08,
+      "torsoZ": -0.6,
+      "torsoX": -0.1,
+      "lhx": 0,
+      "lhz": 0.1,
+      "lk": 0.15,
+      "lsx": -0.4,
+      "lsz": 0.55,
+      "le": -1.4
+     },
+     "w": {
+      "yaw": 0.35,
+      "rhx": -1,
+      "rhz": -0.55,
+      "rk": 1.7,
+      "lhx": -0.1,
+      "lk": 0.2
+     }
+    },
+    "df1": {
+     "n": "Short Elbow",
+     "s": 13,
+     "a": 2,
+     "r": 16,
+     "d": 10,
+     "l": "mid",
+     "hit": 6,
+     "blk": 1,
+     "rg": 0.9,
+     "p": {
+      "torsoY": -0.8,
+      "torsoX": 0.15,
+      "lsx": -0.15,
+      "lsy": -0.9,
+      "lsz": 1.45,
+      "le": -2.5
+     }
+    },
+    "df2": {
+     "n": "Uppercut Elbow",
+     "s": 14,
+     "a": 3,
+     "r": 19,
+     "d": 14,
+     "l": "mid",
+     "hit": 5,
+     "blk": -6,
+     "rg": 0.9,
+     "p": {
+      "torsoX": -0.15,
+      "torsoY": 0.45,
+      "hipY": 0.03,
+      "rsx": -2.4,
+      "rsy": 0,
+      "rsz": -0.1,
+      "re": -2.5,
+      "lhx": -0.15,
+      "lk": 0.1
+     },
+     "w": {
+      "hipY": -0.26,
+      "torsoX": 0.45,
+      "torsoY": 0.15,
+      "rsx": -0.15,
+      "rsy": 0,
+      "rsz": -0.1,
+      "re": -1.3,
+      "lhx": -0.8,
+      "lk": 1.15,
+      "rhx": -0.1,
+      "rk": 0.95
+     }
+    },
+    "df4": {
+     "n": "Skip Knee",
+     "s": 15,
+     "a": 3,
+     "r": 20,
+     "d": 15,
+     "l": "mid",
+     "launch": 1,
+     "blk": -13,
+     "rg": 0.95,
+     "mv": 0.02,
+     "p": {
+      "rhx": -1.95,
+      "rhz": 0,
+      "rk": 2.3,
+      "torsoX": -0.2,
+      "hipY": 0.02,
+      "lsx": -1.25,
+      "rsx": -1.25,
+      "lsy": 0,
+      "rsy": 0,
+      "le": -0.9,
+      "re": -0.9,
+      "lsz": -0.15,
+      "rsz": 0.15
+     },
+     "w": {
+      "rhx": -0.7,
+      "rhz": 0,
+      "rk": 1.7,
+      "torsoX": 0.15
+     }
+    },
+    "d3": {
+     "n": "Shin Check",
+     "s": 16,
+     "a": 3,
+     "r": 19,
+     "d": 8,
+     "l": "low",
+     "hit": 3,
+     "blk": -12,
+     "low": 1,
+     "p": {
+      "hipY": -0.3,
+      "torsoX": 0.25,
+      "hipYaw": 0,
+      "lhx": -1.05,
+      "lk": 0.05,
+      "lhz": 0.18,
+      "rhx": -0.75,
+      "rk": 1.9,
+      "rhz": -0.12
+     }
+    },
+    "d4": {
+     "n": "Leg Kick",
+     "s": 15,
+     "a": 3,
+     "r": 19,
+     "d": 13,
+     "l": "low",
+     "hit": 3,
+     "blk": -10,
+     "p": {
+      "yaw": 1.05,
+      "hipY": -0.12,
+      "rhx": -0.45,
+      "rhz": -0.7,
+      "rk": 0.1,
+      "torsoZ": -0.35,
+      "lhx": -0.3,
+      "lk": 0.6
+     },
+     "w": {
+      "yaw": 0.3,
+      "rhx": -0.7,
+      "rhz": -0.4,
+      "rk": 1.3
+     }
+    },
+    "b2": {
+     "n": "Spinning Elbow",
+     "s": 16,
+     "a": 3,
+     "r": 20,
+     "d": 20,
+     "l": "high",
+     "kd": 1,
+     "hom": 1,
+     "blk": -4,
+     "rg": 0.95,
+     "p": {
+      "yaw": -4.5,
+      "torsoY": 0.5,
+      "rsx": -0.15,
+      "rsy": 0.5,
+      "rsz": -1.45,
+      "re": -2.5
+     },
+     "w": {
+      "yaw": -2.2,
+      "torsoY": 0.3
+     }
+    },
+    "f12": {
+     "n": "Clinch Knees",
+     "s": 14,
+     "a": 2,
+     "r": 26,
+     "d": 32,
+     "l": "throw",
+     "throw": 1,
+     "cmd": 1,
+     "tt": "knees",
+     "rg": 0.95,
+     "p": {
+      "lsx": -1.5,
+      "rsx": -1.5,
+      "lsy": 0,
+      "rsy": 0,
+      "lsz": 0.25,
+      "rsz": -0.25,
+      "le": -0.4,
+      "re": -0.4,
+      "torsoX": 0.25,
+      "torsoY": 0
+     }
+    },
+    "ws2": {
+     "n": "Rising Elbow",
+     "s": 12,
+     "a": 3,
+     "r": 17,
+     "d": 13,
+     "l": "mid",
+     "hit": 6,
+     "blk": -3,
+     "rg": 0.9,
+     "p": {
+      "torsoX": -0.15,
+      "torsoY": 0.45,
+      "hipY": 0.03,
+      "rsx": -2.4,
+      "rsy": 0,
+      "rsz": -0.1,
+      "re": -2.5,
+      "lhx": -0.15,
+      "lk": 0.1
+     }
+    },
+    "ws4": {
+     "n": "Rising Knee",
+     "s": 13,
+     "a": 3,
+     "r": 20,
+     "d": 15,
+     "l": "mid",
+     "launch": 1,
+     "blk": -12,
+     "rg": 0.95,
+     "p": {
+      "rhx": -1.95,
+      "rhz": 0,
+      "rk": 2.3,
+      "torsoX": -0.2,
+      "hipY": 0.02,
+      "lsx": -1.25,
+      "rsx": -1.25,
+      "lsy": 0,
+      "rsy": 0,
+      "le": -0.9,
+      "re": -0.9,
+      "lsz": -0.15,
+      "rsz": 0.15
+     }
+    },
+    "ff3": {
+     "n": "Flying Knee",
+     "sig": 1,
+     "s": 17,
+     "a": 3,
+     "r": 22,
+     "d": 22,
+     "l": "mid",
+     "launch": 1,
+     "jump": 1,
+     "mv": 0.06,
+     "blk": -10,
+     "p": {
+      "lift": 0.5,
+      "rhx": -1.95,
+      "rk": 2.4,
+      "lhx": 0.45,
+      "lk": 1.7,
+      "torsoX": -0.25,
+      "lsx": -1.3,
+      "rsx": -1.3,
+      "lsy": 0,
+      "rsy": 0,
+      "le": -0.8,
+      "re": -0.8
+     },
+     "w": {
+      "lift": 0.15,
+      "rhx": -0.8,
+      "rk": 1.8,
+      "lhx": 0.3,
+      "lk": 1.2,
+      "torsoX": 0.1
+     }
+    }
+   }
+  }
+ ]
+}

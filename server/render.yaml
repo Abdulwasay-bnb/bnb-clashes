@@ -1,0 +1,10 @@
+# One-click deploy on Render (free plan): New → Blueprint → pick this repo, root directory "server".
+services:
+  - type: web
+    name: bnb-clashes-relay
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node relay.mjs
+    healthCheckPath: /
