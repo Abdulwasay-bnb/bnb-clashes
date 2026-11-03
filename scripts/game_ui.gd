@@ -1906,6 +1906,30 @@ func show_arcade_win() -> void:
 	var s := lbl("%s beat the whole office, HR, the PM and the CEO.\nThe corner office is yours… until Monday's stand-up." % A.player.name, 26, F_BODY, INK)
 	s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(s)
+	# the (unofficial) certificate: type a name, get a PDF
+	var cert_row := HBoxContainer.new()
+	cert_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	cert_row.add_theme_constant_override("separation", 14)
+	var name_in := LineEdit.new()
+	name_in.placeholder_text = "Your name for the certificate"
+	name_in.max_length = 32
+	name_in.custom_minimum_size = Vector2(460, 72)
+	name_in.add_theme_font_override("font", F_BODY)
+	name_in.add_theme_font_size_override("font_size", 30)
+	cert_row.add_child(name_in)
+	var status := lbl("", 20, F_MED, Color(0.79, 0.83, 0.88))
+	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var make_cert := func():
+		var who := name_in.text.strip_edges()
+		if who == "":
+			status.text = "Type a name first."; return
+		status.text = "Printing your certificate…"
+		var img: Image = await Certificate.render(self, who, A.player, G.portraits.get(A.player.id))
+		status.text = Certificate.save(Certificate.to_pdf(img), who)
+	name_in.text_submitted.connect(func(_t): make_cert.call())
+	cert_row.add_child(big_btn("GET CERTIFICATE", GOLD, make_cert))
+	v.add_child(cert_row)
+	v.add_child(status)
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_child(big_btn("MAIN MENU", P2C, show_title))

@@ -259,7 +259,9 @@ func start_move(key: String) -> void:
 		G.ui.screen_flash(C.accent)
 		# the fighter's power props fly in and land on the first active frame
 		if C.has("person") and G.F.size() == 2:
-			PowerProps.launch(G, self, G.F[1 - side], String(C.person.get("prop", "")), m.s / 60.0)
+			var fx: Array = C.person.get("fx", [])
+			if fx.is_empty(): PowerProps.launch(G, self, G.F[1 - side], String(C.person.get("prop", "")), m.s / 60.0)
+			else: PowerProps.play(G, self, G.F[1 - side], fx, m.s / 60.0)
 	if side == 0 and G.mode == "training" and not m.trans:
 		G.fd = {m = m, res = "", adv = null, tr = null}
 
@@ -576,6 +578,14 @@ static func _len(n: String) -> float:
 func clip_request() -> Array:
 	match state:
 		"attack":
+			if move != null and move.surge:
+				var pa := own_clip(C, "power_anim", "")
+				if pa != "":
+					var c: ClipLib.Clip = ClipLib.get_clip(pa)
+					var rel: float = c.hits[0].t if not c.hits.is_empty() else c.length * 0.45
+					var tt := lerpf(maxf(0.0, rel - 0.6), rel, float(sf) / maxf(1.0, move.s)) if sf < move.s \
+						else lerpf(rel, minf(c.length, rel + 0.8), clampf(float(sf - move.s) / maxf(1.0, move.end - move.s), 0.0, 1.0))
+					return [pa, tt]
 			var d = MoveClips.info(move)
 			if d == null: return ["", 0.0]
 			return [d.clip, MoveClips.time_at(d, move, sf), d.mirror]
@@ -589,10 +599,12 @@ func clip_request() -> Array:
 				return [ic, minf(el * maxf(1.0, _len(ic) / 2.4), _len(ic))]
 			var n := own_clip(C, "idle", idle_clip(C.arch))
 			return [n, fmod(anim_t, _len(n))]
+		# walking clips follow the distance actually covered (walk_ph grows with it), so feet don't slide:
+		# one loop of step_forward ~ 0.55 m of travel, step_back ~ 0.45 m
 		"walkf":
-			return ["step_forward", fmod(anim_t * 1.3 * C.speed, _len("step_forward"))]
+			return ["step_forward", fposmod(absf(walk_ph) / (0.55 * 8.33) * _len("step_forward"), _len("step_forward"))]
 		"walkb":
-			return ["step_back", fmod(anim_t * 1.3 * C.speed, _len("step_back"))]
+			return ["step_back", fposmod(absf(walk_ph) / (0.45 * 9.17) * _len("step_back"), _len("step_back"))]
 		"dash":
 			return ["step_long", minf(sf / 14.0, 1.0) * _len("step_long")]
 		"bdash":
@@ -625,16 +637,41 @@ func clip_request() -> Array:
 	return ["", 0.0]
 
 
+var held_prop: Node3D
+
+
+## Their intro prop (chai cup, phone, tablet...) sits in the right hand while the intro plays.
+func _update_held_prop() -> void:
+	var want: String = (C.get("person", {}) as Dictionary).get("intro_prop", "")
+	var show: bool = want != "" and G.phase == "intro" and state == "idle"
+	if show and held_prop == null:
+		held_prop = PowerProps.build(want, C.accent)
+		held_prop.scale = Vector3.ONE * 1.0
+		G.add_child(held_prop)
+	if held_prop != null:
+		if not show:
+			held_prop.queue_free(); held_prop = null
+		else:
+			held_prop.global_transform = rig.hand_xform(true).translated_local(Vector3(0, 0.07, 0))
+
+
 func render(t: float) -> void:
+	_update_held_prop()
 	if last_rt < 0.0: last_rt = t
 	anim_t += clampf(t - last_rt, 0.0, 0.1)
 	last_rt = t
 	var cr := clip_request()
-	rig.set_clip(cr[0], cr[1], state != "thrown", cr[2] if cr.size() > 2 else false)
+	# paired throws (e.g. a takedown) were authored with both fighters in one space: keep the hip motion,
+	# and draw the victim at the thrower's spot and facing so the two halves line up
+	var pair: bool = state in ["throwing", "thrown"] and throw_pair(self if state == "throwing" else thrower)[0] != "throw"
+	rig.set_clip(cr[0], cr[1], state != "thrown" or pair, cr[2] if cr.size() > 2 else false, pair)
 	var a := Engine.get_physics_interpolation_fraction()
 	var p := Pose.lerp_p(prev_disp, disp, a)
 	rig.position = prev_pos.lerp(pos, a)
 	rig.rotation.y = lerp_angle(prev_face, face, a)
+	if pair and state == "thrown" and thrower != null:
+		rig.position = thrower.prev_pos.lerp(thrower.pos, a)
+		rig.rotation.y = lerp_angle(thrower.prev_face, thrower.face, a)
 	if state in ["walkf", "walkb", "dash"]:
 		# Step cycle: legs swing, knees lift on the passing leg, hips sway, torso counter-rotates, arms pump.
 		var s := sin(walk_ph)

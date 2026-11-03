@@ -153,13 +153,33 @@ static func build(kind: String, accent: Color) -> Node3D:
 			sp.shaded = false; sp.modulate = Color(1.8, 1.8, 1.8)
 			sp.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 			n.add_child(sp)
+		"heart":
+			var pk := _mat(Color(1.0, 0.4, 0.62), 1.6)
+			_mesh(n, _sph(0.045), pk, Vector3(-0.032, 0.02, 0))
+			_mesh(n, _sph(0.045), pk, Vector3(0.032, 0.02, 0))
+			_mesh(n, _cyl(0.0, 0.06, 0.08), pk, Vector3(0, -0.035, 0), Vector3(PI, 0, 0))
+		"bubble":
+			_mesh(n, _box(0.22, 0.09, 0.02), _mat(Color(0.97, 0.97, 1.0), 0.4))
+			_mesh(n, _sph(0.022), _mat(Color(1.0, 0.25, 0.3), 1.5), Vector3(0.1, 0.045, 0.012))
+			_mesh(n, _box(0.05, 0.05, 0.022), _mat(Color(0.3, 0.55, 1.0), 1.2), Vector3(-0.07, 0, 0.002))
+		"coin":
+			_mesh(n, _cyl(0.04, 0.04, 0.01), _mat(Color(1.0, 0.8, 0.25), 1.4), Vector3.ZERO, Vector3(PI / 2, 0, 0))
+		"terminal":
+			_mesh(n, _box(0.36, 0.24, 0.015), _mat(Color(0.03, 0.05, 0.04), 0.0, 0.9))
+			var t := _text(n, ">_ sudo", Color(0.2, 1.0, 0.45), 48)
+			t.position = Vector3(0, 0.02, 0.012); t.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+		"tablet":
+			_mesh(n, _box(0.2, 0.14, 0.012), _mat(Color(0.08, 0.08, 0.1)))
+			_mesh(n, _box(0.18, 0.12, 0.002), _mat(CY, 1.2), Vector3(0, 0, 0.007))
+		"stump":
+			_mesh(n, _cyl(0.012, 0.012, 0.7), _mat(Color(0.92, 0.85, 0.65)), Vector3(0, 0.35, 0))
 		_:
 			_mesh(n, _sph(0.07), _mat(accent, 2.0))
 	return n
 
 
 ## How many props and how they travel, per kind: [count, spin, arc height, scale].
-const STYLE := {
+static var STYLE := {
 	"banana": [5, 9.0, 0.5, 1.4], "chai": [3, 6.0, 0.7, 1.6], "cigarette": [4, 12.0, 0.2, 1.8], "ball": [1, 20.0, 0.1, 1.8],
 	"snake": [1, 0.0, 0.0, 2.6], "goat": [1, 0.0, 0.0, 1.7], "agents": [10, 0.0, 0.5, 1.3], "cards": [7, 14.0, 0.3, 1.4], "notes": [8, 8.0, 0.6, 1.2],
 	"letters": [6, 7.0, 0.4, 1.4], "contract": [3, 5.0, 0.5, 1.5], "phone": [3, 4.0, 0.3, 1.6], "briefcase": [1, 10.0, 0.5, 1.6],
@@ -214,3 +234,241 @@ static func launch(G: Node, att, def, kind: String, travel: float) -> void:
 		tw.tween_property(p, "scale", p.scale * 1.8, 0.08)
 		tw.parallel().tween_property(p, "scale:y", 0.01, 0.12).set_delay(0.06)
 		tw.tween_callback(p.queue_free)
+
+
+# ---------------------------------------------------------------- choreographed powers
+## Play a fighter's power: a list of effects [effect, prop or text, start (fraction of travel), param].
+## travel = seconds until the first active frame; everything is visual only.
+static func play(G: Node, att, def, fx: Array, travel: float) -> void:
+	if G.get("resim"): return
+	travel = maxf(travel, 0.3)
+	for e in fx:
+		var kind: String = e[0]
+		var what: String = String(e[1])
+		var at := float(e[2]) * travel
+		var param = e[3] if e.size() > 3 else null
+		var run := func(): _effect(G, att, def, kind, what, param, maxf(0.12, travel - at))
+		if at <= 0.0: run.call()
+		else: G.get_tree().create_timer(at).timeout.connect(run)
+
+
+static func _col(param, fallback: Color) -> Color:
+	return Color(param[0], param[1], param[2]) if param is Array and param.size() >= 3 else fallback
+
+
+static func _chest(f) -> Vector3:
+	return f.pos + Vector3(0, 1.15 * f.C.scale, 0)
+
+
+static func _effect(G: Node, att, def, kind: String, what: String, param, left: float) -> void:
+	var a: Vector3 = _chest(att)
+	var d: Vector3 = _chest(def)
+	match kind:
+		"volley":
+			var st: Array = STYLE.get(what, [3, 6.0, 0.3, 1.4]).duplicate()
+			if param != null: st[0] = int(param)
+			_volley(G, att, def, what, left, st)
+		"rain":
+			for k in int(param if param != null else 8):
+				var p := _spawn(G, what, att.C.accent, 1.4)
+				var start: Vector3 = def.pos + Vector3(randf_range(-0.7, 0.7), randf_range(3.0, 4.2), randf_range(-0.7, 0.7))
+				p.position = start
+				var tw := p.create_tween()
+				tw.tween_interval(k * 0.04)
+				tw.tween_property(p, "position", Vector3(start.x, d.y - 0.3, start.z), maxf(0.2, left)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+				tw.parallel().tween_property(p, "rotation", Vector3(randf() * 6, randf() * 6, 0), maxf(0.2, left))
+				_pop(tw, p)
+		"geyser":
+			for k in int(param if param != null else 8):
+				var p := _spawn(G, what, att.C.accent, 1.4)
+				var base: Vector3 = def.pos + Vector3(randf_range(-0.5, 0.5), 0.0, randf_range(-0.5, 0.5))
+				p.position = base
+				var tw := p.create_tween()
+				tw.tween_interval(k * 0.03)
+				tw.tween_property(p, "position", base + Vector3(0, randf_range(1.8, 3.0), 0), left + 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+				_pop(tw, p)
+		"ring":
+			var n := int(param if param != null else 8)
+			for k in n:
+				var p := _spawn(G, what, att.C.accent, 1.3)
+				var ph := k * TAU / n
+				var orbit := left * 0.6
+				var tw := p.create_tween()
+				tw.tween_method(func(u: float):
+					var ang := ph + u * TAU * 1.5
+					p.position = a + Vector3(cos(ang) * 0.9, sin(u * PI) * 0.3, sin(ang) * 0.9), 0.0, 1.0, maxf(0.1, orbit))
+				tw.tween_method(func(u: float):
+					var ang := ph + TAU * 1.5
+					var from := a + Vector3(cos(ang) * 0.9, 0, sin(ang) * 0.9)
+					p.position = from.lerp(d, u), 0.0, 1.0, maxf(0.1, left - orbit))
+				_pop(tw, p)
+		"beam":
+			var c := _col(param, att.C.accent)
+			var beam := MeshInstance3D.new()
+			beam.mesh = _cyl(0.06, 0.06, 1.0)
+			beam.material_override = _mat(c, 3.0, 0.7)
+			beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			G.add_child(beam)
+			var mid := (a + d) / 2.0
+			var length := a.distance_to(d)
+			beam.position = mid
+			beam.look_at_from_position(mid, d, Vector3.UP)
+			beam.rotate_object_local(Vector3.RIGHT, PI / 2)
+			beam.scale = Vector3(0.2, 0.01, 0.2)
+			var tw := beam.create_tween()
+			tw.tween_property(beam, "scale", Vector3(1.0, length, 1.0), left).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+			tw.tween_property(beam, "scale", Vector3(2.2, length, 2.2), 0.12)
+			tw.tween_property(beam, "scale", Vector3(0.01, length, 0.01), 0.35)
+			tw.tween_callback(beam.queue_free)
+			if what != "":
+				_volley(G, att, def, what, left, [4, 0.0, 0.0, 1.2])
+		"summon":
+			var big := float(param if param != null else 2.5)
+			var p := _spawn(G, what, att.C.accent, big)
+			var behind: Vector3 = att.pos + (att.pos - def.pos).normalized() * 1.2
+			var tw := p.create_tween()
+			match what:
+				"goat":   # charges along the floor
+					p.position = behind
+					p.look_at_from_position(behind, Vector3(def.pos.x, behind.y, def.pos.z), Vector3.UP)
+					tw.tween_method(func(u: float):
+						p.position = behind.lerp(def.pos, u) + Vector3(0, absf(sin(u * 20.0)) * 0.15, 0), 0.0, 1.0, left + 0.1)
+				"snake":  # rises behind, then strikes
+					p.position = behind + Vector3(0, -1.0, 0)
+					p.look_at_from_position(p.position, d, Vector3.UP)
+					tw.tween_property(p, "position", behind + Vector3(0, 2.2, 0), left * 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+					tw.tween_property(p, "position", d, left * 0.5).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+				"clock":  # appears over the opponent and drops
+					p.position = def.pos + Vector3(0, 4.0, 0)
+					tw.tween_property(p, "position", d + Vector3(0, 0.4, 0), left).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+				_:        # the giant logo: rises behind, then slams down on the opponent
+					p.position = behind + Vector3(0, 0.5, 0)
+					tw.tween_property(p, "position", behind + Vector3(0, 3.2, 0), left * 0.55).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+					tw.tween_property(p, "position", def.pos + Vector3(0, 1.0, 0), left * 0.45).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+			tw.tween_interval(0.25)
+			_pop(tw, p)
+		"shock":
+			var c := _col(param, att.C.accent)
+			for k in 3:
+				var ring := MeshInstance3D.new()
+				var tor := TorusMesh.new(); tor.inner_radius = 0.9; tor.outer_radius = 1.0; tor.rings = 48
+				ring.mesh = tor
+				ring.material_override = _mat(c, 3.0, 0.75)
+				ring.position = att.pos + Vector3(0, 0.05, 0)
+				ring.scale = Vector3(0.2, 1, 0.2)
+				G.add_child(ring)
+				var reach: float = att.pos.distance_to(def.pos) + 0.6
+				var tw := ring.create_tween()
+				tw.tween_interval(k * 0.09)
+				tw.tween_property(ring, "scale", Vector3(reach, 1, reach), left + 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+				tw.parallel().tween_property(ring.material_override, "albedo_color:a", 0.0, left + 0.3)
+				tw.tween_callback(ring.queue_free)
+			if what != "":
+				_volley(G, att, def, what, left, [3, 1.0, 0.1, 2.0])
+		"cage":
+			var n := int(param if param != null else 6)
+			for k in n:
+				var p := _spawn(G, what, att.C.accent, 1.4)
+				var ang := k * TAU / n
+				var at := d + Vector3(cos(ang) * 1.1, sin(k * 1.7) * 0.25, sin(ang) * 1.1)
+				p.position = at
+				p.look_at_from_position(at, d, Vector3.UP)
+				p.scale = Vector3.ONE * 0.01
+				var tw := p.create_tween()
+				tw.tween_property(p, "scale", Vector3.ONE * 1.4, left * 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+				tw.tween_property(p, "position", d, left * 0.4 + 0.05).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+				_pop(tw, p)
+		"stamp":
+			var c := _col(param, Color(1, 0.3, 0.3))
+			var l := _label(G, what, c, 150)
+			l.position = d + Vector3(0, 0.9, 0)
+			l.scale = Vector3.ONE * 3.5
+			l.modulate.a = 0.0
+			var tw := l.create_tween()
+			tw.tween_interval(maxf(0.0, left - 0.12))
+			tw.tween_property(l, "modulate:a", 1.0, 0.04)
+			tw.parallel().tween_property(l, "scale", Vector3.ONE, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			tw.tween_interval(0.9)
+			tw.tween_property(l, "modulate:a", 0.0, 0.3)
+			tw.tween_callback(l.queue_free)
+		"text":
+			var l := _label(G, what, _col(param, att.C.accent), 120)
+			l.position = a + Vector3(0, 0.9, 0)
+			var tw := l.create_tween()
+			tw.tween_property(l, "position", l.position + Vector3(0, 0.6, 0), 1.4)
+			tw.parallel().tween_property(l, "modulate:a", 0.0, 1.4).set_delay(0.6)
+			tw.tween_callback(l.queue_free)
+		"burst":
+			for k in int(param if param != null else 10):
+				var p := _spawn(G, what, att.C.accent, 1.4)
+				p.position = d
+				var dir := Vector3(randf_range(-1, 1), randf_range(0.3, 1.4), randf_range(-1, 1)).normalized()
+				var tw := p.create_tween()
+				tw.tween_interval(maxf(0.0, left - 0.05))
+				tw.tween_property(p, "position", d + dir * randf_range(0.8, 1.6), 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+				tw.parallel().tween_property(p, "rotation", Vector3(randf() * 8, randf() * 8, 0), 0.5)
+				_pop(tw, p)
+		"peels":   # banana peels left on the floor around the opponent
+			for k in int(param if param != null else 4):
+				var p := _spawn(G, "banana", att.C.accent, 1.5)
+				p.position = def.pos + Vector3(randf_range(-0.8, 0.8), 0.04, randf_range(-0.8, 0.8))
+				p.scale = Vector3(1.5, 0.35, 1.5)
+				var tw := p.create_tween()
+				tw.tween_interval(2.2)
+				tw.tween_property(p, "scale", Vector3(0.01, 0.01, 0.01), 0.3)
+				tw.tween_callback(p.queue_free)
+		"laughs":
+			for k in int(param if param != null else 5):
+				var l := _label(G, what, Color(1.0, 0.85, 0.3).lerp(att.C.accent, randf()), randi_range(80, 140))
+				l.position = a + Vector3(randf_range(-1.2, 1.2), randf_range(0.2, 1.3), randf_range(-0.4, 0.4))
+				l.modulate.a = 0.0
+				var tw := l.create_tween()
+				tw.tween_interval(k * 0.08)
+				tw.tween_property(l, "modulate:a", 1.0, 0.05)
+				tw.tween_property(l, "position", l.position + Vector3(0, 0.5, 0), 0.8)
+				tw.parallel().tween_property(l, "modulate:a", 0.0, 0.5).set_delay(0.3)
+				tw.tween_callback(l.queue_free)
+		"stumps":  # three stumps behind the opponent that scatter on impact
+			var behind: Vector3 = def.pos + (def.pos - att.pos).normalized() * 0.5
+			var side: Vector3 = (def.pos - att.pos).normalized().cross(Vector3.UP)
+			for k in 3:
+				var p := _spawn(G, "stump", att.C.accent, 1.0)
+				p.position = behind + side * (k - 1) * 0.11
+				var tw := p.create_tween()
+				tw.tween_interval(maxf(0.0, left))
+				tw.tween_property(p, "rotation", Vector3(randf_range(-1.4, -0.6), 0, (k - 1) * 0.8), 0.25)
+				tw.parallel().tween_property(p, "position", p.position + (def.pos - att.pos).normalized() * 0.8 + side * (k - 1) * 0.4, 0.3)
+				tw.tween_interval(1.2)
+				_pop(tw, p)
+
+
+static func _spawn(G: Node, what: String, accent: Color, s: float) -> Node3D:
+	var p := build(what, accent)
+	p.scale = Vector3.ONE * s
+	G.add_child(p)
+	return p
+
+
+static func _pop(tw: Tween, p: Node3D) -> void:
+	tw.tween_property(p, "scale", p.scale * 1.6, 0.07)
+	tw.tween_property(p, "scale", Vector3.ONE * 0.01, 0.12)
+	tw.tween_callback(p.queue_free)
+
+
+static func _label(G: Node, t: String, c: Color, size: int) -> Label3D:
+	var l := Label3D.new()
+	l.text = t; l.font_size = size; l.outline_size = 18; l.shaded = false
+	l.modulate = c * 1.5; l.outline_modulate = Color(0.02, 0.02, 0.04)
+	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	l.no_depth_test = true
+	l.pixel_size = 0.0028
+	l.font = load("res://assets/fonts/RussoOne-Regular.ttf")
+	G.add_child(l)
+	return l
+
+
+static func _volley(G: Node, att, def, kind: String, travel: float, st: Array) -> void:
+	var saved = STYLE.get(kind)
+	STYLE[kind] = st
+	launch(G, att, def, kind, travel)
+	if saved != null: STYLE[kind] = saved

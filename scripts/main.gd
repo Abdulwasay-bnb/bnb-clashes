@@ -1298,6 +1298,54 @@ func _run_autotest() -> void:
 				set_preview(0, Data.by_id(pairs[k][0])); set_preview(1, Data.by_id(pairs[k][1]))
 				await get_tree().create_timer(2.5).timeout
 				await shot.call("poses%d" % k)
+		"grapple":
+			# Hamza's takedown and Kashaf's slam, three frames each (paired throws must line up)
+			for who in ["hamza_khan", "kashaf_ud_duja"]:
+				await start_match({mode = "training", stage = "boardroom"}, [Data.by_id(who), Data.by_id("ali")])
+				dummy = 0
+				F[0].reset(-0.5); F[1].reset(0.5)
+				for i in 5: await get_tree().physics_frame
+				F[0].start_move("12")
+				for k in 3:
+					for i in 14: await get_tree().physics_frame
+					await shot.call("grapple_%s_%d" % [who, k])
+		"powers":
+			# fire each listed fighter's power at a dummy; two shots per power (wind-up, impact)
+			var ids := ["hamza_khan", "kashaf_ud_duja", "muhammad_mubarak", "zia_khan", "faisal_ahmed", "muhammad_nauman_nawaz", "sabir_ud_din", "ali"]
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--ids="): ids = a.substr(6).split(",")
+			for id in ids:
+				await start_match({mode = "training", stage = "open_office"}, [Data.by_id(id), Data.by_id("tuaha_aamir")])
+				dummy = 0
+				F[0].reset(-1.1); F[1].reset(1.1)
+				for i in 10: await get_tree().physics_frame
+				var key := ""
+				for k in F[0].C.moves:
+					if F[0].C.moves[k].surge: key = k
+				F[0].meter = 100.0
+				F[0].start_move(key)
+				var s0: int = F[0].C.moves[key].s
+				for i in maxi(1, s0 - 6): await get_tree().physics_frame
+				await shot.call("pw_%s_0" % id)
+				for i in 14: await get_tree().physics_frame
+				await shot.call("pw_%s_1" % id)
+		"skull":
+			for id in ["hamza_khan", "kashaf_ud_duja", "amina_mughal"]:
+				var r := make_rig(Data.by_id(id))
+				add_child(r)
+				if r is VrmRig: print("AUTOTEST skull %s %s" % [id, r.skull])
+				r.queue_free()
+		"certificate":
+			var img: Image = await Certificate.render(self, "Abdul Wasay", Data.by_id("ali"), portraits.get("ali"))
+			img.save_png("user://shot_certificate.png")
+			var pdf := Certificate.to_pdf(img)
+			var f := FileAccess.open("user://test_certificate.pdf", FileAccess.WRITE); f.store_buffer(pdf); f.close()
+			print("AUTOTEST certificate %dx%d pdf=%d bytes" % [img.get_width(), img.get_height(), pdf.size()])
+		"intro":
+			await start_match({mode = "cpu", lv = 1, stage = "cafeteria"}, [Data.by_id("ali"), Data.by_id("hamza_khan")])
+			for k in 3:
+				await get_tree().create_timer(0.9).timeout
+				await shot.call("intro%d" % k)
 		"trade":
 			for setup in [["throw vs jab", "12", "1", 2], ["jab vs throw", "1", "12", -2], ["throw vs throw", "12", "12", 0]]:
 				await start_match({mode = "training"}, [Data.by_id("tao"), Data.by_id("lio")])

@@ -80,7 +80,7 @@ def main():
         accent = color_of(r.get("favorite_color"), hue_color(i, len(rows)))
         try: h = float(r.get("height_cm") or 0)
         except ValueError: h = 0
-        scale = round(min(1.1, max(0.78, h / 172.0)), 3) if h else 1.0
+        scale = round(min(1.12, max(0.78, h / 172.0)), 3) if h else 1.0
         skills = [s.strip() for s in re.split(r"[,/;]", r.get("skills (from work, e.g. Python, React, Design)") or "") if s.strip()]
         role = d.get("role") or (r.get("role") or "").strip() or "Team Member"
         surge = d.get("power") or ((skills[0] + " Overdrive") if skills else "")
@@ -96,6 +96,9 @@ def main():
             "quote": d.get("quote") or (r.get("catchphrase (optional)") or "").strip() or "Let's ship it.",
             "prop": d.get("prop", ""), "outfit_kind": d.get("outfit", "casual"), "extras": extras, "skin": d.get("skin", []),
             "idle": d.get("idle", ""), "pose": d.get("pose", ""), "intro": d.get("intro", ""),
+            "hair_style": d.get("hair_style", ""), "hair_color": d.get("hair_color", []), "head": d.get("head", [1, 1, 1]),
+            "face": d.get("face", {}), "eyes": d.get("eyes", []), "intro_prop": d.get("intro_prop", ""),
+            "power_anim": d.get("power_anim", ""), "fx": d.get("fx", []),
             "boss": boss, "model": model, "scale": scale, "accent": accent, "surge": surge,
             "hair": (r.get("hair (color + style)") or "").strip(), "glasses": (r.get("glasses (y/n)") or "").lower().startswith("y"),
             "beard": (r.get("beard (y/n)") or "").lower().startswith("y"), "outfit": (r.get("outfit (formal / smart-casual / hoodie / hijab+abaya / etc.)") or "").strip(),

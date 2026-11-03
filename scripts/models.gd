@@ -123,7 +123,7 @@ static func register(p: Dictionary) -> void:
 			var extra: Array = []
 			if p.get("glasses", false): extra.append(["glasses", Color(0.1, 0.1, 0.12)])
 			for x in p.get("extras", []):
-				extra.append([x, Color(0.16, 0.11, 0.08)])
+				extra.append([x, Color(0.3, 0.2, 0.13)])   # dark brown facial hair (pure black reads as tape)
 			var kind := String(p.get("outfit_kind", "casual"))
 			# [main color, second color, trim]: their own colors, then Casual Friday, then Team BNB
 			var palettes := [[acc, acc.darkened(0.55), acc.lightened(0.35)],
@@ -131,11 +131,22 @@ static func register(p: Dictionary) -> void:
 				[BV, Color(0.1, 0.08, 0.16), GD]]
 			var names := ["Signature", "Casual Friday", "Team BNB"]
 			if kind == "ceo": names[0] = "Chief Executive"
+			# their own haircut replaces the shared base hair (not under a hijab)
+			var style := String(p.get("hair_style", ""))
+			var hc: Array = p.get("hair_color", [])
+			var hair_col := Color(hc[0], hc[1], hc[2]) if hc.size() == 3 else Color(0.09, 0.07, 0.06)
+			var ey: Array = p.get("eyes", [])
 			for k in 3:
 				var o := _outfit(kind, palettes[k], hair, female, k)
 				var tint: Dictionary = o.tint
 				tint.merge(skin(skin_c))
-				costumes.append({name = names[k], tint = tint, acc = o.acc + extra})
+				var parts: Array = o.acc + extra
+				if style != "" and kind != "hijab":
+					tint["Hair"] = "hide"
+					parts.append([style, hair_col])
+				if ey.size() == 3:
+					tint["EyeIris"] = {c = Color(ey[0], ey[1], ey[2]) * 2.2, sat = 1.0, bright = 1.0}
+				costumes.append({name = names[k], tint = tint, acc = parts})
 	LIST[p.id] = {file = {"android": SEED, "female": GIRL}.get(String(p.model), MALE), costumes = costumes}
 
 
@@ -163,6 +174,9 @@ static func _outfit(kind: String, pal: Array, hair: Dictionary, female: bool, va
 		"ceo":
 			tint.merge({"Tops": {c = Color(0.12, 0.1, 0.18) if variant == 0 else main, sat = 0.0, bright = 0.4, pat = {kind = "pinstripes", a = Color(0.3, 0.26, 0.38), scale = 0.5}},
 				"Bottoms": T.call(Color(0.1, 0.09, 0.14), 0.35), "Shoes": T.call(Color(0.08, 0.07, 0.07), 0.3), "Tie": T.call(Color(0.58, 0.3, 0.85) if variant == 0 else trim, 0.9)}, true)
+		"staff":   # office staff: plain polo shirt, work trousers
+			tint.merge({"Tops": S.call(Color(0.32, 0.45, 0.62) if variant == 0 else main, 0.75), "Bottoms": T.call(Color(0.2, 0.2, 0.24) if variant != 1 else second, 0.5),
+				"Shoes": T.call(Color(0.12, 0.1, 0.09), 0.4)}, true)
 		"kurta":
 			tint.merge({"Tops": S.call(Color(0.86, 0.82, 0.72) if variant == 0 else main, 0.75), "Bottoms": T.call(Color(0.9, 0.86, 0.76) if variant == 0 else second, 0.7),
 				"Shoes": T.call(Color(0.35, 0.22, 0.12), 0.45)}, true)

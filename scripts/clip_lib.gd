@@ -33,7 +33,8 @@ class Clip:
 			var q: Quaternion = s[0][k]
 			var mk: String = k.replace("left", "@").replace("right", "left").replace("@", "right")
 			out[mk] = Quaternion(q.x, -q.y, -q.z, q.w)
-		return [out, s[1]]
+		var h: Vector3 = s[1]
+		return [out, Vector3(-h.x, h.y, h.z)]
 
 	func _sample(t: float) -> Array:
 		var n := frames.size()
@@ -167,7 +168,8 @@ static func _bake(path: String) -> Clip:
 		var off := Vector3.ZERO
 		if hips_pos_tr >= 0:
 			var hp: Vector3 = anim.position_track_interpolate(hips_pos_tr, t)
-			off = Vector3(0, (hp.y - hip_rest.y) / hip_h, 0)
+			# x / z are kept for paired clips (thrower + victim share one space); solo clips only use y
+			off = Vector3(hp.x / hip_h, (hp.y - hip_rest.y) / hip_h, hp.z / hip_h)
 		c.hip.append(off)
 		var ef := {}
 		for e in eff_b:

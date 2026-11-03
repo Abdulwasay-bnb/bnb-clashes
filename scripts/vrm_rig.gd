@@ -35,6 +35,9 @@ var clip_name := ""
 var clip_t := 0.0
 var clip_hip := true
 var clip_mirror := false
+var clip_pair := false
+var head_scale := Vector3.ONE
+var base_face := {}        # resting expression: preset -> weight, under the fight expressions     # paired throw clip: keep its horizontal hip motion (both fighters share one origin)
 var prev_mirror := false
 var prev_name := ""
 var prev_t := 0.0
@@ -61,6 +64,14 @@ func build(C: Dictionary) -> void:
 	_load(spec.file)
 	_restyle(spec.get("tint", {}))
 	_index_skeleton()
+	# their own head shape and resting expression (everyone shares a few base models)
+	var person: Dictionary = C.get("person", {})
+	var hs: Array = person.get("head", [1, 1, 1])
+	head_scale = Vector3(hs[0], hs[1], hs[2])
+	if bones.has("head"): skel.set_bone_pose_scale(bones.head, head_scale)
+	_measure_skull()
+	base_face = person.get("face", {})
+	set_face("neutral", true)
 	_make_fists()
 	_make_accessories(spec.get("acc", []))
 	scale = Vector3.ONE * float(C.scale)
@@ -432,8 +443,9 @@ func apply_pose(p: PackedFloat32Array, ground := true) -> void:
 		want[bones[L[2]]] = r_lo * rest_g[bones[L[2]]].basis
 	# Hips translation (proxy units -> skeleton units).
 	var hip_pos: Vector3 = rest_g[bones.hips].origin + qi * (hips_t.origin - Vector3(0, 0.95, 0)) / k
-	clip_w = move_toward(clip_w, clip_target, 0.2)
-	fade = minf(1.0, fade + 0.2)
+	# blend in/out a bit faster so turning a step into a block or an attack feels immediate
+	clip_w = move_toward(clip_w, clip_target, 0.25)
+	fade = minf(1.0, fade + 0.25)
 	if clip_w > 0.001 and clip_name != "":
 		hip_pos = _blend_clip(want, hip_pos)
 	# Solve once, evaluate constraints from that result, then solve again with them applied.
@@ -601,6 +613,10 @@ func _acc_parts(kind: String) -> Array:
 				["head", ToonRig.box(0.016, 0.005, 0.005), Vector3(0, 0.074, 0.11), Vector3.ZERO, Vector3.ONE],
 				["head", ToonRig.box(0.005, 0.005, 0.1), Vector3(0.066, 0.074, 0.06), Vector3.ZERO, Vector3.ONE],
 				["head", ToonRig.box(0.005, 0.005, 0.1), Vector3(-0.066, 0.074, 0.06), Vector3.ZERO, Vector3.ONE]]
+		# ---- hair styles (BNB Clashes): replace the shared base hair with a per-person cut
+		"hair_back", "hair_side", "hair_wolf", "hair_curl", "hair_thin", "hair_short", "hair_messy", "hair_spiky", \
+		"hair_ponytail", "hair_bob", "hair_bun", "hair_long", "hair_braid":
+			return _hair_parts(kind)
 		# ---- garments (BNB Clashes): simple shapes on the bones, so modest outfits stay covered while fighting
 		"hijab":
 			return [["head", ToonRig.sph(0.128), Vector3(0, 0.078, -0.058), Vector3.ZERO, Vector3(1.0, 1.06, 1.0)],
@@ -628,11 +644,13 @@ func _acc_parts(kind: String) -> Array:
 				["upperChest", ToonRig.box(0.11, 0.38, 0.02), Vector3(-0.12, -0.08, 0.1), Vector3(-0.08, 0, -0.2), Vector3.ONE]]
 		"beard":
 			var tufts: Array = []
-			for k in 7:
-				var a := (k - 3) / 3.0 * 1.15            # -1.15 .. 1.15 rad around the jaw
-				var pos := Vector3(sin(a) * 0.066, 0.006 - 0.014 * cos(a), cos(a) * 0.074 - 0.006)
-				tufts.append(["head", ToonRig.sph(0.022), pos, Vector3(0, a, 0), Vector3(1.0, 1.35, 0.55)])
-			tufts.append(["head", ToonRig.sph(0.024), Vector3(0, -0.014, 0.074), Vector3.ZERO, Vector3(1.1, 1.0, 0.7)])   # chin
+			var jaw_y := skull.position.y + 0.012            # just above the chin
+			var front := skull.position.z + skull.size.z
+			var hw := skull.size.x / 2.0
+			for k in 9:
+				var a := (k - 4) / 4.0 * 1.25                # ear to ear around the jaw
+				var pos := Vector3(sin(a) * hw * 0.86, lerpf(jaw_y + 0.045, jaw_y, cos(a)), front - 0.03 - (1.0 - cos(a)) * 0.095)
+				tufts.append(["head", ToonRig.sph(0.014), pos, Vector3(0, a, 0), Vector3(1.0, 1.1, 0.45)])
 			return tufts + _acc_parts("mustache")
 		"mustache":
 			return [["head", ToonRig.sph(0.016), Vector3(0.016, 0.016, 0.103), Vector3(0, 0, -0.25), Vector3(1.7, 0.55, 0.6)],
@@ -644,6 +662,83 @@ func _acc_parts(kind: String) -> Array:
 			return [["leftUpperArm", ToonRig.box(0.15, 0.06, 0.17), Vector3(0.03, 0.07, 0), Vector3(0, 0, -0.3), Vector3.ONE],
 				["rightUpperArm", ToonRig.box(0.15, 0.06, 0.17), Vector3(-0.03, 0.07, 0), Vector3(0, 0, 0.3), Vector3.ONE]]
 	return []
+
+
+## Hair pieces, placed from the measured skull: A = (0, top of head, face front), sizes scale with head width.
+## Every style starts from a cap that clears the scalp and sits back from the face (the forehead shows),
+## plus volume at the back of the head; each style adds its own shapes.
+func _hair_parts(kind: String) -> Array:
+	var H := "head"
+	var f := (skull.size.x / 2.0) / 0.105                       # 1.0 on the men's base, ~1.08 on the women's
+	var A := Vector3(0, skull.position.y + skull.size.y, skull.position.z + skull.size.z)
+	var at := func(x: float, y: float, z: float) -> Vector3: return A + Vector3(x, y, z) * f
+	var blob := func(pos: Vector3, rx: float, ry: float, rz: float, rot := Vector3.ZERO) -> Array:
+		return [H, ToonRig.sph(1.0), pos, rot, Vector3(rx, ry, rz) * f]
+	var cone := func(r: float, h: float, pos: Vector3, rot: Vector3) -> Array: return [H, ToonRig.cyl(0.0, r * f, h * f), pos, rot, Vector3.ONE]
+	# cap: centred well behind the face, so its front edge is a hairline high on the forehead
+	var cap: Array = blob.call(at.call(0, -0.07, -0.172), 0.12, 0.1, 0.135)
+	var back: Array = blob.call(at.call(0, -0.13, -0.23), 0.112, 0.105, 0.08)
+	var out: Array = []
+	if kind in ["hair_ponytail", "hair_bun", "hair_long", "hair_braid"]:
+		# women's cuts: hairline further forward, with soft bangs over the forehead
+		cap = blob.call(at.call(0, -0.07, -0.15), 0.122, 0.105, 0.135)
+		out.append(blob.call(at.call(0, -0.035, -0.035), 0.1, 0.04, 0.055, Vector3(0.35, 0, 0)))
+		for sx in [-1.0, 1.0]:
+			out.append(blob.call(at.call(sx * 0.1, -0.12, -0.07), 0.03, 0.085, 0.06))
+	match kind:
+		"hair_back":   # slicked back: smooth cap swept to the nape
+			out = [cap, back, blob.call(at.call(0, -0.03, -0.17), 0.09, 0.05, 0.1, Vector3(-0.3, 0, 0))]
+		"hair_side":   # side part with a sweep over one side
+			out = [cap, back, blob.call(at.call(0.05, -0.012, -0.075), 0.085, 0.035, 0.07, Vector3(0, 0, -0.3))]
+		"hair_short":  # buzz cut: close to the scalp
+			out = [blob.call(at.call(0, -0.09, -0.135), 0.112, 0.102, 0.122)]
+		"hair_thin":   # thinning: sides and back only, the crown shows through
+			out = [blob.call(at.call(0, -0.125, -0.15), 0.116, 0.07, 0.12)]
+		"hair_wolf":   # wolf cut: shaggy layers on top, longer flicks at the nape and sides
+			out = [cap, back]
+			for k in 5:
+				var a := (k - 2) * 0.32
+				out.append(cone.call(0.03, 0.12, at.call(sin(a) * 0.08, -0.2, -0.22 + absf(sin(a)) * 0.04), Vector3(0.5, a * 0.6, 0)))
+			for k in 6:
+				var a := (k - 2.5) * 0.45
+				out.append(cone.call(0.035, 0.08, at.call(sin(a) * 0.07, 0.0, -0.1 + cos(a) * 0.02), Vector3(-0.9, 0, a * 0.5)))
+			for sx in [-1.0, 1.0]:
+				out.append(cone.call(0.03, 0.1, at.call(sx * 0.11, -0.12, -0.11), Vector3(0, 0, sx * -0.35)))
+		"hair_curl":   # styled back with loose curls on top
+			out = [cap, back]
+			for k in 7:
+				var a := (k - 3) * 0.33
+				out.append(blob.call(at.call(sin(a) * 0.065, 0.0 + 0.01 * cos(k * 2.1), -0.08 + cos(a) * 0.02), 0.035, 0.035, 0.035))
+		"hair_messy":  # relaxed and unbrushed
+			out = [cap, back]
+			for k in 7:
+				var a := k * 0.9
+				out.append(cone.call(0.032, 0.075, at.call(sin(a) * 0.065, -0.005, -0.1 + cos(a) * 0.05), Vector3(sin(a) * 0.8, 0, cos(a) * 0.8)))
+		"hair_spiky":  # comic spikes
+			out = [cap, back]
+			for k in 7:
+				var a := (k - 3) * 0.38
+				out.append(cone.call(0.03, 0.13, at.call(sin(a) * 0.065, 0.02, -0.09), Vector3(-0.35, 0, a * 0.8)))
+		"hair_ponytail":   # high ponytail with a band
+			out += [cap, back, [H, ToonRig.cyl(0.03 * f, 0.03 * f, 0.035 * f), at.call(0, -0.04, -0.235), Vector3(-1.0, 0, 0), Vector3.ONE]]
+			for k in 4:
+				out.append(blob.call(at.call(0, -0.07 - k * 0.075, -0.27 - k * 0.012), 0.045 - k * 0.007, 0.07, 0.045 - k * 0.007))
+		"hair_bob":    # chin-length bob with a fringe
+			out = [cap, back, blob.call(at.call(0, -0.03, -0.03), 0.1, 0.03, 0.05)]
+			for sx in [-1.0, 1.0]:
+				out.append(blob.call(at.call(sx * 0.11, -0.16, -0.08), 0.038, 0.09, 0.085))
+			out.append(blob.call(at.call(0, -0.18, -0.17), 0.12, 0.09, 0.09))
+		"hair_bun":    # neat bun on the back of the head
+			out += [cap, back, blob.call(at.call(0, -0.03, -0.25), 0.058, 0.058, 0.058)]
+		"hair_long":   # long straight hair down the back
+			out += [cap, back, [H, ToonRig.box(0.22 * f, 0.44 * f, 0.045 * f), at.call(0, -0.38, -0.21), Vector3(0.12, 0, 0), Vector3.ONE]]
+			for sx in [-1.0, 1.0]:
+				out.append([H, ToonRig.box(0.04 * f, 0.3 * f, 0.05 * f), at.call(sx * 0.112, -0.26, -0.1), Vector3.ZERO, Vector3.ONE])
+		"hair_braid":  # side braid over the shoulder
+			out += [cap, back]
+			for k in 6:
+				out.append(blob.call(at.call(0.095 + k * 0.006, -0.18 - k * 0.055, -0.09 + k * 0.012), 0.032, 0.04, 0.032))
+	return out
 
 
 func _make_accessories(list: Array) -> void:
@@ -674,7 +769,12 @@ func _make_accessories(list: Array) -> void:
 			mi.mesh = part[1]
 			mi.material_override = m
 			add_child(mi)
-			accs.append({node = mi, b = bones[part[0]], off = part[2], basis = Basis.from_euler(part[3]).scaled(part[4])})
+			var off: Vector3 = part[2]
+			var bas := Basis.from_euler(part[3]).scaled(part[4])
+			if part[0] == "head":   # follow the person's head shape
+				off *= head_scale
+				bas = Basis.from_scale(head_scale) * bas
+			accs.append({node = mi, b = bones[part[0]], off = off, basis = bas})
 
 
 func _place_accessories(G: Dictionary) -> void:
@@ -687,7 +787,8 @@ func _place_accessories(G: Dictionary) -> void:
 
 # ---------------------------------------------------------------- Mixamo clip layer
 ## Request a clip for this frame ("" = keyframed poses only). t is the time into the clip in seconds.
-func set_clip(name: String, t: float, use_hip := true, mirror := false) -> void:
+func set_clip(name: String, t: float, use_hip := true, mirror := false, pair := false) -> void:
+	clip_pair = pair
 	if name == "" or not ClipLib.has(name):
 		clip_target = 0.0
 		return
@@ -731,8 +832,48 @@ func _blend_clip(want: Dictionary, hip_pos: Vector3) -> Vector3:
 	if not clip_hip:
 		return hip_pos
 	var hy: float = rest_g[bones.hips].origin.y
-	var clip_pos: Vector3 = rest_g[bones.hips].origin + qi * Vector3(0, s[1].y * hy, 0)
+	var h: Vector3 = s[1]
+	var clip_pos: Vector3 = rest_g[bones.hips].origin + qi * Vector3(h.x * hy if clip_pair else 0.0, h.y * hy, h.z * hy if clip_pair else 0.0)
 	return hip_pos.lerp(clip_pos, clip_w)
+
+
+## The head's real size and position (from the face mesh), in the head bone's rest frame, rig axes
+## (+Y up, +Z front). Hair and beards are placed relative to this, so they fit every base model.
+var skull := AABB(Vector3(-0.09, -0.02, -0.1), Vector3(0.18, 0.24, 0.2))
+
+
+func _measure_skull() -> void:
+	if not bones.has("head"): return
+	var head_g: Transform3D = rest_g[bones.head]
+	for mi in model.find_children("*", "MeshInstance3D", true, false):
+		var is_face := false
+		for si in mi.mesh.get_surface_count():
+			var m = mi.mesh.surface_get_material(si)
+			if m != null and "face" in String(m.resource_name).to_lower() and "skin" in String(m.resource_name).to_lower(): is_face = true
+		if not is_face: continue
+		# mesh AABB is in mesh space; walk up to the model (= skeleton space), then into the head
+		# bone's frame in rig axes, the same space accessory offsets use (pos = origin + qi * off / k)
+		var box: AABB = mi.get_aabb()
+		var chain := Transform3D.IDENTITY
+		var n: Node = mi
+		while n != null and n != model:
+			if n is Node3D: chain = (n as Node3D).transform * chain
+			n = n.get_parent()
+		var pts := []
+		for i in 8:
+			var p: Vector3 = chain * box.get_endpoint(i)
+			pts.append(qi.inverse() * (p - head_g.origin) * k)
+		var out := AABB(pts[0], Vector3.ZERO)
+		for p in pts: out = out.expand(p)
+		skull = out
+		return
+
+
+## World transform of a hand (for props held during intros).
+func hand_xform(right := true) -> Transform3D:
+	var hn := "rightHand" if right else "leftHand"
+	if not bones.has(hn): return global_transform
+	return skel.global_transform * skel.get_bone_global_pose(bones[hn])
 
 
 func set_flash(v: float) -> void:
@@ -748,13 +889,18 @@ func set_glow(v: float) -> void:
 		m.set_shader_parameter("rim_amount", 0.25 + (v - 0.9) * 0.4 if strong else 0.18)
 
 
-func set_face(name: String) -> void:
-	if name == face:
+func set_face(name: String, force := false) -> void:
+	if name == face and not force:
 		return
 	for e in expressions.values():
 		for bind in e:
 			bind[0].set_blend_shape_value(bind[1], 0.0)
 	face = name
+	# resting expression first, the moment's expression on top
+	for pre in base_face:
+		if expressions.has(pre) and pre != name:
+			for bind in expressions[pre]:
+				bind[0].set_blend_shape_value(bind[1], bind[2] * float(base_face[pre]))
 	if expressions.has(name):
 		for bind in expressions[name]:
 			bind[0].set_blend_shape_value(bind[1], bind[2])

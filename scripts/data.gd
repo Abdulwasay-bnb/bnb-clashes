@@ -61,7 +61,7 @@ static func load_all() -> void:
 		var raw: Dictionary = (styles[p.base] as Dictionary).duplicate(true)
 		raw.id = p.id; raw.name = p.name; raw.title = p.title; raw.origin = p.origin; raw.style = p.style
 		raw.quote = p.quote
-		raw.scale = float(raw.scale) * float(p.scale)
+		raw.scale = float(p.scale)   # the person's real height only (not the base style's size)
 		raw.hp = float(raw.hp) * float(p.get("hp_mult", 1.0))
 		raw.power = float(raw.power) * float(p.get("power_mult", 1.0))
 		var a: Array = p.accent

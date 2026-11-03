@@ -13,7 +13,47 @@
    0.62,
    0.48
   ],
-  "idle": "idle_fight_c"
+  "idle": "idle_fight_c",
+  "hair_style": "hair_curl",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   1.0,
+   1.02,
+   1.0
+  ],
+  "face": {
+   "relaxed": 0.15
+  },
+  "eyes": [
+   0.3,
+   0.2,
+   0.12
+  ],
+  "intro": "in_battlecry",
+  "intro_prop": "",
+  "power_anim": "pw_twohand",
+  "fx": [
+   [
+    "ring",
+    "agents",
+    0.0,
+    12
+   ],
+   [
+    "text",
+    "DEPLOYED",
+    0.55,
+    [
+     0.13,
+     0.78,
+     0.92
+    ]
+   ]
+  ]
  },
  "Abdul Wasay Waqas": {
   "style": "vex",
@@ -25,12 +65,51 @@
   "accent": "#3d7bd9",
   "outfit": "casual",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
   "pose": "idle_shy",
-  "intro": "idle_shy"
+  "intro": "intro_neck",
+  "hair_style": "hair_wolf",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   0.96,
+   1.04,
+   0.98
+  ],
+  "face": {
+   "relaxed": 0.2
+  },
+  "eyes": [
+   0.22,
+   0.14,
+   0.09
+  ],
+  "intro_prop": "",
+  "power_anim": "pw_cast1",
+  "fx": [
+   [
+    "geyser",
+    "py",
+    0.0,
+    8
+   ],
+   [
+    "text",
+    "import antigravity",
+    0.5,
+    [
+     0.3,
+     0.55,
+     1.0
+    ]
+   ]
+  ]
  },
  "Amina Mughal": {
   "style": "mara",
@@ -42,12 +121,51 @@
   "accent": "#ff5fa2",
   "outfit": "pakistani",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
   "pose": "idle_cheerful",
-  "intro": "idle_cheerful"
+  "intro": "in_excited",
+  "hair_style": "hair_bob",
+  "hair_color": [
+   0.2,
+   0.13,
+   0.08
+  ],
+  "head": [
+   1.02,
+   0.98,
+   1.0
+  ],
+  "face": {
+   "happy": 0.4
+  },
+  "eyes": [
+   0.28,
+   0.17,
+   0.1
+  ],
+  "intro_prop": "",
+  "power_anim": "pw_wide",
+  "fx": [
+   [
+    "ring",
+    "notes",
+    0.0,
+    10
+   ],
+   [
+    "text",
+    "QUICK SYNC!",
+    0.55,
+    [
+     1.0,
+     0.45,
+     0.7
+    ]
+   ]
+  ]
  },
  "Aqsa Altaf": {
   "style": "sora",
@@ -59,12 +177,51 @@
   "accent": "#e0245e",
   "outfit": "hijab",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
   "pose": "idle_cheerful",
-  "intro": "idle_cheerful"
+  "intro": "in_excited",
+  "hair_style": "",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   0.98,
+   0.97,
+   1.0
+  ],
+  "face": {
+   "happy": 0.3
+  },
+  "eyes": [
+   0.25,
+   0.15,
+   0.1
+  ],
+  "intro_prop": "",
+  "power_anim": "pw_cast1",
+  "fx": [
+   [
+    "beam",
+    "gem",
+    0.0,
+    [
+     0.9,
+     0.08,
+     0.25
+    ]
+   ],
+   [
+    "volley",
+    "gem",
+    0.15,
+    5
+   ]
+  ]
  },
  "Daniyal Zubair": {
   "style": "lio",
@@ -79,6 +236,44 @@
    0.6,
    0.42,
    0.3
+  ],
+  "hair_style": "hair_wolf",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   1.04,
+   0.97,
+   1.02
+  ],
+  "face": {},
+  "eyes": [
+   0.2,
+   0.13,
+   0.08
+  ],
+  "intro": "in_stretch",
+  "intro_prop": "",
+  "power_anim": "pw_throw",
+  "fx": [
+   [
+    "rain",
+    "paint",
+    0.0,
+    12
+   ],
+   [
+    "beam",
+    "paint",
+    0.2,
+    [
+     1.0,
+     0.6,
+     0.1
+    ]
+   ]
   ]
  },
  "Faizan Ali": {
@@ -99,8 +294,57 @@
    0.3
   ],
   "pose": "idle_relaxed",
-  "intro": "idle_relaxed",
-  "idle": "idle_relaxed"
+  "intro": "in_shrug",
+  "idle": "idle_relaxed",
+  "hair_style": "hair_messy",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   1.03,
+   0.99,
+   1.0
+  ],
+  "face": {
+   "relaxed": 0.55
+  },
+  "eyes": [
+   0.2,
+   0.12,
+   0.08
+  ],
+  "intro_prop": "",
+  "power_anim": "pw_cast1",
+  "fx": [
+   [
+    "shock",
+    "smoke",
+    0.0,
+    [
+     0.85,
+     0.88,
+     0.9
+    ]
+   ],
+   [
+    "volley",
+    "smoke",
+    0.2,
+    4
+   ],
+   [
+    "text",
+    "chill.",
+    0.6,
+    [
+     0.5,
+     0.85,
+     0.7
+    ]
+   ]
+  ]
  },
  "Faisal Ahmed": {
   "style": "tao",
@@ -112,11 +356,51 @@
   "accent": "#2bb3c0",
   "outfit": "formal",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
-  "idle": "idle_martial"
+  "idle": "idle_martial",
+  "hair_style": "hair_side",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   1.0,
+   1.05,
+   1.0
+  ],
+  "face": {
+   "relaxed": 0.15
+  },
+  "eyes": [
+   0.22,
+   0.14,
+   0.09
+  ],
+  "intro": "in_thinking",
+  "intro_prop": "",
+  "power_anim": "pw_magic",
+  "fx": [
+   [
+    "cage",
+    "terminal",
+    0.0,
+    6
+   ],
+   [
+    "stamp",
+    "ACCESS GRANTED",
+    0.6,
+    [
+     0.2,
+     1.0,
+     0.45
+    ]
+   ]
+  ]
  },
  "Kashaf ud Duja": {
   "style": "ember",
@@ -128,12 +412,57 @@
   "accent": "#ff8fb8",
   "outfit": "formal_f",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
   "pose": "idle_cheerful",
-  "intro": "idle_cheerful"
+  "intro": "in_clap",
+  "hair_style": "hair_ponytail",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   0.95,
+   0.97,
+   0.98
+  ],
+  "face": {
+   "happy": 0.3
+  },
+  "eyes": [
+   0.3,
+   0.18,
+   0.1
+  ],
+  "intro_prop": "",
+  "power_anim": "pw_wide",
+  "fx": [
+   [
+    "rain",
+    "letters",
+    0.0,
+    10
+   ],
+   [
+    "volley",
+    "heart",
+    0.15,
+    4
+   ],
+   [
+    "stamp",
+    "FINAL WARNING",
+    0.6,
+    [
+     1.0,
+     0.2,
+     0.3
+    ]
+   ]
+  ]
  },
  "Kiran Fazal": {
   "style": "kael",
@@ -145,11 +474,61 @@
   "accent": "#c03fd1",
   "outfit": "pakistani",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
-  "idle": "idle_fight_c"
+  "idle": "idle_fight_c",
+  "hair_style": "hair_bun",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   0.97,
+   1.04,
+   0.98
+  ],
+  "face": {
+   "happy": 0.15
+  },
+  "eyes": [
+   0.4,
+   0.28,
+   0.14
+  ],
+  "intro": "in_point",
+  "intro_prop": "",
+  "power_anim": "pw_throw",
+  "fx": [
+   [
+    "volley",
+    "contract",
+    0.0,
+    4
+   ],
+   [
+    "shock",
+    "",
+    0.5,
+    [
+     0.75,
+     0.25,
+     0.82
+    ]
+   ],
+   [
+    "stamp",
+    "DEAL CLOSED",
+    0.6,
+    [
+     0.75,
+     0.25,
+     0.82
+    ]
+   ]
+  ]
  },
  "Mahveen Khan": {
   "style": "sora",
@@ -161,12 +540,61 @@
   "accent": "#ffb02e",
   "outfit": "pakistani",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
   "pose": "idle_cheerful",
-  "intro": "idle_cheerful"
+  "intro": "in_bow_informal",
+  "hair_style": "hair_long",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   0.96,
+   1.0,
+   0.97
+  ],
+  "face": {
+   "happy": 0.25
+  },
+  "eyes": [
+   0.42,
+   0.3,
+   0.15
+  ],
+  "intro_prop": "",
+  "power_anim": "pw_throw",
+  "fx": [
+   [
+    "beam",
+    "phone",
+    0.0,
+    [
+     1.0,
+     0.7,
+     0.2
+    ]
+   ],
+   [
+    "volley",
+    "phone",
+    0.1,
+    4
+   ],
+   [
+    "text",
+    "RING RING!",
+    0.4,
+    [
+     1.0,
+     0.7,
+     0.2
+    ]
+   ]
+  ]
  },
  "Muhammad Mubarak": {
   "style": "tao",
@@ -178,11 +606,57 @@
   "accent": "#3fbf5a",
   "outfit": "casual",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
-  "idle": "idle_martial"
+  "idle": "idle_martial",
+  "hair_style": "hair_back",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   1.02,
+   1.05,
+   1.02
+  ],
+  "face": {
+   "happy": 0.12
+  },
+  "eyes": [
+   0.22,
+   0.14,
+   0.09
+  ],
+  "intro": "in_tablet",
+  "intro_prop": "tablet",
+  "power_anim": "pw_twohand",
+  "fx": [
+   [
+    "summon",
+    "snake",
+    0.0,
+    3.0
+   ],
+   [
+    "ring",
+    "notes",
+    0.1,
+    6
+   ],
+   [
+    "text",
+    "SPRINT COMPLETE",
+    0.65,
+    [
+     0.25,
+     0.75,
+     0.35
+    ]
+   ]
+  ]
  },
  "Muhammad Saad": {
   "style": "sora",
@@ -194,9 +668,49 @@
   "accent": "#4f8cff",
   "outfit": "casual",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
+  ],
+  "hair_style": "hair_wolf",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   1.0,
+   0.98,
+   1.0
+  ],
+  "face": {
+   "happy": 0.12
+  },
+  "eyes": [
+   0.24,
+   0.15,
+   0.1
+  ],
+  "intro": "in_tablet",
+  "intro_prop": "phone",
+  "power_anim": "pw_cast1",
+  "fx": [
+   [
+    "rain",
+    "bubble",
+    0.0,
+    10
+   ],
+   [
+    "text",
+    "1 NEW NOTIFICATION",
+    0.55,
+    [
+     0.3,
+     0.55,
+     1.0
+    ]
+   ]
   ]
  },
  "Muhammad Sufyan": {
@@ -209,9 +723,55 @@
   "accent": "#2f4f9f",
   "outfit": "formal",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
+  ],
+  "hair_style": "hair_side",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   1.03,
+   1.03,
+   1.0
+  ],
+  "face": {
+   "happy": 0.15
+  },
+  "eyes": [
+   0.22,
+   0.14,
+   0.09
+  ],
+  "intro": "in_phone",
+  "intro_prop": "phone",
+  "power_anim": "pw_throw_object",
+  "fx": [
+   [
+    "volley",
+    "briefcase",
+    0.0,
+    1
+   ],
+   [
+    "burst",
+    "coin",
+    0.45,
+    14
+   ],
+   [
+    "text",
+    "UPGRADE TO PREMIUM",
+    0.6,
+    [
+     1.0,
+     0.8,
+     0.25
+    ]
+   ]
   ]
  },
  "Muzdalfa Naeem": {
@@ -224,12 +784,51 @@
   "accent": "#9d6bff",
   "outfit": "pakistani",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
   "pose": "idle_cheerful",
-  "intro": "idle_cheerful"
+  "intro": "in_wave",
+  "hair_style": "hair_braid",
+  "hair_color": [
+   0.2,
+   0.13,
+   0.08
+  ],
+  "head": [
+   0.98,
+   0.99,
+   0.98
+  ],
+  "face": {
+   "happy": 0.2
+  },
+  "eyes": [
+   0.3,
+   0.2,
+   0.12
+  ],
+  "intro_prop": "",
+  "power_anim": "pw_throw",
+  "fx": [
+   [
+    "volley",
+    "letters",
+    0.0,
+    10
+   ],
+   [
+    "text",
+    "RE: RE: RE: FOLLOW UP",
+    0.5,
+    [
+     0.62,
+     0.42,
+     1.0
+    ]
+   ]
+  ]
  },
  "Nabeel Ahmad": {
   "style": "bastion",
@@ -241,9 +840,55 @@
   "accent": "#f2d45c",
   "outfit": "casual",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
+  ],
+  "hair_style": "hair_short",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   1.08,
+   0.98,
+   1.04
+  ],
+  "face": {
+   "happy": 0.2
+  },
+  "eyes": [
+   0.2,
+   0.12,
+   0.08
+  ],
+  "intro": "in_drinking",
+  "intro_prop": "snack",
+  "power_anim": "pw_throw",
+  "fx": [
+   [
+    "volley",
+    "snack",
+    0.0,
+    5
+   ],
+   [
+    "rain",
+    "snack",
+    0.2,
+    6
+   ],
+   [
+    "text",
+    "SNACK BREAK",
+    0.6,
+    [
+     0.95,
+     0.83,
+     0.36
+    ]
+   ]
   ]
  },
  "Muhammad Nauman Nawaz": {
@@ -256,9 +901,55 @@
   "accent": "#ffd23f",
   "outfit": "formal",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
+  ],
+  "hair_style": "hair_thin",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   0.98,
+   1.06,
+   1.0
+  ],
+  "face": {
+   "happy": 0.3
+  },
+  "eyes": [
+   0.22,
+   0.14,
+   0.09
+  ],
+  "intro": "in_point",
+  "intro_prop": "banana",
+  "power_anim": "pw_throw",
+  "fx": [
+   [
+    "volley",
+    "banana",
+    0.0,
+    6
+   ],
+   [
+    "peels",
+    "banana",
+    0.5,
+    5
+   ],
+   [
+    "text",
+    "SLIPPED!",
+    0.7,
+    [
+     1.0,
+     0.85,
+     0.25
+    ]
+   ]
   ]
  },
  "Sabir ud Din": {
@@ -271,11 +962,57 @@
   "accent": "#1fa35c",
   "outfit": "formal",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
-  "idle": "idle_fight_c"
+  "idle": "idle_fight_c",
+  "hair_style": "hair_back",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   1.02,
+   1.04,
+   1.02
+  ],
+  "face": {
+   "angry": 0.15
+  },
+  "eyes": [
+   0.22,
+   0.14,
+   0.09
+  ],
+  "intro": "intro_warmup",
+  "intro_prop": "",
+  "power_anim": "pw_pitch",
+  "fx": [
+   [
+    "volley",
+    "ball",
+    0.0,
+    1
+   ],
+   [
+    "stumps",
+    "",
+    0.55,
+    0
+   ],
+   [
+    "stamp",
+    "HOWZAT!",
+    0.62,
+    [
+     0.15,
+     0.75,
+     0.4
+    ]
+   ]
+  ]
  },
  "Samreen Fatima": {
   "style": "sora",
@@ -287,9 +1024,55 @@
   "accent": "#00c2a8",
   "outfit": "hijab",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
+  ],
+  "hair_style": "",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   0.97,
+   1.03,
+   0.98
+  ],
+  "face": {
+   "happy": 0.12
+  },
+  "eyes": [
+   0.3,
+   0.2,
+   0.12
+  ],
+  "intro": "in_tablet",
+  "intro_prop": "tablet",
+  "power_anim": "pw_cast2",
+  "fx": [
+   [
+    "rain",
+    "pixels",
+    0.0,
+    14
+   ],
+   [
+    "cage",
+    "pixels",
+    0.2,
+    8
+   ],
+   [
+    "text",
+    "PIXEL PERFECT",
+    0.6,
+    [
+     0.0,
+     0.76,
+     0.66
+    ]
+   ]
   ]
  },
  "Sarfraz Yousaf": {
@@ -302,13 +1085,48 @@
   "accent": "#9b30ff",
   "outfit": "smart",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
   "pose": "idle_goofy",
-  "intro": "idle_goofy",
-  "idle": "idle_goofy"
+  "intro": "in_laughing",
+  "idle": "idle_goofy",
+  "hair_style": "hair_spiky",
+  "hair_color": [
+   0.2,
+   0.13,
+   0.08
+  ],
+  "head": [
+   1.04,
+   0.96,
+   1.0
+  ],
+  "face": {
+   "happy": 0.5
+  },
+  "eyes": [
+   0.25,
+   0.15,
+   0.1
+  ],
+  "intro_prop": "",
+  "power_anim": "pw_throw",
+  "fx": [
+   [
+    "volley",
+    "cards",
+    0.0,
+    9
+   ],
+   [
+    "laughs",
+    "HA",
+    0.3,
+    6
+   ]
+  ]
  },
  "Syeda Ghazia": {
   "style": "sora",
@@ -320,12 +1138,61 @@
   "accent": "#6a9bd8",
   "outfit": "hijab",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
   "pose": "idle_shy",
-  "intro": "idle_cheerful"
+  "intro": "in_wave",
+  "hair_style": "",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   0.95,
+   0.96,
+   0.96
+  ],
+  "face": {
+   "surprised": 0.25
+  },
+  "eyes": [
+   0.28,
+   0.17,
+   0.1
+  ],
+  "intro_prop": "",
+  "power_anim": "pw_cast1",
+  "fx": [
+   [
+    "beam",
+    "code",
+    0.0,
+    [
+     0.42,
+     0.6,
+     0.85
+    ]
+   ],
+   [
+    "text",
+    "Hello, World!",
+    0.4,
+    [
+     0.42,
+     0.6,
+     0.85
+    ]
+   ],
+   [
+    "volley",
+    "heart",
+    0.5,
+    3
+   ]
+  ]
  },
  "Tuaha Aamir": {
   "style": "bastion",
@@ -337,12 +1204,51 @@
   "accent": "#c8c8d0",
   "outfit": "casual",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
   "pose": "idle_shy",
-  "intro": "idle_shy"
+  "intro": "idle_shy",
+  "hair_style": "hair_back",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   1.0,
+   1.03,
+   1.02
+  ],
+  "face": {
+   "relaxed": 0.25
+  },
+  "eyes": [
+   0.2,
+   0.12,
+   0.08
+  ],
+  "intro_prop": "",
+  "power_anim": "pw_magic",
+  "fx": [
+   [
+    "summon",
+    "goat",
+    0.0,
+    1.0
+   ],
+   [
+    "text",
+    "G.O.A.T.",
+    0.6,
+    [
+     0.9,
+     0.9,
+     0.95
+    ]
+   ]
+  ]
  },
  "Umar Farooq": {
   "style": "mara",
@@ -354,12 +1260,51 @@
   "accent": "#ff7a3d",
   "outfit": "formal",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
   "pose": "idle_nervous",
-  "intro": "idle_nervous"
+  "intro": "idle_nervous",
+  "hair_style": "hair_side",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   0.97,
+   0.98,
+   0.98
+  ],
+  "face": {
+   "sad": 0.35
+  },
+  "eyes": [
+   0.25,
+   0.15,
+   0.1
+  ],
+  "intro_prop": "",
+  "power_anim": "pw_throw",
+  "fx": [
+   [
+    "rain",
+    "clock",
+    0.0,
+    8
+   ],
+   [
+    "stamp",
+    "DEADLINE",
+    0.6,
+    [
+     1.0,
+     0.48,
+     0.24
+    ]
+   ]
+  ]
  },
  "Usman Najeeb": {
   "style": "ember",
@@ -371,9 +1316,49 @@
   "accent": "#8a8f98",
   "outfit": "formal",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
+  ],
+  "hair_style": "hair_wolf",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   0.98,
+   1.0,
+   0.98
+  ],
+  "face": {
+   "relaxed": 0.2
+  },
+  "eyes": [
+   0.22,
+   0.14,
+   0.09
+  ],
+  "intro": "in_shrug",
+  "intro_prop": "",
+  "power_anim": "pw_throw",
+  "fx": [
+   [
+    "volley",
+    "cigarette",
+    0.0,
+    5
+   ],
+   [
+    "shock",
+    "smoke",
+    0.45,
+    [
+     0.6,
+     0.6,
+     0.62
+    ]
+   ]
   ]
  },
  "Zia Khan": {
@@ -386,11 +1371,61 @@
   "accent": "#d4af37",
   "outfit": "formal",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
-  "idle": "idle_martial"
+  "idle": "idle_martial",
+  "hair_style": "hair_back",
+  "hair_color": [
+   0.45,
+   0.45,
+   0.47
+  ],
+  "head": [
+   1.02,
+   1.04,
+   1.02
+  ],
+  "face": {
+   "relaxed": 0.3
+  },
+  "eyes": [
+   0.22,
+   0.14,
+   0.09
+  ],
+  "intro": "intro_bow",
+  "intro_prop": "",
+  "power_anim": "pw_twohand",
+  "fx": [
+   [
+    "ring",
+    "runes",
+    0.0,
+    10
+   ],
+   [
+    "beam",
+    "runes",
+    0.35,
+    [
+     1.0,
+     0.82,
+     0.3
+    ]
+   ],
+   [
+    "text",
+    "LEGACY CODE",
+    0.6,
+    [
+     1.0,
+     0.82,
+     0.3
+    ]
+   ]
+  ]
  },
  "Ali": {
   "style": "kael",
@@ -400,14 +1435,59 @@
   "prop": "chai",
   "quote": "Tea is at 3 and 5. Not again. For anyone.",
   "accent": "#c8743a",
-  "outfit": "kurta",
+  "outfit": "staff",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
   "pose": "idle_impatient",
-  "intro": "taunt_angry"
+  "intro": "in_drinking",
+  "hair_style": "hair_short",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   0.94,
+   1.05,
+   0.96
+  ],
+  "face": {
+   "angry": 0.35
+  },
+  "eyes": [
+   0.2,
+   0.12,
+   0.08
+  ],
+  "intro_prop": "chai",
+  "power_anim": "pw_throw",
+  "fx": [
+   [
+    "volley",
+    "chai",
+    0.0,
+    4
+   ],
+   [
+    "summon",
+    "clock",
+    0.1,
+    2.0
+   ],
+   [
+    "stamp",
+    "3 PM ONLY",
+    0.6,
+    [
+     0.78,
+     0.45,
+     0.23
+    ]
+   ]
+  ]
  },
  "Hamza Khan": {
   "style": "bastion",
@@ -419,11 +1499,70 @@
   "accent": "#7a3fd1",
   "outfit": "ceo",
   "skin": [
-   0.93,
-   0.8,
-   0.7
+   0.86,
+   0.72,
+   0.62
   ],
   "pose": "idle_boss",
-  "intro": "idle_boss"
+  "intro": "in_ceo",
+  "hair_style": "hair_back",
+  "hair_color": [
+   0.09,
+   0.07,
+   0.06
+  ],
+  "head": [
+   1.05,
+   1.02,
+   1.03
+  ],
+  "face": {
+   "angry": 0.15
+  },
+  "eyes": [
+   0.22,
+   0.14,
+   0.09
+  ],
+  "intro_prop": "",
+  "power_anim": "pw_magic",
+  "fx": [
+   [
+    "summon",
+    "logo",
+    0.0,
+    3.5
+   ],
+   [
+    "shock",
+    "",
+    0.2,
+    [
+     0.58,
+     0.3,
+     0.85
+    ]
+   ],
+   [
+    "shock",
+    "",
+    0.35,
+    [
+     0.13,
+     0.78,
+     0.92
+    ]
+   ],
+   [
+    "stamp",
+    "ACQUIRED",
+    0.62,
+    [
+     0.58,
+     0.3,
+     0.85
+    ]
+   ]
+  ]
  }
 }
