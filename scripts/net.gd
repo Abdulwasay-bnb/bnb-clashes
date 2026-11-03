@@ -15,8 +15,12 @@ const GAME := "bnb"         # rooms are per game on a shared relay
 const LAN_PORT := 47787
 const BEACON_PORT := 47788
 const SETTINGS := "user://settings.cfg"
-## Where the online relay runs. Override in settings.cfg ([net] relay="wss://...") or with --relay=URL.
-const DEFAULT_RELAY := "wss://bnb-clashes-relay.onrender.com"
+## Online rooms: the Vercel server only hands out room codes and passes the WebRTC handshake;
+## the match itself then runs directly between the two players (peer-to-peer).
+## A ws:// or wss:// URL instead uses the WebSocket relay in server/ (every message goes through it).
+## Override in settings.cfg ([net] relay="...") or with --relay=URL.
+const DEFAULT_RELAY := "https://bnb-clashes-relay.vercel.app"
+const ICE := {"iceServers": [{"urls": ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302", "stun:stun.cloudflare.com:3478"]}]}
 
 var ws: WebSocketPeer
 var server: TCPServer          # LAN host only
@@ -29,6 +33,13 @@ var found := {}                # LAN games: ip -> {name, t}
 var _hello := {}               # first message to send once the socket opens
 var _was_open := false
 var _beacon_t := 0.0
+# peer-to-peer (WebRTC) rooms
+var pc: WebRTCPeerConnection
+var dc: WebRTCDataChannel
+var _sig_from := 0
+var _sig_t := 0.0
+var _sig_busy := false
+var _p2p_deadline := 0
 
 
 static func relay_url() -> String:
@@ -47,14 +58,120 @@ static func lan_supported() -> bool:
 # ---------------------------------------------------------------- start / stop
 func create_room() -> void:
 	close()
-	is_host = true; via = "relay"
+	is_host = true
+	if relay_url().begins_with("http"):
+		via = "p2p"
+		if not p2p_supported():
+			failed.emit("Online rooms aren't available on this device. Use Wi-Fi play instead."); return
+		var r := await _http(HTTPClient.METHOD_POST, "/api/room", {g = GAME})
+		if not r.has("code"):
+			failed.emit(r.get("error", "Can't reach the online server")); return
+		code = r.code
+		_start_peer()
+		room_created.emit(code)
+		return
+	via = "relay"
 	_open(relay_url(), {t = "create", v = VERSION, g = GAME})
 
 
 func join_room(c: String) -> void:
 	close()
-	is_host = false; via = "relay"; code = c.strip_edges().to_upper()
+	is_host = false; code = c.strip_edges().to_upper()
+	if relay_url().begins_with("http"):
+		via = "p2p"
+		if not p2p_supported():
+			failed.emit("Online rooms aren't available on this device. Use Wi-Fi play instead."); return
+		var r := await _http(HTTPClient.METHOD_POST, "/api/join", {g = GAME, code = code})
+		if not r.get("ok", false):
+			failed.emit(r.get("error", "Can't reach the online server")); return
+		_start_peer()
+		_signal({t = "hello"})   # tells the host to send its offer
+		return
+	via = "relay"
 	_open(relay_url(), {t = "join", code = code, v = VERSION, g = GAME})
+
+
+# ---------------------------------------------------------------- peer-to-peer rooms (WebRTC)
+static func p2p_supported() -> bool:
+	if not ClassDB.class_exists("WebRTCPeerConnection"): return false
+	var t := WebRTCPeerConnection.new()
+	var ok := t.initialize({}) == OK
+	t.close()
+	return ok
+
+
+func _start_peer() -> void:
+	pc = WebRTCPeerConnection.new()
+	pc.initialize(ICE)
+	pc.session_description_created.connect(func(type: String, sdp: String):
+		pc.set_local_description(type, sdp)
+		_signal({t = type, sdp = sdp}))
+	pc.ice_candidate_created.connect(func(media: String, index: int, cname: String):
+		_signal({t = "ice", media = media, index = index, name = cname}))
+	# both sides create the same pre-agreed channel, so no extra negotiation is needed
+	dc = pc.create_data_channel("game", {"negotiated": true, "id": 1})
+	_sig_from = 0
+	_p2p_deadline = Time.get_ticks_msec() + 45000
+
+
+func _signal(msg: Dictionary) -> void:
+	_http(HTTPClient.METHOD_POST, "/api/signal", {g = GAME, code = code, to = "guest" if is_host else "host", msg = msg})
+
+
+func _poll_signals() -> void:
+	if _sig_busy: return
+	_sig_busy = true
+	var r := await _http(HTTPClient.METHOD_GET, "/api/signal?g=%s&code=%s&for=%s&from=%d" % [GAME, code, "host" if is_host else "guest", _sig_from], {})
+	_sig_busy = false
+	if pc == null or not r.has("msgs"): return
+	_sig_from = int(r.get("next", _sig_from))
+	for m in r.msgs:
+		match String(m.get("t", "")):
+			"hello":
+				if is_host: pc.create_offer()
+			"offer", "answer":
+				pc.set_remote_description(m.t, m.sdp)
+			"ice":
+				pc.add_ice_candidate(m.media, int(m.index), m.name)
+
+
+## Small JSON request to the room server. Returns the parsed reply ({} or {error} on failure).
+func _http(method: int, path: String, body: Dictionary) -> Dictionary:
+	var req := HTTPRequest.new()
+	req.timeout = 12.0
+	add_child(req)
+	var headers := PackedStringArray(["content-type: application/json"])
+	var err := req.request(relay_url().trim_suffix("/") + path, headers, method, "" if method == HTTPClient.METHOD_GET else JSON.stringify(body))
+	if err != OK:
+		req.queue_free(); return {error = "Can't reach the online server"}
+	var res: Array = await req.request_completed
+	req.queue_free()
+	var parsed = JSON.parse_string((res[3] as PackedByteArray).get_string_from_utf8())
+	if res[0] != HTTPRequest.RESULT_SUCCESS or not (parsed is Dictionary):
+		return {error = "Can't reach the online server"}
+	return parsed
+
+
+func _poll_p2p(dt: float) -> void:
+	pc.poll()
+	if dc.get_ready_state() == WebRTCDataChannel.STATE_OPEN:
+		if not connected: _set_paired()
+		while dc != null and dc.get_available_packet_count() > 0:
+			var d = JSON.parse_string(dc.get_packet().get_string_from_utf8())
+			if d is Dictionary: _on_message(d)
+		return
+	if connected and (dc.get_ready_state() == WebRTCDataChannel.STATE_CLOSED or pc.get_connection_state() >= WebRTCPeerConnection.STATE_DISCONNECTED):
+		connected = false
+		peer_left.emit()
+		return
+	if not connected:
+		_sig_t -= dt
+		if _sig_t <= 0.0:
+			_sig_t = 0.4
+			_poll_signals()
+		if Time.get_ticks_msec() > _p2p_deadline and (not is_host or _sig_from > 0):
+			failed.emit("Couldn't connect to your rival directly (some networks block it). Try Wi-Fi play, or another network.")
+			close()
 
 
 func host_lan() -> bool:
@@ -90,6 +207,9 @@ func close() -> void:
 	if ws != null:
 		ws.close()
 	ws = null
+	if dc != null: dc.close()
+	if pc != null: pc.close()
+	dc = null; pc = null
 	if server != null: server.stop()
 	server = null
 	if beacon != null: beacon.close()
@@ -98,6 +218,9 @@ func close() -> void:
 
 
 func send(d: Dictionary) -> void:
+	if dc != null and dc.get_ready_state() == WebRTCDataChannel.STATE_OPEN:
+		dc.put_packet(JSON.stringify(d).to_utf8_buffer())
+		return
 	if ws != null and ws.get_ready_state() == WebSocketPeer.STATE_OPEN:
 		ws.send_text(JSON.stringify(d))
 
@@ -127,6 +250,9 @@ func _process(dt: float) -> void:
 
 ## Called every render frame and again right before each fight tick, so inputs arrive as early as possible.
 func poll(dt := 0.0) -> void:
+	if pc != null:
+		_poll_p2p(dt)
+		return
 	if server != null and ws == null and server.is_connection_available():
 		ws = WebSocketPeer.new()
 		ws.accept_stream(server.take_connection())

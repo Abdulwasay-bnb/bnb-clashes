@@ -62,6 +62,11 @@ var prev_pos := Vector3.ZERO
 var prev_face := 0.0
 var bounced := false
 var anim_t := 0.0        # running time for looping clips
+var voice_at := 0        # last voice line (ms), so grunts don't stack
+# visual wear for the whole match (not part of the fight state)
+var bruise := 0.0        # bruising + one eye swelling shut
+var dirt := 0.0          # dust on the clothes from knockdowns
+var blood_on := 0.0      # blood stains on the clothes
 var last_rt := -1.0
 
 
@@ -244,6 +249,9 @@ func start_move(key: String) -> void:
 	from = disp.duplicate()
 	set_state("attack")
 	has_hit = false; queued = ""; armor_used = false; ws_t = 0
+	if m.surge: G.voice(self, "power")
+	elif m.launch or m.kd or m.dmg >= 18 or m.is_throw: G.voice(self, "heavy")
+	elif randf() < 0.45: G.voice(self, "attack")
 	move_seq += 1
 	move_id = move_seq
 	if buffer != null and not m.next.is_empty():
@@ -353,6 +361,7 @@ func step(opp: Fighter) -> void:
 			# Safety net: never stay grabbed by someone who is no longer throwing.
 			if sf > 3 and (thrower == null or thrower.state != "throwing" or thrower.victim != self):
 				pos.y = 0.0; down_len = 30
+				dirt = minf(1.0, dirt + 0.3)   # landed on the floor: clothes get dusty
 				set_state("down")
 		"air":
 			if pos.y <= 0.0 and sf > 2 and vy <= 0.0:
@@ -657,6 +666,7 @@ func _update_held_prop() -> void:
 
 func render(t: float) -> void:
 	_update_held_prop()
+	if rig.has_method("set_wear"): rig.set_wear(bruise, dirt, blood_on)
 	if last_rt < 0.0: last_rt = t
 	anim_t += clampf(t - last_rt, 0.0, 0.1)
 	last_rt = t

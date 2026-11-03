@@ -14,7 +14,9 @@ uniform int pattern = 0;
 uniform vec4 pat_a : source_color = vec4(1.0);
 uniform vec4 pat_b : source_color = vec4(0.0, 0.0, 0.0, 0.0);
 uniform float pat_scale = 1.0;
-uniform float pat_o = 0.5;     // where flames / bands / gradients sit along the texture's height
+uniform float pat_o = 0.5;
+uniform float dirt = 0.0;      // clothes: dust from knockdowns (0..1)
+uniform float blood = 0.0;     // clothes: blood stains (0..1)     // where flames / bands / gradients sit along the texture's height
 
 float _h21(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float _vn(vec2 p) {
@@ -94,6 +96,16 @@ void fragment() {
 		vec2 m = pattern_mask(UV);
 		c.rgb = mix(c.rgb, pat_a.rgb * fold, clamp(m.x, 0.0, 1.0) * pat_a.a);
 		c.rgb = mix(c.rgb, pat_b.rgb * fold, clamp(m.y, 0.0, 1.0) * pat_b.a);
+	}
+	if (dirt > 0.001) {   // patchy dust, growing with every knockdown
+		float n = _fbm(UV * 16.0 + vec2(3.1, 1.7));
+		float d = smoothstep(1.0 - dirt * 0.75, 1.05 - dirt * 0.75, n);
+		c.rgb = mix(c.rgb, c.rgb * vec3(0.6, 0.5, 0.38) + vec3(0.06, 0.045, 0.03), d * 0.85);
+	}
+	if (blood > 0.001) {
+		float n2 = _fbm(UV * 10.0 + vec2(7.3, 2.2));
+		float b = smoothstep(1.0 - blood * 0.55, 1.03 - blood * 0.55, n2);
+		c.rgb = mix(c.rgb, vec3(0.42, 0.02, 0.03), b * 0.8);
 	}
 	ALBEDO = c.rgb;
 	#ifdef USE_ALPHA

@@ -247,6 +247,50 @@ func _synth(kind: String) -> AudioStreamWAV:
 	return w
 
 
+var voice_players: Array = []
+
+
+## A fighter's voice: attack / heavy / hurt / ko / power / win. Throttled so grunts don't stack up.
+func voice(f: Fighter, kind: String) -> void:
+	if resim or f == null: return
+	var now := Time.get_ticks_msec()
+	if kind in ["attack", "hurt"] and now - f.voice_at < 260: return
+	f.voice_at = now
+	var s := Voices.get_sound(f.C, kind)
+	if s == null: return
+	if voice_players.is_empty():
+		for i in 4:
+			var vp := AudioStreamPlayer.new(); vp.volume_db = -3; add_child(vp); voice_players.append(vp)
+	var p: AudioStreamPlayer = voice_players[f.side * 2 + (1 if kind in ["hurt", "ko"] else 0)]
+	p.stream = s
+	p.pitch_scale = randf_range(0.97, 1.04)
+	p.play()
+
+
+## Blood droplets from a hard hit (cosmetic).
+func blood(at: Vector3, dir: Vector3, amount: int) -> void:
+	if resim: return
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color(0.55, 0.02, 0.04)
+	m.roughness = 0.3
+	var mesh := SphereMesh.new(); mesh.radius = 0.018; mesh.height = 0.036; mesh.radial_segments = 6; mesh.rings = 3
+	for k in amount:
+		var d := MeshInstance3D.new()
+		d.mesh = mesh; d.material_override = m
+		d.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(d)
+		d.position = at
+		var v := (dir * randf_range(0.6, 1.6) + Vector3(randf_range(-0.6, 0.6), randf_range(0.4, 1.4), randf_range(-0.6, 0.6))) * 1.6
+		var land := Vector3(at.x + v.x * 0.35, 0.01, at.z + v.z * 0.35)
+		var tw := d.create_tween()
+		tw.tween_method(func(u: float):
+			d.position = at.lerp(land, u) + Vector3(0, sin(u * PI) * 0.35 * v.y * 0.4, 0), 0.0, 1.0, randf_range(0.35, 0.55))
+		tw.tween_property(d, "scale", Vector3(2.2, 0.15, 2.2), 0.06)   # splat on the floor
+		tw.tween_interval(4.0)
+		tw.tween_property(d, "scale", Vector3(0.01, 0.01, 0.01), 0.6)
+		tw.tween_callback(d.queue_free)
+
+
 func sfx(k: String) -> void:
 	if resim: return
 	if not sounds.has(k): return
@@ -442,6 +486,7 @@ func ko_start(w: Fighter) -> void:
 	phase = "ko"; phase_t = 210; winner = w.side; slow = 60
 	ui.announce("PERFECT K.O." if w.hp >= w.max_hp else "K.O.", "ko")
 	sfx("ko")
+	voice(F[1 - w.side], "ko")
 
 
 func time_up() -> void:
@@ -528,7 +573,8 @@ var send_snap := false
 var resim := false                # re-running ticks after a resync: no sounds or effects
 var net_stall := 0
 var net_ping := {sent = 0, ms = 0}
-const NET_SKIP := ["G", "C", "rig", "flash", "disp", "from", "pose_vel", "prev_disp", "prev_pos", "prev_face", "anim_t", "last_rt"]
+const NET_SKIP := ["G", "C", "rig", "flash", "disp", "from", "pose_vel", "prev_disp", "prev_pos", "prev_face", "anim_t", "last_rt",
+	"voice_at", "bruise", "dirt", "blood_on", "held_prop"]   # cosmetic, not fight state
 
 
 ## Input delay for this connection: the one-way trip in ticks, plus one for jitter.
@@ -731,7 +777,8 @@ func tick() -> void:
 				if time_left <= 0: time_up()
 		"ko":
 			var w: Fighter = F[winner] if winner >= 0 else null
-			if w != null and phase_t < 110 and w.can_act(): w.set_state("win")
+			if w != null and phase_t < 110 and w.can_act():
+				w.set_state("win"); voice(w, "win")
 			phase_t -= 1
 			if phase_t <= 0: end_round()
 
@@ -771,6 +818,9 @@ func check(att: Fighter, def: Fighter):
 
 func hurt(def: Fighter, dmg: int, att: Fighter) -> void:
 	def.hp = maxf(1.0 if mode == "training" else 0.0, def.hp - dmg)
+	# wear and tear: bruising and a swelling eye build up over the match
+	def.bruise = minf(1.0, def.bruise + dmg / def.max_hp * 1.6)
+	if dmg >= 6 and def.hp > 0.0 and randf() < 0.75: voice(def, "hurt")
 	att.meter = minf(100.0, att.meter + dmg * 0.9)
 	def.meter = minf(100.0, def.meter + dmg * 1.1)
 
@@ -788,6 +838,9 @@ func apply_hit(att: Fighter, def: Fighter, res: Dictionary) -> void:
 	var hy: float = def.pos.y + 0.95 if air else (1.5 if m.lvl == "high" else 0.35 if m.lvl == "low" else 1.05) * def.C.scale
 	var d := maxf(0.25, res.fwd - 0.28 * def.C.scale)
 	var cp := Vector3(att.pos.x + f.x * d, hy, att.pos.z + f.z * d)
+	if res.type != "block" and (m.surge or m.launch or m.kd or res.ch or m.dmg >= 16):
+		blood(cp, f, 10 if m.surge else 6)
+		def.blood_on = minf(1.0, def.blood_on + 0.18)
 	if res.type == "armor":
 		hurt(def, roundi(m.dmg * att.C.power * 0.6), att); def.armor_used = true; def.flash = 1.0
 		hitstop = 8; burst(cp, Color(1, 0.82, 0.4), 14, 3.0); sfx("block"); ui.pop_text("ARMOR", def.side)
@@ -1346,6 +1399,24 @@ func _run_autotest() -> void:
 			for k in 3:
 				await get_tree().create_timer(0.9).timeout
 				await shot.call("intro%d" % k)
+		"wear":
+			# voices to listen to + a fighter after a rough match
+			for id in ["hamza_khan", "ali", "kashaf_ud_duja", "sarfraz_yousaf", "tuaha_aamir"]:
+				var C := Data.by_id(id)
+				for kind in ["attack", "heavy", "hurt", "ko", "power", "win"]:
+					var w := Voices.get_sound(C, kind)
+					w.save_to_wav("user://voice_%s_%s.wav" % [id, kind])
+			print("AUTOTEST voices saved")
+			await start_match({mode = "training", stage = "open_office"}, [Data.by_id("hamza_khan"), Data.by_id("kashaf_ud_duja")])
+			for f in F:
+				f.bruise = 0.9; f.dirt = 0.8; f.blood_on = 0.6
+			blood(F[0].pos + Vector3(0.4, 1.3, 0), Vector3(1, 0, 0), 12)
+			await get_tree().create_timer(0.25).timeout
+			camera.position = F[0].pos + Vector3(0.9, 1.5, 1.6); camera.look_at(F[0].pos + Vector3(0, 1.2, 0))
+			set_process(false)
+			await get_tree().create_timer(0.2).timeout
+			await shot.call("wear")
+			set_process(true)
 		"trade":
 			for setup in [["throw vs jab", "12", "1", 2], ["jab vs throw", "1", "12", -2], ["throw vs throw", "12", "12", 0]]:
 				await start_match({mode = "training"}, [Data.by_id("tao"), Data.by_id("lio")])

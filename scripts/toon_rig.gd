@@ -296,6 +296,10 @@ func build_joints() -> void:
 	r_h = _joint(hips, Vector3(-0.1, -0.03, 0)); r_k = _joint(r_h, Vector3(0, -0.45, 0))
 
 
+func set_wear(_b: float, _d: float, _bl: float) -> void:
+	pass
+
+
 func hand_xform(_right := true) -> Transform3D:
 	return global_transform.translated_local(Vector3(0, 1.2, 0.3))
 

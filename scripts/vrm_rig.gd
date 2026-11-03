@@ -37,7 +37,10 @@ var clip_hip := true
 var clip_mirror := false
 var clip_pair := false
 var head_scale := Vector3.ONE
-var base_face := {}        # resting expression: preset -> weight, under the fight expressions     # paired throw clip: keep its horizontal hip motion (both fighters share one origin)
+var base_face := {}        # resting expression: preset -> weight, under the fight expressions
+var cloth_mats: Array = []
+var wear := Vector3(-1, -1, -1)   # bruise, dirt, blood last applied
+var bruise_mat: StandardMaterial3D     # paired throw clip: keep its horizontal hip motion (both fighters share one origin)
 var prev_mirror := false
 var prev_name := ""
 var prev_t := 0.0
@@ -200,7 +203,8 @@ func _load_vrm0(j: Dictionary, state: GLTFState, bone_of: Callable) -> void:
 				chain.append(jd)
 				for kb in kids: stack.append(kb)
 			if not chain.is_empty(): springs.append(chain)
-	var rename := {"joy": "happy", "sorrow": "sad", "fun": "surprised", "angry": "angry", "neutral": "neutral"}
+	var rename := {"joy": "happy", "sorrow": "sad", "fun": "surprised", "angry": "angry", "neutral": "neutral",
+		"blink_l": "blinkLeft", "blink_r": "blinkRight"}
 	for g in vrm.get("blendShapeMaster", {}).get("blendShapeGroups", []):
 		var preset: String = String(g.get("presetName", "")).to_lower()
 		if not rename.has(preset): continue
@@ -303,6 +307,8 @@ func _restyle(tint: Dictionary) -> void:
 				m.set_shader_parameter("tex", _white())
 			mi.set_surface_override_material(si, m)
 			mats.append(m)
+			var low := name.to_lower()
+			if "cloth" in low or "huku" in low or "wear" in low: cloth_mats.append(m)
 
 
 const PATTERNS := ["none", "plaid", "camo", "flames", "bands", "pinstripes", "diagonal", "dots", "grid", "scales", "gradient", "solid"]
@@ -865,6 +871,38 @@ func _measure_skull() -> void:
 		for p in pts: out = out.expand(p)
 		skull = out
 		return
+
+
+## Match wear: bruising + a swelling eye, dusty and bloodied clothes.
+func set_wear(bruise: float, dirt: float, blood: float) -> void:
+	var w := Vector3(bruise, dirt, blood)
+	if (w - wear).length() < 0.02: return
+	wear = w
+	for m in cloth_mats:
+		m.set_shader_parameter("dirt", dirt)
+		m.set_shader_parameter("blood", blood)
+	if bones.has("head"):
+		if bruise_mat == null:
+			bruise_mat = StandardMaterial3D.new()
+			bruise_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			bruise_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			bruise_mat.albedo_color = Color(0.42, 0.12, 0.32, 0.0)
+			var front := skull.position.z + skull.size.z
+			for spot in [[Vector3(-0.036, 0.062, front - 0.012), Vector3(0.03, 0.022, 0.012)], [Vector3(0.05, 0.02, front - 0.03), Vector3(0.024, 0.02, 0.012)]]:
+				var mi := MeshInstance3D.new()
+				mi.mesh = ToonRig.sph(1.0); mi.material_override = bruise_mat
+				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				add_child(mi)
+				accs.append({node = mi, b = bones.head, off = spot[0] * head_scale, basis = Basis.from_scale(spot[1] * head_scale)})
+		bruise_mat.albedo_color.a = clampf(bruise - 0.15, 0.0, 1.0) * 0.6
+	# the bruised eye swells shut a little as damage builds up
+	var swell := clampf(bruise - 0.3, 0.0, 0.7) * 0.85
+	if swell > 0.0:
+		for pre in ["blinkRight", "blink_r", "blinkLeft"]:
+			if expressions.has(pre):
+				base_face[pre] = swell
+				break
+		set_face(face, true)
 
 
 ## World transform of a hand (for props held during intros).
