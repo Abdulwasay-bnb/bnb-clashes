@@ -26,18 +26,18 @@ static func profile(C: Dictionary) -> Dictionary:
 	var female := String(p.get("model", "")) == "female"
 	var h := hash(String(C.id))
 	var v := {
-		f0 = (215.0 if female else 118.0) * (0.9 + float(h % 21) / 100.0),
+		f0 = (198.0 if female else 104.0) * (0.92 + float(h % 17) / 100.0),
 		fs = (1.17 if female else 1.0) * (0.96 + float((h / 21) % 9) / 100.0),
 		breath = 0.12, rasp = 0.05, wobble = 0.0, vol = 1.0,
 	}
 	var who := String(C.id)
 	match who:   # a few people get a very particular voice
-		"hamza_khan": v.f0 = 92.0; v.rasp = 0.16
-		"ali": v.f0 = 152.0; v.rasp = 0.32; v.vol = 1.1                    # high, raspy, always annoyed
+		"hamza_khan": v.f0 = 86.0; v.rasp = 0.12
+		"ali": v.f0 = 128.0; v.rasp = 0.25; v.vol = 1.1                    # high, raspy, always annoyed
 		"tuaha_aamir": v.breath = 0.32; v.vol = 0.6                          # rarely raises his voice
 		"abdul_wasay_waqas": v.breath = 0.25; v.vol = 0.75
 		"sarfraz_yousaf": v.wobble = 0.22                                    # comic sing-song
-		"kashaf_ud_duja": v.f0 = 248.0; v.breath = 0.18                      # sweet-toned
+		"kashaf_ud_duja": v.f0 = 220.0; v.breath = 0.18                      # sweet-toned
 		"amina_mughal", "aqsa_altaf": v.vol = 1.15; v.f0 *= 1.06              # loud and lively
 		"faizan_ali": v.f0 *= 0.92; v.breath = 0.25                          # can't be bothered
 		"zia_khan", "faisal_ahmed": v.f0 *= 0.9; v.rasp = 0.1
@@ -77,27 +77,44 @@ static func _make(v: Dictionary, k: Array) -> AudioStreamWAV:
 	var dur: float = k[0]
 	var vowel: Array = VOWELS[k[1]]
 	var n := int(dur * RATE)
-	var res := [_reson(vowel[0] * v.fs, 90.0), _reson(vowel[1] * v.fs, 110.0), _reson(vowel[2] * v.fs, 150.0)]
-	var amps := [1.0, 0.55, 0.25]
+	# wider formant bandwidths and a quieter top end sound like a person, not a buzzer
+	var res := [_reson(vowel[0] * v.fs, 110.0), _reson(vowel[1] * v.fs, 140.0), _reson(vowel[2] * v.fs, 220.0)]
+	var amps := [1.0, 0.42, 0.12]
 	var data := PackedByteArray()
 	data.resize(n * 2)
 	var ph := 0.0
+	var prev_g := 0.0
+	var lp := 0.0
+	var shim := 1.0
+	var jit := 1.0
 	var breath_t: float = k[4]
 	for i in n:
 		var t := float(i) / RATE
 		var u := t / dur
-		var f0: float = v.f0 * lerpf(k[2], k[3], u) * (1.0 + v.wobble * sin(t * 38.0)) * (1.0 + randf_range(-0.01, 0.01))
+		# natural pitch: contour + slow vibrato + per-cycle jitter
+		var f0: float = v.f0 * lerpf(k[2], k[3], u) * (1.0 + v.wobble * sin(t * 38.0)) * (1.0 + 0.012 * sin(t * 31.0)) * jit
+		var prev_ph := ph
 		ph += f0 / RATE
-		var g := fposmod(ph, 1.0)
-		var pulse: float = (g * 2.0 - 1.0) - (0.5 if g < 0.5 else -0.5) * 0.8          # bright glottal buzz
-		pulse += randf_range(-1.0, 1.0) * v.rasp                                  # rasp
+		if floorf(ph) != floorf(prev_ph):   # new glottal cycle: a little jitter and shimmer, like a real voice
+			jit = 1.0 + randf_range(-0.012, 0.012)
+			shim = 1.0 + randf_range(-0.08, 0.08)
+		var x := fposmod(ph, 1.0)
+		# Rosenberg glottal pulse (smooth opening, quicker closing, closed phase), then its slope (lip radiation)
+		var g := 0.0
+		if x < 0.42: g = 0.5 * (1.0 - cos(PI * x / 0.42))
+		elif x < 0.58: g = cos(PI * 0.5 * (x - 0.42) / 0.16)
+		g *= shim
+		var pulse: float = (g - prev_g) * 9.0
+		prev_g = g
+		pulse += randf_range(-1.0, 1.0) * v.rasp * 0.35
 		var noise := randf_range(-1.0, 1.0)
 		var voiced: float = 0.0 if t < breath_t else 1.0
-		var src: float = pulse * voiced * (1.0 - v.breath) + noise * (v.breath + (0.8 if t < breath_t else 0.0))
+		var src: float = pulse * voiced * (1.0 - v.breath * 0.6) + noise * (v.breath * 0.35 + (0.5 if t < breath_t else 0.0))
 		var out := 0.0
 		for j in 3: out += _step(res[j], src) * float(amps[j])
-		var env: float = minf(1.0, t / 0.012) * pow(1.0 - u, 1.6)
-		data.encode_s16(i * 2, int(clampf(out * env * 2.6 * k[5] * v.vol, -1.0, 1.0) * 30000.0))
+		lp += (out - lp) * 0.45            # gentle low-pass: takes the hiss / buzz off the top
+		var env: float = minf(1.0, t / 0.02) * pow(1.0 - u, 1.3)
+		data.encode_s16(i * 2, int(clampf(lp * env * 3.2 * k[5] * v.vol, -1.0, 1.0) * 27000.0))
 	return _wav(data)
 
 

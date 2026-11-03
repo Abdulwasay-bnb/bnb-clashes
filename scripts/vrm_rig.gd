@@ -632,13 +632,15 @@ func _acc_parts(kind: String) -> Array:
 			# a short skirt piece on the hips plus one long panel per thigh (a kameez has side slits),
 			# so the hem moves with the legs instead of the knees poking through it
 			return [["hips", ToonRig.cyl(0.17, 0.205, 0.2), Vector3(0, -0.04, 0.0), Vector3.ZERO, Vector3(1.0, 1.0, 0.9)],
-				["leftUpperLeg", ToonRig.cyl(0.115, 0.15, 0.4), Vector3(0.012, -0.17, 0.0), Vector3.ZERO, Vector3(1.0, 1.0, 0.95)],
-				["rightUpperLeg", ToonRig.cyl(0.115, 0.15, 0.4), Vector3(-0.012, -0.17, 0.0), Vector3.ZERO, Vector3(1.0, 1.0, 0.95)]]
-		"shalwar":
-			return [["leftUpperLeg", ToonRig.cyl(0.082, 0.07, 0.42), Vector3(0, -0.2, 0), Vector3.ZERO, Vector3.ONE],
-				["rightUpperLeg", ToonRig.cyl(0.082, 0.07, 0.42), Vector3(0, -0.2, 0), Vector3.ZERO, Vector3.ONE],
-				["leftLowerLeg", ToonRig.cyl(0.066, 0.058, 0.4), Vector3(0, -0.19, 0), Vector3.ZERO, Vector3.ONE],
-				["rightLowerLeg", ToonRig.cyl(0.066, 0.058, 0.4), Vector3(0, -0.19, 0), Vector3.ZERO, Vector3.ONE]]
+				["leftUpperLeg", ToonRig.cyl(0.14, 0.17, 0.4), Vector3(0.012, -0.17, -0.01), Vector3.ZERO, Vector3(1.0, 1.0, 0.98)],
+				["rightUpperLeg", ToonRig.cyl(0.14, 0.17, 0.4), Vector3(-0.012, -0.17, -0.01), Vector3.ZERO, Vector3(1.0, 1.0, 0.98)]]
+		"shalwar":   # wide enough for thighs and calves, set a little back, with the knee covered
+			return [["leftUpperLeg", ToonRig.cyl(0.125, 0.1, 0.47), Vector3(0, -0.21, -0.012), Vector3.ZERO, Vector3.ONE],
+				["rightUpperLeg", ToonRig.cyl(0.125, 0.1, 0.47), Vector3(0, -0.21, -0.012), Vector3.ZERO, Vector3.ONE],
+				["leftLowerLeg", ToonRig.sph(0.108), Vector3(0, 0.01, -0.022), Vector3.ZERO, Vector3(1.0, 1.15, 1.05)],
+				["rightLowerLeg", ToonRig.sph(0.108), Vector3(0, 0.01, -0.022), Vector3.ZERO, Vector3(1.0, 1.15, 1.05)],
+				["leftLowerLeg", ToonRig.cyl(0.102, 0.08, 0.42), Vector3(0, -0.2, -0.012), Vector3.ZERO, Vector3.ONE],
+				["rightLowerLeg", ToonRig.cyl(0.102, 0.08, 0.42), Vector3(0, -0.2, -0.012), Vector3.ZERO, Vector3.ONE]]
 		"sleeves":
 			return [["leftUpperArm", ToonRig.cyl(0.05, 0.046, 0.27), Vector3(0.13, 0, 0), Z90, Vector3.ONE],
 				["rightUpperArm", ToonRig.cyl(0.05, 0.046, 0.27), Vector3(-0.13, 0, 0), Z90, Vector3.ONE],
@@ -711,10 +713,10 @@ func _hair_parts(kind: String) -> Array:
 				out.append(cone.call(0.035, 0.08, at.call(sin(a) * 0.07, 0.012, -0.09 + cos(a) * 0.02), Vector3(-0.9, 0, a * 0.5)))
 			for sx in [-1.0, 1.0]:
 				out.append(cone.call(0.03, 0.1, at.call(sx * 0.112, -0.12, -0.1), Vector3(0, 0, sx * -0.35)))
-		"hair_curl":   # loose curls on top
-			for k in 7:
-				var a := (k - 3) * 0.33
-				out.append(blob.call(at.call(sin(a) * 0.065, 0.012 + 0.01 * cos(k * 2.1), -0.07 + cos(a) * 0.02), 0.034, 0.034, 0.034))
+		"hair_curl":   # styled back, with low flat waves along the front hairline (nothing piled on top)
+			for k in 5:
+				var a := (k - 2) * 0.42
+				out.append(blob.call(at.call(sin(a) * 0.07, -0.022, -0.06 + cos(a) * 0.012), 0.03, 0.014, 0.026, Vector3(0.5, a * 0.5, 0)))
 		"hair_messy":  # relaxed and unbrushed
 			for k in 7:
 				var a := k * 0.9

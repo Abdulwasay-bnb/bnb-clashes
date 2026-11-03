@@ -1417,6 +1417,21 @@ func _run_autotest() -> void:
 			await get_tree().create_timer(0.2).timeout
 			await shot.call("wear")
 			set_process(true)
+		"backview":
+			# women's outfits from behind, mid-stride (legs must stay covered)
+			var ids := ["amina_mughal", "aqsa_altaf", "kashaf_ud_duja"]
+			for k in ids.size():
+				await start_match({mode = "training", stage = "open_office"}, [Data.by_id(ids[k]), Data.by_id("ali")])
+				test_keys[KEY_D] = true
+				await get_tree().create_timer(0.6).timeout
+				test_keys[KEY_D] = false
+				var f: Fighter = F[0]
+				camera.position = f.pos + Vector3(-2.2, 1.0, -0.6) * Vector3(1, 1, 1)
+				camera.look_at(f.pos + Vector3(0, 0.6, 0))
+				set_process(false)
+				await get_tree().create_timer(0.15).timeout
+				await shot.call("back%d" % k)
+				set_process(true)
 		"trade":
 			for setup in [["throw vs jab", "12", "1", 2], ["jab vs throw", "1", "12", -2], ["throw vs throw", "12", "12", 0]]:
 				await start_match({mode = "training"}, [Data.by_id("tao"), Data.by_id("lio")])
