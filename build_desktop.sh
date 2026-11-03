@@ -9,6 +9,6 @@ mkdir -p build/windows build/linux && touch build/.gdignore
 "$GD" --headless --path . --import >/dev/null 2>&1 || true
 "$GD" --headless --path . --export-release "Windows Desktop" build/windows/BNBClashes.exe
 "$GD" --headless --path . --export-release "Linux" build/linux/BNBClashes.x86_64
-(cd build/windows && rm -f ../BNBClashes-windows.zip && zip -q ../BNBClashes-windows.zip BNBClashes.exe)
-(cd build/linux && chmod +x BNBClashes.x86_64 && rm -f ../BNBClashes-linux.zip && zip -q ../BNBClashes-linux.zip BNBClashes.x86_64)
+(cd build/windows && rm -f ../BNBClashes-windows.zip && zip -q ../BNBClashes-windows.zip BNBClashes.exe *.dll)
+(cd build/linux && chmod +x BNBClashes.x86_64 && rm -f ../BNBClashes-linux.zip && zip -q ../BNBClashes-linux.zip BNBClashes.x86_64 *.so)
 ls -la build/*.zip
