@@ -7,12 +7,20 @@
    "origin": "BIT & BYTES  \u00b7  FULL-STACK AI ENGINEER",
    "base": "tao",
    "style": "Kung Fu  \u2014  Mixed: calm one minute, all-in the next",
-   "quote": "Frontend, backend, AI. Pick a layer, I'll still win.",
-   "prop": "code",
+   "quote": "Why fight alone? I deployed twelve agents.",
+   "prop": "agents",
    "outfit_kind": "all_black",
    "extras": [
     "beard"
    ],
+   "skin": [
+    0.8,
+    0.62,
+    0.48
+   ],
+   "idle": "idle_fight_c",
+   "pose": "",
+   "intro": "",
    "boss": "",
    "model": "male",
    "scale": 1.063,
@@ -21,7 +29,7 @@
     0.302,
     1.0
    ],
-   "surge": "FULL-STACK FLOW",
+   "surge": "AGENT SWARM",
    "hair": "black all hair back styled little curled",
    "glasses": false,
    "beard": true,
@@ -41,6 +49,14 @@
    "prop": "py",
    "outfit_kind": "casual",
    "extras": [],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "idle_shy",
+   "intro": "idle_shy",
    "boss": "",
    "model": "male",
    "scale": 1.048,
@@ -69,6 +85,14 @@
    "prop": "notes",
    "outfit_kind": "pakistani",
    "extras": [],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "idle_cheerful",
+   "intro": "idle_cheerful",
    "boss": "",
    "model": "female",
    "scale": 0.979,
@@ -97,6 +121,14 @@
    "prop": "gem",
    "outfit_kind": "hijab",
    "extras": [],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "idle_cheerful",
+   "intro": "idle_cheerful",
    "boss": "",
    "model": "female",
    "scale": 0.889,
@@ -127,6 +159,14 @@
    "extras": [
     "beard"
    ],
+   "skin": [
+    0.6,
+    0.42,
+    0.3
+   ],
+   "idle": "",
+   "pose": "",
+   "intro": "",
    "boss": "",
    "model": "male",
    "scale": 0.871,
@@ -157,6 +197,14 @@
    "extras": [
     "mustache"
    ],
+   "skin": [
+    0.6,
+    0.42,
+    0.3
+   ],
+   "idle": "idle_relaxed",
+   "pose": "idle_relaxed",
+   "intro": "idle_relaxed",
    "boss": "",
    "model": "male",
    "scale": 0.877,
@@ -187,6 +235,14 @@
    "extras": [
     "beard"
    ],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "idle_martial",
+   "pose": "",
+   "intro": "",
    "boss": "",
    "model": "male",
    "scale": 1.048,
@@ -215,6 +271,14 @@
    "prop": "contract",
    "outfit_kind": "pakistani",
    "extras": [],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "idle_fight_c",
+   "pose": "",
+   "intro": "",
    "boss": "",
    "model": "female",
    "scale": 1.048,
@@ -243,6 +307,14 @@
    "prop": "phone",
    "outfit_kind": "pakistani",
    "extras": [],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "idle_cheerful",
+   "intro": "idle_cheerful",
    "boss": "",
    "model": "female",
    "scale": 0.99,
@@ -273,6 +345,14 @@
    "extras": [
     "beard"
    ],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "",
+   "intro": "",
    "boss": "",
    "model": "male",
    "scale": 1.017,
@@ -303,6 +383,14 @@
    "extras": [
     "beard"
    ],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "",
+   "intro": "",
    "boss": "",
    "model": "male",
    "scale": 1.057,
@@ -331,6 +419,14 @@
    "prop": "letters",
    "outfit_kind": "pakistani",
    "extras": [],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "idle_cheerful",
+   "intro": "idle_cheerful",
    "boss": "",
    "model": "female",
    "scale": 1.017,
@@ -361,6 +457,14 @@
    "extras": [
     "beard"
    ],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "",
+   "intro": "",
    "boss": "",
    "model": "male",
    "scale": 1.047,
@@ -391,6 +495,14 @@
    "extras": [
     "beard"
    ],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "",
+   "intro": "",
    "boss": "",
    "model": "male",
    "scale": 1.047,
@@ -421,6 +533,14 @@
    "extras": [
     "beard"
    ],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "idle_fight_c",
+   "pose": "",
+   "intro": "",
    "boss": "",
    "model": "male",
    "scale": 1.081,
@@ -449,6 +569,14 @@
    "prop": "pixels",
    "outfit_kind": "hijab",
    "extras": [],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "",
+   "intro": "",
    "boss": "",
    "model": "female",
    "scale": 1.052,
@@ -479,6 +607,14 @@
    "extras": [
     "beard"
    ],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "idle_goofy",
+   "pose": "idle_goofy",
+   "intro": "idle_goofy",
    "boss": "",
    "model": "male",
    "scale": 0.944,
@@ -507,6 +643,14 @@
    "prop": "code",
    "outfit_kind": "hijab",
    "extras": [],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "idle_shy",
+   "intro": "idle_cheerful",
    "boss": "",
    "model": "female",
    "scale": 0.944,
@@ -537,6 +681,14 @@
    "extras": [
     "beard"
    ],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "idle_shy",
+   "intro": "idle_shy",
    "boss": "",
    "model": "male",
    "scale": 1.069,
@@ -567,6 +719,14 @@
    "extras": [
     "beard"
    ],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "idle_nervous",
+   "intro": "idle_nervous",
    "boss": "",
    "model": "male",
    "scale": 0.871,
@@ -595,6 +755,14 @@
    "prop": "cigarette",
    "outfit_kind": "formal",
    "extras": [],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "",
+   "intro": "",
    "boss": "",
    "model": "male",
    "scale": 0.889,
@@ -623,6 +791,14 @@
    "prop": "runes",
    "outfit_kind": "formal",
    "extras": [],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "idle_martial",
+   "pose": "",
+   "intro": "",
    "boss": "",
    "model": "male",
    "scale": 0.889,
@@ -651,6 +827,14 @@
    "prop": "chai",
    "outfit_kind": "kurta",
    "extras": [],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "idle_impatient",
+   "intro": "taunt_angry",
    "boss": "",
    "model": "male",
    "scale": 0.783,
@@ -681,6 +865,14 @@
    "extras": [
     "beard"
    ],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "idle_martial",
+   "pose": "",
+   "intro": "",
    "boss": "bonus",
    "model": "male",
    "scale": 1.075,
@@ -709,6 +901,14 @@
    "prop": "letters",
    "outfit_kind": "formal_f",
    "extras": [],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "idle_cheerful",
+   "intro": "idle_cheerful",
    "boss": "mini",
    "model": "female",
    "scale": 0.86,
@@ -739,6 +939,14 @@
    "extras": [
     "beard"
    ],
+   "skin": [
+    0.93,
+    0.8,
+    0.7
+   ],
+   "idle": "",
+   "pose": "idle_boss",
+   "intro": "idle_boss",
    "boss": "final",
    "model": "male",
    "scale": 1.052,

@@ -3,11 +3,17 @@
   "style": "tao",
   "personality": "Mixed: calm one minute, all-in the next",
   "role": "Full-Stack AI Engineer",
-  "power": "FULL-STACK FLOW",
-  "prop": "code",
-  "quote": "Frontend, backend, AI. Pick a layer, I'll still win.",
+  "power": "AGENT SWARM",
+  "prop": "agents",
+  "quote": "Why fight alone? I deployed twelve agents.",
   "accent": "#7b4dff",
-  "outfit": "all_black"
+  "outfit": "all_black",
+  "skin": [
+   0.8,
+   0.62,
+   0.48
+  ],
+  "idle": "idle_fight_c"
  },
  "Abdul Wasay Waqas": {
   "style": "vex",
@@ -17,7 +23,14 @@
   "prop": "py",
   "quote": "...",
   "accent": "#3d7bd9",
-  "outfit": "casual"
+  "outfit": "casual",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "pose": "idle_shy",
+  "intro": "idle_shy"
  },
  "Amina Mughal": {
   "style": "mara",
@@ -27,7 +40,14 @@
   "prop": "notes",
   "quote": "Quick sync? This'll only take a second.",
   "accent": "#ff5fa2",
-  "outfit": "pakistani"
+  "outfit": "pakistani",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "pose": "idle_cheerful",
+  "intro": "idle_cheerful"
  },
  "Aqsa Altaf": {
   "style": "sora",
@@ -37,7 +57,14 @@
   "prop": "gem",
   "quote": "Convention over configuration. And over you.",
   "accent": "#e0245e",
-  "outfit": "hijab"
+  "outfit": "hijab",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "pose": "idle_cheerful",
+  "intro": "idle_cheerful"
  },
  "Daniyal Zubair": {
   "style": "lio",
@@ -47,7 +74,12 @@
   "prop": "paint",
   "quote": "Can we make it pop? Yes. Your guard.",
   "accent": "#ff9f1c",
-  "outfit": "casual"
+  "outfit": "casual",
+  "skin": [
+   0.6,
+   0.42,
+   0.3
+  ]
  },
  "Faizan Ali": {
   "style": "lio",
@@ -60,7 +92,15 @@
   "outfit": "casual",
   "extras": [
    "mustache"
-  ]
+  ],
+  "skin": [
+   0.6,
+   0.42,
+   0.3
+  ],
+  "pose": "idle_relaxed",
+  "intro": "idle_relaxed",
+  "idle": "idle_relaxed"
  },
  "Faisal Ahmed": {
   "style": "tao",
@@ -70,7 +110,13 @@
   "prop": "keys",
   "quote": "I don't fix bugs. I approve their removal.",
   "accent": "#2bb3c0",
-  "outfit": "formal"
+  "outfit": "formal",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "idle": "idle_martial"
  },
  "Kashaf ud Duja": {
   "style": "ember",
@@ -80,7 +126,14 @@
   "prop": "letters",
   "quote": "This is a friendly reminder… that you lost.",
   "accent": "#ff8fb8",
-  "outfit": "formal_f"
+  "outfit": "formal_f",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "pose": "idle_cheerful",
+  "intro": "idle_cheerful"
  },
  "Kiran Fazal": {
   "style": "kael",
@@ -90,7 +143,13 @@
   "prop": "contract",
   "quote": "Sign here. And here. And… down you go.",
   "accent": "#c03fd1",
-  "outfit": "pakistani"
+  "outfit": "pakistani",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "idle": "idle_fight_c"
  },
  "Mahveen Khan": {
   "style": "sora",
@@ -100,7 +159,14 @@
   "prop": "phone",
   "quote": "Hi! Do you have five minutes? You'll need them to recover.",
   "accent": "#ffb02e",
-  "outfit": "pakistani"
+  "outfit": "pakistani",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "pose": "idle_cheerful",
+  "intro": "idle_cheerful"
  },
  "Muhammad Mubarak": {
   "style": "tao",
@@ -110,7 +176,13 @@
   "prop": "snake",
   "quote": "Every sprint ends with a strike.",
   "accent": "#3fbf5a",
-  "outfit": "casual"
+  "outfit": "casual",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "idle": "idle_martial"
  },
  "Muhammad Saad": {
   "style": "sora",
@@ -120,7 +192,12 @@
   "prop": "phone",
   "quote": "You have 1 new notification: defeat.",
   "accent": "#4f8cff",
-  "outfit": "casual"
+  "outfit": "casual",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ]
  },
  "Muhammad Sufyan": {
   "style": "bastion",
@@ -130,7 +207,12 @@
   "prop": "briefcase",
   "quote": "That was the basic package. Want premium?",
   "accent": "#2f4f9f",
-  "outfit": "formal"
+  "outfit": "formal",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ]
  },
  "Muzdalfa Naeem": {
   "style": "mara",
@@ -140,7 +222,14 @@
   "prop": "letters",
   "quote": "Just following up on that knockout.",
   "accent": "#9d6bff",
-  "outfit": "pakistani"
+  "outfit": "pakistani",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "pose": "idle_cheerful",
+  "intro": "idle_cheerful"
  },
  "Nabeel Ahmad": {
   "style": "bastion",
@@ -150,7 +239,12 @@
   "prop": "snack",
   "quote": "Code review after lunch. And after snacks.",
   "accent": "#f2d45c",
-  "outfit": "casual"
+  "outfit": "casual",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ]
  },
  "Muhammad Nauman Nawaz": {
   "style": "ember",
@@ -160,7 +254,12 @@
   "prop": "banana",
   "quote": "Watch your step.",
   "accent": "#ffd23f",
-  "outfit": "formal"
+  "outfit": "formal",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ]
  },
  "Sabir ud Din": {
   "style": "kael",
@@ -170,7 +269,13 @@
   "prop": "ball",
   "quote": "That was OUT. I don't care what the umpire says.",
   "accent": "#1fa35c",
-  "outfit": "formal"
+  "outfit": "formal",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "idle": "idle_fight_c"
  },
  "Samreen Fatima": {
   "style": "sora",
@@ -180,7 +285,12 @@
   "prop": "pixels",
   "quote": "Off by one pixel. Fixed. You're next.",
   "accent": "#00c2a8",
-  "outfit": "hijab"
+  "outfit": "hijab",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ]
  },
  "Sarfraz Yousaf": {
   "style": "lio",
@@ -190,7 +300,15 @@
   "prop": "cards",
   "quote": "Why did the dev cross the road? To hit you.",
   "accent": "#9b30ff",
-  "outfit": "smart"
+  "outfit": "smart",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "pose": "idle_goofy",
+  "intro": "idle_goofy",
+  "idle": "idle_goofy"
  },
  "Syeda Ghazia": {
   "style": "sora",
@@ -200,7 +318,14 @@
   "prop": "code",
   "quote": "Is this… how we fight? Okay! I'll try!",
   "accent": "#6a9bd8",
-  "outfit": "hijab"
+  "outfit": "hijab",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "pose": "idle_shy",
+  "intro": "idle_cheerful"
  },
  "Tuaha Aamir": {
   "style": "bastion",
@@ -210,7 +335,14 @@
   "prop": "goat",
   "quote": "…",
   "accent": "#c8c8d0",
-  "outfit": "casual"
+  "outfit": "casual",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "pose": "idle_shy",
+  "intro": "idle_shy"
  },
  "Umar Farooq": {
   "style": "mara",
@@ -220,7 +352,14 @@
   "prop": "clock",
   "quote": "Is it due today? It's due today, isn't it?!",
   "accent": "#ff7a3d",
-  "outfit": "formal"
+  "outfit": "formal",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "pose": "idle_nervous",
+  "intro": "idle_nervous"
  },
  "Usman Najeeb": {
   "style": "ember",
@@ -230,7 +369,12 @@
   "prop": "cigarette",
   "quote": "Automate everything. Even your defeat.",
   "accent": "#8a8f98",
-  "outfit": "formal"
+  "outfit": "formal",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ]
  },
  "Zia Khan": {
   "style": "tao",
@@ -240,7 +384,13 @@
   "prop": "runes",
   "quote": "I wrote the code you're running on.",
   "accent": "#d4af37",
-  "outfit": "formal"
+  "outfit": "formal",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "idle": "idle_martial"
  },
  "Ali": {
   "style": "kael",
@@ -250,7 +400,14 @@
   "prop": "chai",
   "quote": "Tea is at 3 and 5. Not again. For anyone.",
   "accent": "#c8743a",
-  "outfit": "kurta"
+  "outfit": "kurta",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "pose": "idle_impatient",
+  "intro": "taunt_angry"
  },
  "Hamza Khan": {
   "style": "bastion",
@@ -260,6 +417,13 @@
   "prop": "logo",
   "quote": "Meeting adjourned.",
   "accent": "#7a3fd1",
-  "outfit": "ceo"
+  "outfit": "ceo",
+  "skin": [
+   0.93,
+   0.8,
+   0.7
+  ],
+  "pose": "idle_boss",
+  "intro": "idle_boss"
  }
 }

@@ -627,9 +627,16 @@ func _acc_parts(kind: String) -> Array:
 				["upperChest", ToonRig.box(0.11, 0.42, 0.02), Vector3(0.1, -0.1, -0.11), Vector3(0.1, 0, 0.15), Vector3.ONE],
 				["upperChest", ToonRig.box(0.11, 0.38, 0.02), Vector3(-0.12, -0.08, 0.1), Vector3(-0.08, 0, -0.2), Vector3.ONE]]
 		"beard":
-			return [["head", ToonRig.sph(0.055), Vector3(0, -0.012, 0.07), Vector3.ZERO, Vector3(1.05, 0.5, 0.5)]]
+			var tufts: Array = []
+			for k in 7:
+				var a := (k - 3) / 3.0 * 1.15            # -1.15 .. 1.15 rad around the jaw
+				var pos := Vector3(sin(a) * 0.066, 0.006 - 0.014 * cos(a), cos(a) * 0.074 - 0.006)
+				tufts.append(["head", ToonRig.sph(0.022), pos, Vector3(0, a, 0), Vector3(1.0, 1.35, 0.55)])
+			tufts.append(["head", ToonRig.sph(0.024), Vector3(0, -0.014, 0.074), Vector3.ZERO, Vector3(1.1, 1.0, 0.7)])   # chin
+			return tufts + _acc_parts("mustache")
 		"mustache":
-			return [["head", ToonRig.box(0.055, 0.009, 0.014), Vector3(0, 0.018, 0.106), Vector3.ZERO, Vector3.ONE]]
+			return [["head", ToonRig.sph(0.016), Vector3(0.016, 0.016, 0.103), Vector3(0, 0, -0.25), Vector3(1.7, 0.55, 0.6)],
+				["head", ToonRig.sph(0.016), Vector3(-0.016, 0.016, 0.103), Vector3(0, 0, 0.25), Vector3(1.7, 0.55, 0.6)]]
 		"kneepads":
 			return [["leftLowerLeg", ToonRig.sph(0.06), Vector3(0, 0.0, 0.05), Vector3.ZERO, Vector3(1, 1, 0.6)],
 				["rightLowerLeg", ToonRig.sph(0.06), Vector3(0, 0.0, 0.05), Vector3.ZERO, Vector3(1, 1, 0.6)]]

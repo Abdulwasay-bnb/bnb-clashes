@@ -561,6 +561,12 @@ static func throw_pair(f: Fighter) -> Array:
 	return ["throw", "thrown"]
 
 
+## A fighter's own clips from their design (fight idle / select-screen pose / match intro), when present.
+static func own_clip(C: Dictionary, key: String, fallback: String) -> String:
+	var n: String = (C.get("person", {}) as Dictionary).get(key, "")
+	return n if n != "" and ClipLib.has(n) else fallback
+
+
 static func _len(n: String) -> float:
 	var c: ClipLib.Clip = ClipLib.get_clip(n)
 	return c.length if c != null else 1.0
@@ -576,12 +582,12 @@ func clip_request() -> Array:
 		"crouch":
 			return ["crouch_idle", fmod(anim_t, _len("crouch_idle"))]
 		"idle":
-			var ic: String = INTRO.get(C.arch, "")
+			var ic: String = own_clip(C, "intro", INTRO.get(C.arch, ""))
 			if G.phase == "intro" and ClipLib.has(ic):
 				# fit the clip into the intro, never slower than real time
 				var el := float(G.INTRO_FRAMES - G.phase_t) / 60.0
 				return [ic, minf(el * maxf(1.0, _len(ic) / 2.4), _len(ic))]
-			var n := idle_clip(C.arch)
+			var n := own_clip(C, "idle", idle_clip(C.arch))
 			return [n, fmod(anim_t, _len(n))]
 		"walkf":
 			return ["step_forward", fmod(anim_t * 1.3 * C.speed, _len("step_forward"))]

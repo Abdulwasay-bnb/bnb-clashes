@@ -118,10 +118,12 @@ static func register(p: Dictionary) -> void:
 			var female := String(p.model) == "female"
 			var hair := _hair(String(p.get("hair", "")), female)
 			var skin_c := Color(0.86, 0.7, 0.58) if female else Color(0.8, 0.62, 0.48)
+			var sk: Array = p.get("skin", [])
+			if sk.size() == 3: skin_c = Color(sk[0], sk[1], sk[2])
 			var extra: Array = []
 			if p.get("glasses", false): extra.append(["glasses", Color(0.1, 0.1, 0.12)])
 			for x in p.get("extras", []):
-				extra.append([x, Color(0.07, 0.06, 0.06)])
+				extra.append([x, Color(0.16, 0.11, 0.08)])
 			var kind := String(p.get("outfit_kind", "casual"))
 			# [main color, second color, trim]: their own colors, then Casual Friday, then Team BNB
 			var palettes := [[acc, acc.darkened(0.55), acc.lightened(0.35)],

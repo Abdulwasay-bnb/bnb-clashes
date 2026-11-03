@@ -81,16 +81,25 @@ static func build(kind: String, accent: Color) -> Node3D:
 			_mesh(n, _sph(0.06), g, Vector3(0.07, 0, 0), Vector3.ZERO, Vector3(1.4, 0.8, 1))
 			_mesh(n, _box(0.06, 0.005, 0.01), _mat(Color(0.9, 0.1, 0.2), 1.5), Vector3(0.15, 0, 0))
 		"goat":
-			var w := _mat(Color(0.92, 0.92, 1.0), 1.2, 0.75)   # a glowing goat spirit
-			_mesh(n, _box(0.5, 0.25, 0.22), w)
-			_mesh(n, _box(0.18, 0.18, 0.16), w, Vector3(0.32, 0.12, 0))
-			for z in [-0.06, 0.06]:
-				var horn := TorusMesh.new(); horn.inner_radius = 0.04; horn.outer_radius = 0.06
-				_mesh(n, horn, _mat(Color(0.85, 0.75, 0.5), 0.6), Vector3(0.3, 0.25, z), Vector3(PI / 2, 0, 0.5))
-			for lx in [-0.18, 0.18]:
-				for z in [-0.08, 0.08]:
-					_mesh(n, _box(0.05, 0.2, 0.05), w, Vector3(lx, -0.2, z))
-			_mesh(n, _box(0.04, 0.1, 0.04), w, Vector3(0.38, -0.02, 0))   # beard
+			# a glowing goat spirit, built facing -Z (the direction props travel)
+			var w := _mat(Color(0.95, 0.95, 1.0), 0.9, 0.9)
+			var horn_m := _mat(Color(0.8, 0.68, 0.45), 0.4)
+			_mesh(n, _sph(0.2), w, Vector3(0, 0.36, 0), Vector3.ZERO, Vector3(0.75, 0.7, 1.45))          # body
+			_mesh(n, _cyl(0.06, 0.08, 0.2), w, Vector3(0, 0.5, -0.26), Vector3(-0.7, 0, 0))               # neck
+			_mesh(n, _sph(0.1), w, Vector3(0, 0.62, -0.38), Vector3(0.25, 0, 0), Vector3(0.8, 0.85, 1.3))  # head
+			_mesh(n, _sph(0.055), _mat(Color(0.85, 0.82, 0.86), 0.5), Vector3(0, 0.57, -0.49))            # snout
+			for sx in [-1.0, 1.0]:
+				_mesh(n, _cyl(0.0, 0.026, 0.2), horn_m, Vector3(sx * 0.05, 0.75, -0.31), Vector3(-1.0, 0, sx * 0.25))  # horns sweep back
+				_mesh(n, _sph(0.035), w, Vector3(sx * 0.1, 0.66, -0.35), Vector3.ZERO, Vector3(1.6, 0.5, 0.8))         # ears
+				for lz in [-0.2, 0.2]:
+					_mesh(n, _cyl(0.024, 0.02, 0.3), w, Vector3(sx * 0.09, 0.14, lz))                                # legs
+			_mesh(n, _cyl(0.0, 0.03, 0.1), w, Vector3(0, 0.49, -0.45), Vector3(PI, 0, 0))                  # beard
+			_mesh(n, _sph(0.04), w, Vector3(0, 0.46, 0.3))                                                  # tail
+		"agents":
+			# one AI agent: a glowing core with an orbiting ring
+			_mesh(n, _sph(0.05), _mat(CY, 2.4))
+			var ring := TorusMesh.new(); ring.inner_radius = 0.075; ring.outer_radius = 0.085
+			_mesh(n, ring, _mat(BV, 2.0), Vector3.ZERO, Vector3(PI / 2, 0, 0))
 		"cards":
 			var c := _mat(Color(1, 1, 1))
 			_mesh(n, _box(0.12, 0.17, 0.004), c)
@@ -152,7 +161,7 @@ static func build(kind: String, accent: Color) -> Node3D:
 ## How many props and how they travel, per kind: [count, spin, arc height, scale].
 const STYLE := {
 	"banana": [5, 9.0, 0.5, 1.4], "chai": [3, 6.0, 0.7, 1.6], "cigarette": [4, 12.0, 0.2, 1.8], "ball": [1, 20.0, 0.1, 1.8],
-	"snake": [1, 0.0, 0.0, 2.6], "goat": [1, 0.0, 0.0, 2.2], "cards": [7, 14.0, 0.3, 1.4], "notes": [8, 8.0, 0.6, 1.2],
+	"snake": [1, 0.0, 0.0, 2.6], "goat": [1, 0.0, 0.0, 1.7], "agents": [10, 0.0, 0.5, 1.3], "cards": [7, 14.0, 0.3, 1.4], "notes": [8, 8.0, 0.6, 1.2],
 	"letters": [6, 7.0, 0.4, 1.4], "contract": [3, 5.0, 0.5, 1.5], "phone": [3, 4.0, 0.3, 1.6], "briefcase": [1, 10.0, 0.5, 1.6],
 	"snack": [4, 8.0, 0.6, 1.4], "gem": [3, 6.0, 0.2, 1.4], "paint": [8, 0.0, 0.5, 1.3], "pixels": [10, 6.0, 0.4, 1.2],
 	"smoke": [3, 1.0, 0.2, 2.2], "clock": [4, 6.0, 0.4, 1.4], "code": [4, 0.0, 0.3, 1.0], "py": [3, 0.0, 0.3, 1.0],
@@ -166,6 +175,8 @@ static func launch(G: Node, att, def, kind: String, travel: float) -> void:
 	var st: Array = STYLE.get(kind, [3, 6.0, 0.3, 1.4])
 	var from: Vector3 = att.pos + Vector3(0, 1.3 * att.C.scale, 0)
 	var to: Vector3 = def.pos + Vector3(0, 1.05 * def.C.scale, 0)
+	if kind == "goat":   # the goat charges along the ground
+		from = att.pos; to = def.pos
 	var count: int = st[0]
 	for k in count:
 		var p := build(kind, att.C.accent)
@@ -187,9 +198,16 @@ static func launch(G: Node, att, def, kind: String, travel: float) -> void:
 		var start := p.position
 		var end := to + spread
 		var wiggle := kind == "snake"
+		var gallop := kind == "goat"
+		var swarm := kind == "agents"
+		var ph := k * TAU / maxf(1.0, count)
 		tw.tween_method(func(u: float):
 			var q := start.lerp(end, u) + Vector3(0, sin(u * PI) * arc, 0)
 			if wiggle: q += Vector3(sin(u * 18.0) * 0.12, 0, cos(u * 18.0) * 0.12)
+			if gallop: q.y = start.y + absf(sin(u * 22.0)) * 0.12
+			if swarm:   # spiral in toward the target, tightening as they close
+				var r := 0.45 * (1.0 - u)
+				q += Vector3(cos(u * 14.0 + ph) * r, sin(u * 14.0 + ph) * r, 0)
 			p.position = q
 			p.rotate_object_local(Vector3(0, 0, 1), spin * 0.016), 0.0, 1.0, dur)
 		# pop on impact

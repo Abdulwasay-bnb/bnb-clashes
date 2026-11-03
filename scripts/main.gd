@@ -990,8 +990,8 @@ func _menu_camera() -> void:
 		pv.disp = Pose.lerp_p(pv.disp, pv.C.pose.win if pv.win else pv.C.pose.guard, 0.12)
 		var q: PackedFloat32Array = pv.disp.duplicate()
 		if not pv.win:
-			Idle.apply(pv.C.id, q, t_now + i * 0.9)
-		var ic := "" if pv.win else Fighter.idle_clip(pv.C.id)
+			Idle.apply(pv.C.arch, q, t_now + i * 0.9)
+		var ic := "" if pv.win else Fighter.own_clip(pv.C, "pose", Fighter.own_clip(pv.C, "idle", Fighter.idle_clip(pv.C.arch)))
 		r.set_clip(ic, fmod(t_now + i * 0.7, Fighter._len(ic)) if ic != "" else 0.0)
 		r.apply_pose(q)
 
@@ -1284,9 +1284,20 @@ func _run_autotest() -> void:
 			await start_match({mode = "training", stage = "boardroom"}, [Data.by_id("ali"), Data.by_id("hamza_khan")])
 			await get_tree().create_timer(0.5).timeout
 			F[0].meter = 100.0
-			PowerProps.launch(self, F[0], F[1], "chai", 0.6)
+			for pr in get_children():
+				if pr is Node3D and pr.get_parent() == self and pr.scale.x == 2.0 and not (pr is Camera3D): pr.queue_free()
+			PowerProps.launch(self, F[0], F[1], "goat", 0.9)
+			PowerProps.launch(self, F[0], F[1], "agents", 0.9)
 			await get_tree().create_timer(0.35).timeout
 			await shot.call("propfly")
+		"poses":
+			# select-screen personality poses, two fighters at a time
+			ui.show_select({mode = "cpu", lv = 1})
+			var pairs := [["ali", "hamza_khan"], ["tuaha_aamir", "sabir_ud_din"]]
+			for k in pairs.size():
+				set_preview(0, Data.by_id(pairs[k][0])); set_preview(1, Data.by_id(pairs[k][1]))
+				await get_tree().create_timer(2.5).timeout
+				await shot.call("poses%d" % k)
 		"trade":
 			for setup in [["throw vs jab", "12", "1", 2], ["jab vs throw", "1", "12", -2], ["throw vs throw", "12", "12", 0]]:
 				await start_match({mode = "training"}, [Data.by_id("tao"), Data.by_id("lio")])
