@@ -40,6 +40,8 @@ var _sig_from := 0
 var _sig_t := 0.0
 var _sig_busy := false
 var _p2p_deadline := 0
+var _epoch := 0          # which join attempt the handshake belongs to (a retry starts a new one)
+var _blip_since := 0
 
 
 static func relay_url() -> String:
@@ -84,6 +86,7 @@ func join_room(c: String) -> void:
 		var r := await _http(HTTPClient.METHOD_POST, "/api/join", {g = GAME, code = code})
 		if not r.get("ok", false):
 			failed.emit(r.get("error", "Can't reach the online server")); return
+		_epoch = int(r.get("epoch", 0))
 		_start_peer()
 		_signal({t = "hello"})   # tells the host to send its offer
 		return
@@ -114,8 +117,14 @@ func _start_peer() -> void:
 	_p2p_deadline = Time.get_ticks_msec() + 45000
 
 
+func _restart_peer() -> void:
+	if dc != null: dc.close()
+	if pc != null: pc.close()
+	_start_peer()
+
+
 func _signal(msg: Dictionary) -> void:
-	_http(HTTPClient.METHOD_POST, "/api/signal", {g = GAME, code = code, to = "guest" if is_host else "host", msg = msg})
+	_http(HTTPClient.METHOD_POST, "/api/signal", {g = GAME, code = code, to = "guest" if is_host else "host", epoch = _epoch, msg = msg})
 
 
 func _poll_signals() -> void:
@@ -124,6 +133,13 @@ func _poll_signals() -> void:
 	var r := await _http(HTTPClient.METHOD_GET, "/api/signal?g=%s&code=%s&for=%s&from=%d" % [GAME, code, "host" if is_host else "guest", _sig_from], {})
 	_sig_busy = false
 	if pc == null or not r.has("msgs"): return
+	var e := int(r.get("epoch", _epoch))
+	if is_host and e != _epoch and not connected:
+		# a (new) guest is trying to join: start a fresh handshake for this attempt
+		_epoch = e
+		_sig_from = 0
+		_restart_peer()
+		return
 	_sig_from = int(r.get("next", _sig_from))
 	for m in r.msgs:
 		match String(m.get("t", "")):
@@ -155,21 +171,34 @@ func _http(method: int, path: String, body: Dictionary) -> Dictionary:
 func _poll_p2p(dt: float) -> void:
 	pc.poll()
 	if dc.get_ready_state() == WebRTCDataChannel.STATE_OPEN:
-		if not connected: _set_paired()
+		if not connected:
+			_set_paired()
+			if is_host: _http(HTTPClient.METHOD_POST, "/api/live", {g = GAME, code = code})   # now it's full
 		while dc != null and dc.get_available_packet_count() > 0:
 			var d = JSON.parse_string(dc.get_packet().get_string_from_utf8())
 			if d is Dictionary: _on_message(d)
 		return
-	if connected and (dc.get_ready_state() == WebRTCDataChannel.STATE_CLOSED or pc.get_connection_state() >= WebRTCPeerConnection.STATE_DISCONNECTED):
-		connected = false
-		peer_left.emit()
+	if connected:
+		# a brief "disconnected" blip can recover by itself; only a closed channel, a failed connection
+		# or a blip that lasts several seconds means the rival is really gone
+		var st := pc.get_connection_state()
+		if st == WebRTCPeerConnection.STATE_DISCONNECTED:
+			if _blip_since == 0: _blip_since = Time.get_ticks_msec()
+		else:
+			_blip_since = 0
+		var gone := dc.get_ready_state() == WebRTCDataChannel.STATE_CLOSED or st >= WebRTCPeerConnection.STATE_FAILED \
+			or (_blip_since > 0 and Time.get_ticks_msec() - _blip_since > 6000)
+		if gone:
+			print("NET p2p lost: dc=%d pc=%d" % [dc.get_ready_state(), st])
+			connected = false
+			peer_left.emit()
 		return
 	if not connected:
 		_sig_t -= dt
 		if _sig_t <= 0.0:
 			_sig_t = 0.4
 			_poll_signals()
-		if Time.get_ticks_msec() > _p2p_deadline and (not is_host or _sig_from > 0):
+		if not is_host and Time.get_ticks_msec() > _p2p_deadline:
 			failed.emit("Couldn't connect to your rival directly (some networks block it). Try Wi-Fi play, or another network.")
 			close()
 
@@ -204,6 +233,7 @@ func join_lan(ip: String) -> void:
 
 
 func close() -> void:
+	if connected: print("NET close() while connected (via %s)" % via)
 	if ws != null:
 		ws.close()
 	ws = null

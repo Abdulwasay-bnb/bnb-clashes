@@ -1467,7 +1467,7 @@ func _end_buttons(row: HBoxContainer) -> void:
 		_focus_first(row)
 		return
 	if G.mode == "online":
-		online.rematch = [false, false]
+		# (online.rematch is reset when a match starts, not here: the rival may already have asked)
 		var rb: Button
 		rb = menu_btn("REMATCH", func():
 			online.rematch[G.local_side] = true

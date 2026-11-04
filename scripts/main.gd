@@ -589,8 +589,13 @@ func room_link(code: String) -> String:
 	return WEB_URL + "?room=" + code
 
 
+var online_matches := 0   # online matches started this session (autotests use it to spot a rematch)
+
+
 func start_online(c: Dictionary, p: Array) -> void:
+	online_matches += 1
 	local_side = 0 if net.is_host else 1
+	ui.online.rematch = [false, false]
 	net_delay = clampi(int(c.get("delay", 3)), 2, 10)
 	nf = 0
 	net_in = [{}, {}]; net_hash = [{}, {}]
@@ -1253,6 +1258,10 @@ func _run_autotest() -> void:
 							code = FileAccess.get_file_as_string(codefile).strip_edges()
 							if code != "": break
 						await get_tree().create_timer(0.2).timeout
+					# first a join that gets abandoned (used to leave the room "full"), then the real one
+					await net.join_room(code)
+					net.close()
+					await get_tree().create_timer(1.0).timeout
 					ui.show_join(code)
 			for k in 150:
 				if net.connected: break
@@ -1290,7 +1299,26 @@ func _run_autotest() -> void:
 				if k % 400 == 0: print("AUTOTEST net progress view=%s mode=%s nf=%d F=%d in0=%d in1=%d" % [ui.view, mode, nf, F.size(), net_in[0].size(), net_in[1].size()])
 				if nf >= 960 or not net.connected: break
 			print("AUTOTEST net done nf=%d connected=%s hp=%s wins=%s" % [nf, net.connected, [roundf(F[0].hp), roundf(F[1].hp)] if not F.is_empty() else [], wins])
-			await get_tree().create_timer(1.5).timeout
+			# rematch race: the guest asks before the host's results screen even exists
+			test_net_input = Callable()
+			if not host:
+				ui.show_end()
+				ui.online.rematch[local_side] = true; net.send({t = "rematch"}); ui._online_rematch()
+				print("AUTOTEST net guest asked for rematch")
+			else:
+				await get_tree().create_timer(2.0).timeout
+				ui.show_end()
+				await get_tree().create_timer(1.0).timeout
+				ui.online.rematch[local_side] = true; net.send({t = "rematch"}); ui._online_rematch()
+				print("AUTOTEST net host asked for rematch")
+			var before := online_matches
+			var started := false
+			for k in 600:
+				await get_tree().create_timer(0.05).timeout
+				if online_matches > before and not F.is_empty() and nf > 30:
+					started = true; break
+			print("AUTOTEST net rematch started=%s view=%s nf=%d connected=%s" % [started, ui.view, nf, net.connected])
+			await get_tree().create_timer(3.0).timeout   # let the rival see it too before hanging up
 			net.close()
 		"onlinemenu":
 			ui.show_online()
