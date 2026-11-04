@@ -561,7 +561,7 @@ func start_race(track_id: String, C: Dictionary) -> void:
 
 ## Online / Wi-Fi race (see PartyLobby).
 func start_race_net(track_id: String, people: Array, humans: int, seed: int, me: int, party: Party, is_guest: bool, pids: Dictionary) -> void:
-	end_race(); end_ops()
+	end_race(); end_ops(); end_ludo()
 	loader.open("LOADING RACE")
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -575,13 +575,52 @@ func start_race_net(track_id: String, people: Array, humans: int, seed: int, me:
 	loader.close()
 
 
+# ------------------------------------------------------------------ BNB Ludo
+var ludo: LudoGame
+
+
+## Solo vs CPU (cpus opponents) or pass & play (cpus + 1 people on this device).
+func start_ludo(C: Dictionary, cpus: int, pass_play: bool) -> void:
+	var pool := Data.ROSTER.filter(func(c): return c.id != C.id)
+	pool.shuffle()
+	var people := [{C = C, human = true, slot = -2 if pass_play else 0}]
+	for k in cpus: people.append({C = pool[k], human = pass_play, slot = -2 if pass_play else -1})
+	await _begin_ludo(func(l: LudoGame): l.start(self, people, randi(), 0, pass_play))
+
+
+func start_ludo_net(people: Array, seed: int, slot: int, party: Party, is_guest: bool, pids: Dictionary) -> void:
+	await _begin_ludo(func(l: LudoGame): l.start_net(self, people, seed, slot, party, is_guest, pids))
+
+
+func _begin_ludo(init: Callable) -> void:
+	end_race(); end_ops(); end_ludo()
+	loader.open("SETTING UP THE BOARD")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	clear_preview()
+	if stage != null: stage.visible = false
+	ui.hide_screen(); ui.view = "ludo"; ui.hide_hud()
+	ludo = LudoGame.new()
+	add_child(ludo)
+	init.call(ludo)
+	ludo.finished.connect(end_ludo)
+	loader.close()
+
+
+func end_ludo() -> void:
+	if ludo != null:
+		ludo.stop(); ludo.queue_free(); ludo = null
+		if stage != null: stage.visible = true
+		camera.current = true
+
+
 # ------------------------------------------------------------------ BNB Office Ops
 var ops: OpsGame
 var lobby: PartyLobby
 
 
 func start_ops_net(a: Array, b: Array, humans: Dictionary, guns: Dictionary, skill: float, seed: int, me: int, party: Party, is_guest: bool, pids: Dictionary) -> void:
-	end_race(); end_ops()
+	end_race(); end_ops(); end_ludo()
 	loader.open("DEPLOYING")
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -1236,8 +1275,12 @@ func _run_autotest() -> void:
 			for k in 100:
 				if race != null or ops != null: break
 				await get_tree().create_timer(0.1).timeout
+			for k in 100:
+				if race != null or ops != null or ludo != null: break
+				await get_tree().create_timer(0.1).timeout
 			if race != null: race.autopilot = true
 			if ops != null: ops.autopilot = true
+			if ludo != null: ludo.autoplay = true
 			var tag := "host" if host else "guest_" + char_id
 			for k in 3:
 				await get_tree().create_timer(7.0).timeout
@@ -1249,8 +1292,32 @@ func _run_autotest() -> void:
 			if ops != null:
 				var me: OpsSim.Soldier = ops.sim.soldiers[ops.me]
 				print("AUTOTEST party %s ops t=%.1f state=%s me=%d team=%d score=%s kills=%d deaths=%d events=%s" % [tag, ops.sim.time, ops.sim.state, ops.me, me.team, ops.sim.score, me.kills, me.deaths, ops.stats])
+			if ludo != null:
+				print("AUTOTEST party %s ludo me=%d turn=%d phase=%s rev=%d tokens=%s" % [tag, ludo.my_slot, ludo.sim.turn, ludo.sim.phase, ludo.sim.rev, ludo.sim.players.map(func(p): return p.tokens)])
 			# the host stays a while so slower guests finish their checks too
 			await get_tree().create_timer(30.0 if host else 2.0).timeout
+		"ludosim":
+			# whole games with 2, 3 and 4 CPU players, no visuals: rules finish, places handed out
+			for n in [2, 3, 4]:
+				var people := []
+				for k in n: people.append({C = Data.ROSTER[k * 3], human = false, slot = -1})
+				var sim := LudoSim.new()
+				sim.setup(people, 11 + n)
+				var counts := {}
+				var t := 0.0
+				while sim.phase != "done" and t < 4000.0:
+					sim.update(0.1); t += 0.1
+					for e in sim.events: counts[e[0]] = counts.get(e[0], 0) + 1
+					sim.events.clear()
+				print("AUTOTEST ludosim %dp done=%s t=%.0fs places=%s events=%s" % [n, sim.phase == "done", t, sim.players.map(func(p): return p.place), counts])
+		"ludo":
+			await start_ludo(Data.by_id("hamza_khan"), 3, false)
+			ludo.autoplay = true
+			for k in 3:
+				await get_tree().create_timer(8.0).timeout
+				await shot.call("ludo_%d" % k)
+			print("AUTOTEST ludo turn=%d phase=%s tokens=%s events=%s" % [ludo.sim.turn, ludo.sim.phase, ludo.sim.players.map(func(p): return p.tokens), ludo.stats])
+			ui.show_ludo_menu(Data.by_id("hamza_khan")); await get_tree().create_timer(0.6).timeout; await shot.call("ludo_menu")
 		"mobile":
 			# run with --phone: the new modes' screens and touch controls at a phone's shape
 			ui.show_title(); await get_tree().create_timer(1.0).timeout; await shot.call("p_title")

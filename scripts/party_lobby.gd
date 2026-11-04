@@ -11,7 +11,7 @@ var mode := ""                 # race / ops
 var C: Dictionary              # this player's character
 var gun := "rifle"
 var players: Array = []        # [{pid, c, gun}] — pid 0 is the host
-var cfg := {track = "city", mine = 4, them = 4, skill = 1.0}
+var cfg := {track = "city", mine = 4, them = 4, skill = 1.0, fill = true}
 var status: Label
 var list_box: VBoxContainer
 var found_box: VBoxContainer
@@ -37,7 +37,11 @@ func _ready() -> void:
 
 
 func max_players() -> int:
-	return 10 if mode == "race" else 8
+	return {"race": 10, "ops": 8, "ludo": 4, "mafia": 10}.get(mode, 8)
+
+
+func title() -> String:
+	return {"race": "RUSH HOUR", "ops": "OFFICE OPS", "ludo": "LUDO", "mafia": "MAFIA"}.get(mode, "")
 
 
 # ---------------------------------------------------------------- menu
@@ -54,7 +58,7 @@ func show_menu(m: String, who: Dictionary, msg := "") -> void:
 	col.add_theme_constant_override("separation", 6)
 	ui.screen.add_child(col)
 	col.position = Vector2(90, 90) if not ui.touch_enabled else Vector2(70, 100)
-	col.add_child(ui.lbl("RUSH HOUR" if mode == "race" else "OFFICE OPS", 64, ui.F_TITLE, Color(0.13, 0.78, 0.92) if mode == "race" else Color(0.66, 0.4, 1.0), 10))
+	col.add_child(ui.lbl(title(), 64, ui.F_TITLE, {"race": Color(0.13, 0.78, 0.92), "ludo": Color(1.0, 0.81, 0.35), "mafia": Color(0.95, 0.3, 0.35)}.get(mode, Color(0.66, 0.4, 1.0)), 10))
 	col.add_child(ui.lbl("%s  ·  PLAY WITH FRIENDS  ·  UP TO %d PLAYERS" % [C.name, max_players()], 20, ui.F_BODY, Color(1.0, 0.81, 0.35)))
 	var back := _back_cb()
 	var items := [
@@ -82,6 +86,8 @@ func show_menu(m: String, who: Dictionary, msg := "") -> void:
 func _back_cb() -> Callable:
 	var who := C
 	if mode == "race": return func(): party.close(); G.ui.show_race_tracks(who)
+	if mode == "ludo": return func(): party.close(); G.ui.show_ludo_menu(who)
+	if mode == "mafia": return func(): party.close(); G.ui.show_title()
 	return func(): party.close(); G.ui.show_ops_setup(who)
 
 
@@ -178,7 +184,7 @@ func _find_lan() -> void:
 	var ui = G.ui
 	party.find_lan(mode)
 	view = "find"
-	var v := _panel("WI-FI GAMES", "Looking for %s games on this network…" % ("Rush Hour" if mode == "race" else "Office Ops"))
+	var v := _panel("WI-FI GAMES", "Looking for %s games on this network…" % title().capitalize())
 	found_box = VBoxContainer.new()
 	found_box.add_theme_constant_override("separation", 10)
 	v.add_child(ui._centered(found_box))
@@ -220,7 +226,7 @@ func _render_lobby() -> void:
 	var host := party.is_host
 	var title := "LOBBY"
 	var how := ""
-	if host and party.via == "p2p": title = "ROOM  " + party.code; how = "Friends: %s → ONLINE / WI-FI → JOIN WITH CODE" % ("RUSH HOUR" if mode == "race" else "OFFICE OPS")
+	if host and party.via == "p2p": title = "ROOM  " + party.code; how = "Friends: %s → PLAY WITH FRIENDS → JOIN WITH CODE" % title()
 	elif host:
 		# home / office Wi-Fi addresses first; 172.x are usually virtual (Docker, VMs) and only shown if nothing else
 		var ips := Net.lan_addresses().filter(func(a): return not String(a).begins_with("172."))
@@ -256,7 +262,10 @@ func _render_lobby() -> void:
 			v.add_child(r)
 		else:
 			v.add_child(_centered_lbl("TRACK:  " + String(RaceSim.TRACKS.get(cfg.track, RaceSim.TRACKS.city).name).to_upper()))
-	else:
+	elif mode == "ludo":
+		if host: v.add_child(_opt_row("EMPTY SEATS", [true, false], "fill", ["CPU PLAYERS", "LEAVE EMPTY"]))
+		else: v.add_child(_centered_lbl("EMPTY SEATS:  " + ("CPU PLAYERS" if cfg.fill else "LEFT EMPTY")))
+	elif mode == "ops":
 		if host:
 			v.add_child(_opt_row("TEAM SIZE", [1, 2, 3, 4], "mine", ["1", "2", "3", "4"]))
 			v.add_child(_opt_row("ENEMY SIZE", [1, 2, 3, 4], "them", ["1", "2", "3", "4"]))
@@ -299,6 +308,7 @@ func _opt_row(title: String, opts: Array, key: String, names: Array) -> HBoxCont
 
 func _seats() -> int:
 	if mode == "race": return 10
+	if mode == "ludo": return 4 if cfg.fill else maxi(2, players.size())
 	var ab := _team_sizes()
 	return ab[0] + ab[1]
 
@@ -327,7 +337,7 @@ func _on_left(pid: int) -> void:
 func _gone(msg: String) -> void:
 	if in_game:
 		in_game = false
-		G.end_race(); G.end_ops()
+		G.end_race(); G.end_ops(); G.end_ludo()
 	show_menu(mode, C, msg)
 
 
@@ -384,6 +394,21 @@ func start_match() -> void:
 	pool.shuffle()
 	party.lock_room(true)
 	in_game = true
+	if mode == "ludo":
+		var ids := []
+		for p in players: ids.append(String(p.c))
+		var n := 4 if cfg.fill else maxi(2, players.size())
+		for c in pool:
+			if ids.size() >= n: break
+			ids.append(String(c.id))
+		var pids := {}
+		for k in players.size():
+			var pid := int(players[k].pid)
+			if pid != 0:
+				pids[pid] = k
+				party.send_to(pid, {t = "start", mode = "ludo", people = ids, humans = players.size(), seed = seed, me = k})
+		G.start_ludo_net(_ludo_people(ids, players.size()), seed, 0, party, false, pids)
+		return
 	if mode == "race":
 		var ids := []
 		for p in players: ids.append(String(p.c))
@@ -428,12 +453,21 @@ func start_match() -> void:
 
 func _start_guest(d: Dictionary) -> void:
 	if in_game:
-		G.end_race(); G.end_ops()
+		G.end_race(); G.end_ops(); G.end_ludo()
 	in_game = true
-	if String(d.mode) == "race":
+	if String(d.mode) == "ludo":
+		G.start_ludo_net(_ludo_people(d.people, int(d.humans)), int(d.seed), int(d.me), party, true, {})
+	elif String(d.mode) == "race":
 		G.start_race_net(String(d.track), _people(d.people), int(d.humans), int(d.seed), int(d.me), party, true, {})
 	else:
 		G.start_ops_net(_people(d.a), _people(d.b), _int_keys(d.humans), _int_keys(d.guns), float(d.skill), int(d.seed), int(d.me), party, true, {})
+
+
+func _ludo_people(ids: Array, humans: int) -> Array:
+	var out := []
+	var cs := _people(ids)
+	for k in cs.size(): out.append({C = cs[k], human = k < humans, slot = k if k < humans else -1})
+	return out
 
 
 func _people(ids: Array) -> Array:
