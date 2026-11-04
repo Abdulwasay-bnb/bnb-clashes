@@ -29,16 +29,38 @@ var stats := {}            # autotest: event counts
 var paused := false
 
 
+# multiplayer: the host runs the race and streams it; guests send their controls and draw what arrives
+var net: Party = null
+var guest := false
+var pid_of := {}           # host: guest pid -> racer id
+var inputs := {}           # host: racer id -> latest controls
+var outbox: Array = []     # host: events since the last snapshot
+var inbox: Array = []      # guest: snapshots / events waiting to be shown
+var track := ""
+
+
 func start(g, track_id: String, player: Dictionary) -> void:
-	G = g
-	font = load("res://assets/fonts/RussoOne-Regular.ttf")
-	small = load("res://assets/fonts/Rajdhani-Bold.ttf")
 	# ten racers: the player plus nine colleagues (bosses included)
 	var others := Data.ROSTER.filter(func(c): return c.id != player.id)
 	others.shuffle()
-	var people := [player] + others.slice(0, 9)
+	_begin(g, track_id, [player] + others.slice(0, 9), 1, randi())
+
+
+## Online / Wi-Fi race. people: every racer (humans first), me: this player's racer.
+func start_net(g, track_id: String, people: Array, humans: int, seed: int, my_id: int, party: Party, is_guest: bool, pids: Dictionary) -> void:
+	net = party; guest = is_guest; pid_of = pids; me = my_id
+	net.message.connect(_net_message)
+	if not guest: net.left.connect(_net_left)
+	_begin(g, track_id, people, humans, seed)
+
+
+func _begin(g, track_id: String, people: Array, humans: int, seed: int) -> void:
+	G = g
+	track = track_id
+	font = load("res://assets/fonts/RussoOne-Regular.ttf")
+	small = load("res://assets/fonts/Rajdhani-Bold.ttf")
 	sim = RaceSim.new()
-	sim.setup(track_id, people, 1, randi())
+	sim.setup(track_id, people, humans, seed)
 	world = RaceWorld.new()
 	G.add_child(world)
 	world.build(sim, people, me)
@@ -55,6 +77,9 @@ func start(g, track_id: String, player: Dictionary) -> void:
 
 
 func stop() -> void:
+	if net != null:
+		if net.message.is_connected(_net_message): net.message.disconnect(_net_message)
+		if net.left.is_connected(_net_left): net.left.disconnect(_net_left)
 	if world != null: world.queue_free()
 	if layer != null: layer.queue_free()
 	world = null; layer = null
@@ -63,10 +88,22 @@ func stop() -> void:
 # ---------------------------------------------------------------- loop
 func _physics_process(_dt: float) -> void:
 	if sim == null or (paused and not online_match()): return
-	sim.tick({me: sim._cpu(sim.racers[me]) if autopilot else _controls()})
-	for e in sim.events:
-		stats[e[0]] = stats.get(e[0], 0) + 1
-		_event(e)
+	var mine: Dictionary = sim._cpu(sim.racers[me]) if autopilot else _controls()
+	if guest:
+		_guest_tick(mine)
+	else:
+		inputs[me] = mine
+		sim.tick(inputs)
+		for e in sim.events:
+			stats[e[0]] = stats.get(e[0], 0) + 1
+			_event(e)
+		if net != null:
+			outbox.append_array(sim.events)
+			if sim.tick_n % 2 == 0 or sim.state == "done":
+				var ev := []
+				for e in outbox: ev.append(Party.pack(e))
+				net.broadcast({t = "rs", s = sim.snapshot(), e = ev})
+				outbox.clear()
 	if sim.state == "done" and not results_shown:
 		results_shown = true
 		await get_tree().create_timer(1.2).timeout
@@ -78,6 +115,37 @@ func _process(dt: float) -> void:
 	world.draw(Engine.get_physics_interpolation_fraction(), dt)
 	toast_t = maxf(0.0, toast_t - dt)
 	hud.queue_redraw()
+
+
+func _guest_tick(mine: Dictionary) -> void:
+	if sim.tick_n % 1 == 0: net.send({t = "ri", i = mine})
+	var got := false
+	for m in inbox:
+		sim.apply(m.s)
+		got = true
+		for e in m.e:
+			var ev := Party.unpack_event(e)
+			stats[ev[0]] = stats.get(ev[0], 0) + 1
+			_event(ev)
+	inbox.clear()
+	if not got: sim.coast()
+
+
+func _net_message(pid: int, d: Dictionary) -> void:
+	match String(d.get("t", "")):
+		"ri":
+			if not guest and pid_of.has(pid) and d.i is Dictionary: inputs[pid_of[pid]] = d.i
+		"rs":
+			if guest: inbox.append(d)
+
+
+## A guest dropped out: a CPU takes over their car.
+func _net_left(pid: int) -> void:
+	if not pid_of.has(pid): return
+	var r: RaceSim.Racer = sim.racers[pid_of[pid]]
+	r.human = -1
+	inputs.erase(r.id)
+	_toast("%s LEFT" % String(r.C.person.get("short", r.C.name) if r.C.has("person") else r.C.name).to_upper())
 
 
 func _unhandled_input(e: InputEvent) -> void:
@@ -322,8 +390,12 @@ func _show_results() -> void:
 	var btns := HBoxContainer.new()
 	btns.alignment = BoxContainer.ALIGNMENT_CENTER
 	btns.add_theme_constant_override("separation", 16)
-	btns.add_child(ui.big_btn("RACE AGAIN", Color(0.13, 0.78, 0.92), func(): finished.emit(); ui.show_race_tracks(sim.racers[me].C)))
-	btns.add_child(ui.big_btn("MAIN MENU", Color(0.55, 0.62, 0.75), func(): finished.emit(); ui.show_title()))
+	if net != null:
+		btns.add_child(ui.big_btn("BACK TO LOBBY", Color(0.13, 0.78, 0.92), func(): finished.emit(); G.lobby.back_to_lobby()))
+		btns.add_child(ui.big_btn("LEAVE", Color(0.55, 0.62, 0.75), func(): finished.emit(); G.lobby.leave()))
+	else:
+		btns.add_child(ui.big_btn("RACE AGAIN", Color(0.13, 0.78, 0.92), func(): finished.emit(); ui.show_race_tracks(sim.racers[me].C)))
+		btns.add_child(ui.big_btn("MAIN MENU", Color(0.55, 0.62, 0.75), func(): finished.emit(); ui.show_title()))
 	v.add_child(btns)
 	panel.reset_size()
 	panel.position = (G.get_viewport().get_visible_rect().size - panel.size) / 2.0
@@ -360,8 +432,10 @@ func toggle_pause() -> void:
 
 
 func online_match() -> bool:
-	return false
+	return net != null
 
 
 func quit_match() -> void:
-	finished.emit(); G.ui.show_title()
+	finished.emit()
+	if net != null: G.lobby.leave()
+	else: G.ui.show_title()

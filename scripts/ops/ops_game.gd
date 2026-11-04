@@ -43,13 +43,38 @@ var look_last := Vector2.ZERO
 var scoreboard := false
 
 
+# multiplayer: the host runs the match and streams it; guests send their controls and aim
+var net: Party = null
+var guest := false
+var pid_of := {}            # host: guest pid -> soldier id
+var inputs := {}            # host: soldier id -> latest controls
+var outbox: Array = []
+var inbox: Array = []
+var aim := Vector2.ZERO     # guest: own yaw / pitch
+
+
 func start(g, team_a: Array, team_b: Array, primary: String, skill: float) -> void:
+	_begin(g, team_a, team_b, {0: 0}, {0: primary}, skill, randi())
+
+
+## Online / Wi-Fi match. humans: soldier id -> player slot, loadouts: soldier id -> primary gun.
+func start_net(g, team_a: Array, team_b: Array, humans: Dictionary, loadouts: Dictionary, skill: float, seed: int, my_id: int,
+		party: Party, is_guest: bool, pids: Dictionary) -> void:
+	net = party; guest = is_guest; pid_of = pids; me = my_id
+	net.message.connect(_net_message)
+	if not guest: net.left.connect(_net_left)
+	_begin(g, team_a, team_b, humans, loadouts, skill, seed)
+	var s: OpsSim.Soldier = sim.soldiers[me]
+	aim = Vector2(s.yaw, s.pitch)
+
+
+func _begin(g, team_a: Array, team_b: Array, humans: Dictionary, loadouts: Dictionary, skill: float, seed: int) -> void:
 	G = g
 	font = load("res://assets/fonts/RussoOne-Regular.ttf")
 	small = load("res://assets/fonts/Rajdhani-Bold.ttf")
 	sim = OpsSim.new()
 	sim.bot_skill = skill
-	sim.setup(team_a, team_b, {0: 0}, {0: primary}, randi())
+	sim.setup(team_a, team_b, humans, loadouts, seed)
 	world = Node3D.new()
 	G.add_child(world)
 	_build_map()
@@ -72,6 +97,9 @@ func start(g, team_a: Array, team_b: Array, primary: String, skill: float) -> vo
 
 func stop() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if net != null:
+		if net.message.is_connected(_net_message): net.message.disconnect(_net_message)
+		if net.left.is_connected(_net_left): net.left.disconnect(_net_left)
 	if world != null: world.queue_free()
 	if layer != null: layer.queue_free()
 	world = null; layer = null
@@ -244,15 +272,70 @@ func _physics_process(_dt: float) -> void:
 	if sim == null or (paused and not online_match()): return
 	var inp: Dictionary = sim._bot(sim.soldiers[me]) if autopilot else ({} if paused else _controls())
 	look = Vector2.ZERO
-	sim.tick({me: inp})
-	for e in sim.events:
-		stats[e[0]] = stats.get(e[0], 0) + 1
-		_event(e)
+	if guest:
+		_guest_tick(inp)
+	else:
+		inputs[me] = inp
+		sim.tick(inputs)
+		for e in sim.events:
+			stats[e[0]] = stats.get(e[0], 0) + 1
+			_event(e)
+		if net != null:
+			outbox.append_array(sim.events)
+			if sim.tick_n % 2 == 0 or sim.state == "done":
+				var ev := []
+				for e in outbox: ev.append(Party.pack(e))
+				net.broadcast({t = "os", s = sim.snapshot(), e = ev})
+				outbox.clear()
 	if sim.state == "done" and not results_shown:
 		results_shown = true
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		await get_tree().create_timer(1.0).timeout
 		_show_results()
+
+
+func _guest_tick(inp: Dictionary) -> void:
+	var s: OpsSim.Soldier = sim.soldiers[me]
+	# aim locally (no waiting for the host), send where we look
+	if autopilot:
+		aim = Vector2(s.yaw + float(inp.get("look_x", 0.0)), s.pitch + float(inp.get("look_y", 0.0)))
+	else:
+		aim.x = wrapf(aim.x + float(inp.get("look_x", 0.0)), -PI, PI)
+		aim.y = clampf(aim.y + float(inp.get("look_y", 0.0)), -1.35, 1.35)
+	inp.erase("look_x"); inp.erase("look_y")
+	inp.yaw = snappedf(aim.x, 0.0001); inp.pitch = snappedf(aim.y, 0.0001)
+	net.send({t = "oi", i = inp})
+	var got := false
+	for m in inbox:
+		var mine: Array = m.s.s[me]
+		if bool(mine[7]) and not s.alive: aim = Vector2(float(mine[3]), float(mine[4]))   # respawned: face the way the spawn faces
+		sim.apply(m.s, me)
+		got = true
+		for e in m.e:
+			var ev := Party.unpack_event(e)
+			stats[ev[0]] = stats.get(ev[0], 0) + 1
+			if ev[0] == "shot" and ev[2] == me: aim.y = minf(1.35, aim.y + float(s.gun().recoil) * 0.35)   # our own kick
+			_event(ev)
+	inbox.clear()
+	if not got: sim.coast()
+	s.yaw = aim.x; s.pitch = aim.y
+
+
+func _net_message(pid: int, d: Dictionary) -> void:
+	match String(d.get("t", "")):
+		"oi":
+			if not guest and pid_of.has(pid) and d.i is Dictionary: inputs[pid_of[pid]] = d.i
+		"os":
+			if guest: inbox.append(d)
+
+
+## A guest dropped out: a bot takes over their soldier.
+func _net_left(pid: int) -> void:
+	if not pid_of.has(pid): return
+	var s: OpsSim.Soldier = sim.soldiers[pid_of[pid]]
+	s.human = -1
+	inputs.erase(s.id)
+	killfeed.push_front(["%s LEFT · A BOT TAKES OVER" % _nm(s).to_upper(), 3.0, -1])
 
 
 func _unhandled_input(e: InputEvent) -> void:
@@ -644,8 +727,12 @@ func _show_results() -> void:
 	btns.alignment = BoxContainer.ALIGNMENT_CENTER
 	btns.add_theme_constant_override("separation", 16)
 	var C: Dictionary = (sim.soldiers[me] as OpsSim.Soldier).C
-	btns.add_child(ui.big_btn("PLAY AGAIN", Color(0.13, 0.78, 0.92), func(): finished.emit(); ui.show_ops_setup(C)))
-	btns.add_child(ui.big_btn("MAIN MENU", Color(0.55, 0.62, 0.75), func(): finished.emit(); ui.show_title()))
+	if net != null:
+		btns.add_child(ui.big_btn("BACK TO LOBBY", Color(0.13, 0.78, 0.92), func(): finished.emit(); G.lobby.back_to_lobby()))
+		btns.add_child(ui.big_btn("LEAVE", Color(0.55, 0.62, 0.75), func(): finished.emit(); G.lobby.leave()))
+	else:
+		btns.add_child(ui.big_btn("PLAY AGAIN", Color(0.13, 0.78, 0.92), func(): finished.emit(); ui.show_ops_setup(C)))
+		btns.add_child(ui.big_btn("MAIN MENU", Color(0.55, 0.62, 0.75), func(): finished.emit(); ui.show_title()))
 	v.add_child(btns)
 	panel.reset_size()
 	panel.position = (G.get_viewport().get_visible_rect().size - panel.size) / 2.0
@@ -682,8 +769,10 @@ func toggle_pause() -> void:
 
 
 func online_match() -> bool:
-	return false
+	return net != null
 
 
 func quit_match() -> void:
-	finished.emit(); G.ui.show_title()
+	finished.emit()
+	if net != null: G.lobby.leave()
+	else: G.ui.show_title()

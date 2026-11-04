@@ -235,8 +235,11 @@ func tick(inputs: Dictionary) -> void:
 func _control(s: Soldier, inp: Dictionary) -> void:
 	if s.protect > 0: s.protect -= 1
 	if s.hurt_t > 0: s.hurt_t -= 1
-	s.yaw = wrapf(s.yaw + float(inp.get("look_x", 0.0)), -PI, PI)
-	s.pitch = clampf(s.pitch + float(inp.get("look_y", 0.0)) - s.recoil * 0.0, -1.35, 1.35)
+	if inp.has("yaw"):   # online players aim on their own screen and send where they're looking
+		s.yaw = wrapf(float(inp.yaw), -PI, PI); s.pitch = clampf(float(inp.get("pitch", 0.0)), -1.35, 1.35)
+	else:
+		s.yaw = wrapf(s.yaw + float(inp.get("look_x", 0.0)), -PI, PI)
+		s.pitch = clampf(s.pitch + float(inp.get("look_y", 0.0)), -1.35, 1.35)
 	s.crouch = bool(inp.get("crouch", false))
 	s.ads = bool(inp.get("ads", false)) and s.reload_t == 0
 	var mx: float = clampf(float(inp.get("move_x", 0.0)), -1.0, 1.0)
@@ -477,6 +480,33 @@ func _bot(s: Soldier) -> Dictionary:
 # ---------------------------------------------------------------- snapshot (multiplayer)
 func snapshot() -> Dictionary:
 	var ss := []
-	for s in soldiers:
-		ss.append([s.pos.x, s.pos.y, s.pos.z, s.yaw, s.pitch, s.hp, s.armor, s.alive, s.crouch, s.slot, s.mag[s.slot], s.reserve[s.slot], s.kills, s.deaths, s.ads, s.reload_t])
-	return {t = tick_n, st = state, time = time, sc = score, s = ss}
+	for o in soldiers:
+		ss.append(Party.pack([o.pos.x, o.pos.y, o.pos.z, o.yaw, o.pitch, o.hp, o.armor, o.alive, o.crouch, o.slot, o.mag[0], o.mag[1], o.reserve[0], o.reserve[1],
+			o.kills, o.deaths, o.ads, o.reload_t, o.vel.x, o.vel.y, o.vel.z, o.on_floor, o.sprint, o.guns[0], o.respawn, o.protect, o.hurt_t, o.hurt_dir.x, o.hurt_dir.z, o.recoil]))
+	return {t = tick_n, st = state, time = snappedf(time, 0.001), warm = warm, sc = score, s = ss}
+
+
+## Guests: take the host's state. keep_aim: this player's own soldier keeps the aim from their screen.
+func apply(sn: Dictionary, keep_aim := -1) -> void:
+	tick_n = int(sn.t); state = String(sn.st); time = float(sn.time); warm = int(sn.warm)
+	score = [int(sn.sc[0]), int(sn.sc[1])]
+	var ss: Array = sn.s
+	for k in mini(ss.size(), soldiers.size()):
+		var o: Soldier = soldiers[k]
+		var a: Array = ss[k]
+		o.prev_pos = o.pos; o.prev_yaw = o.yaw
+		o.pos = Vector3(a[0], a[1], a[2])
+		if k != keep_aim: o.yaw = float(a[3]); o.pitch = float(a[4])
+		o.hp = float(a[5]); o.armor = float(a[6]); o.alive = bool(a[7]); o.crouch = bool(a[8]); o.slot = int(a[9])
+		o.mag = [int(a[10]), int(a[11])]; o.reserve = [int(a[12]), int(a[13])]
+		o.kills = int(a[14]); o.deaths = int(a[15]); o.ads = bool(a[16]); o.reload_t = int(a[17])
+		o.vel = Vector3(a[18], a[19], a[20]); o.on_floor = bool(a[21]); o.sprint = bool(a[22])
+		o.guns = [String(a[23]), "pistol"]; o.respawn = int(a[24]); o.protect = int(a[25]); o.hurt_t = int(a[26])
+		o.hurt_dir = Vector3(a[27], 0, a[28]); o.recoil = float(a[29])
+
+
+## Guests, between snapshots: keep everyone moving the way they were going.
+func coast() -> void:
+	for o in soldiers:
+		o.prev_pos = o.pos; o.prev_yaw = o.yaw
+		if o.alive: o.pos += Vector3(o.vel.x, 0, o.vel.z) * DT

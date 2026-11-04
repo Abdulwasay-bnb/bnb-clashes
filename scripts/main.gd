@@ -70,6 +70,8 @@ func _ready() -> void:
 	net = Net.new()
 	add_child(net)
 	net.message.connect(net_message)
+	lobby = PartyLobby.new(self)
+	add_child(lobby)
 	await ClipLib.load_all_async(get_tree(), func(f): loader.progress("LOADING MOVES", f * 0.7))
 	_setup_input_map()
 	if OS.has_feature("mobile") or "--phone" in OS.get_cmdline_user_args():
@@ -557,8 +559,40 @@ func start_race(track_id: String, C: Dictionary) -> void:
 	loader.close()
 
 
+## Online / Wi-Fi race (see PartyLobby).
+func start_race_net(track_id: String, people: Array, humans: int, seed: int, me: int, party: Party, is_guest: bool, pids: Dictionary) -> void:
+	end_race(); end_ops()
+	loader.open("LOADING RACE")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	clear_preview()
+	if stage != null: stage.visible = false
+	ui.hide_screen(); ui.view = "race"; ui.hide_hud()
+	race = RaceGame.new()
+	add_child(race)
+	race.start_net(self, track_id, people, humans, seed, me, party, is_guest, pids)
+	race.finished.connect(end_race)
+	loader.close()
+
+
 # ------------------------------------------------------------------ BNB Office Ops
 var ops: OpsGame
+var lobby: PartyLobby
+
+
+func start_ops_net(a: Array, b: Array, humans: Dictionary, guns: Dictionary, skill: float, seed: int, me: int, party: Party, is_guest: bool, pids: Dictionary) -> void:
+	end_race(); end_ops()
+	loader.open("DEPLOYING")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	clear_preview()
+	if stage != null: stage.visible = false
+	ui.hide_screen(); ui.view = "ops"; ui.hide_hud()
+	ops = OpsGame.new()
+	add_child(ops)
+	ops.start_net(self, a, b, humans, guns, skill, seed, me, party, is_guest, pids)
+	ops.finished.connect(end_ops)
+	loader.close()
 
 
 func start_ops(C: Dictionary, cfg: Dictionary) -> void:
@@ -1144,6 +1178,8 @@ func clear_preview() -> void:
 # ------------------------------------------------------------------ automated checks (xvfb)
 func _run_autotest() -> void:
 	var shot := func(name: String) -> void:
+		if DisplayServer.get_name() == "headless":   # nothing is drawn: no screenshot
+			await get_tree().process_frame; return
 		await RenderingServer.frame_post_draw
 		get_viewport().get_texture().get_image().save_png("user://shot_%s.png" % name)
 	match autotest:
@@ -1151,6 +1187,70 @@ func _run_autotest() -> void:
 			ui.show_title()
 			await get_tree().create_timer(1.0).timeout
 			await shot.call("title")
+		"partyhost", "partyjoin":
+			# Several game processes in one Rush Hour / Office Ops match. Args: --pmode=race|ops, --lan (else online room),
+			# --codefile=PATH (room code hand-off), --guests=N (host waits for them), --char=ID
+			var host := autotest == "partyhost"
+			var pmode := "race"
+			var lan := false
+			var codefile := ""
+			var guests := 1
+			var char_id := "hamza_khan" if host else "abdul_wasay"
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--pmode="): pmode = a.substr(8)
+				if a == "--lan": lan = true
+				if a.begins_with("--codefile="): codefile = a.substr(11)
+				if a.begins_with("--guests="): guests = int(a.substr(9))
+				if a.begins_with("--char="): char_id = a.substr(7)
+			lobby.show_menu(pmode, Data.by_id(char_id))
+			if host:
+				if lan: lobby._host_lan()
+				else:
+					lobby.party.room_created.connect(func(code):
+						var f := FileAccess.open(codefile, FileAccess.WRITE); f.store_string(code); f.close()
+						print("AUTOTEST party room ", code))
+					lobby._create()
+				for k in 600:
+					if lobby.players.size() >= guests + 1: break
+					await get_tree().create_timer(0.1).timeout
+				print("AUTOTEST party host players=%d" % lobby.players.size())
+				await get_tree().create_timer(1.0).timeout
+				await shot.call("party_lobby")
+				lobby.cfg.mine = 2; lobby.cfg.them = 2
+				lobby.start_match()
+			else:
+				await get_tree().create_timer(1.5).timeout
+				if lan: lobby.join_ip("127.0.0.1")
+				else:
+					var code := ""
+					for k in 200:
+						if FileAccess.file_exists(codefile):
+							code = FileAccess.get_file_as_string(codefile).strip_edges()
+							if code != "": break
+						await get_tree().create_timer(0.2).timeout
+					lobby.join_code(code)
+				for k in 900:
+					if lobby.in_game: break
+					await get_tree().create_timer(0.1).timeout
+				print("AUTOTEST party guest in_game=%s ok=%s" % [lobby.in_game, lobby.party.ok])
+			for k in 100:
+				if race != null or ops != null: break
+				await get_tree().create_timer(0.1).timeout
+			if race != null: race.autopilot = true
+			if ops != null: ops.autopilot = true
+			var tag := "host" if host else "guest_" + char_id
+			for k in 3:
+				await get_tree().create_timer(7.0).timeout
+				await shot.call("party_%s_%d" % [tag, k])
+			if race != null:
+				var me: RaceSim.Racer = race.sim.racers[race.me]
+				print("AUTOTEST party %s race t=%.1f state=%s me=%d lap=%d place=%d speed=%.0f prog=%.0f humans=%s events=%s" % [tag, race.sim.time, race.sim.state, race.me, me.lap, me.place, me.speed, me.progress,
+					race.sim.racers.filter(func(r): return r.human >= 0).size(), race.stats])
+			if ops != null:
+				var me: OpsSim.Soldier = ops.sim.soldiers[ops.me]
+				print("AUTOTEST party %s ops t=%.1f state=%s me=%d team=%d score=%s kills=%d deaths=%d events=%s" % [tag, ops.sim.time, ops.sim.state, ops.me, me.team, ops.sim.score, me.kills, me.deaths, ops.stats])
+			# the host stays a while so slower guests finish their checks too
+			await get_tree().create_timer(30.0 if host else 2.0).timeout
 		"mobile":
 			# run with --phone: the new modes' screens and touch controls at a phone's shape
 			ui.show_title(); await get_tree().create_timer(1.0).timeout; await shot.call("p_title")

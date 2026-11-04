@@ -261,6 +261,7 @@ static func _chest(f) -> Vector3:
 
 
 static func _effect(G: Node, att, def, kind: String, what: String, param, left: float) -> void:
+	if G == null or not is_instance_valid(G) or not G.is_inside_tree(): return   # the race / fight ended mid-show
 	var a: Vector3 = _chest(att)
 	var d: Vector3 = _chest(def)
 	match kind:

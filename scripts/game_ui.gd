@@ -384,7 +384,7 @@ func big_btn(text: String, accent: Color, cb: Callable) -> Button:
 func _process(_dt: float) -> void:
 	_process_online()
 	if nav_back == null: return
-	var menus := ["diff", "select", "stage", "moves", "info", "online", "ladder", "race_tracks", "ops_setup"]
+	var menus := ["diff", "select", "stage", "moves", "info", "online", "ladder", "race_tracks", "ops_setup", "party"]
 	nav_back.visible = view in menus
 	nav_ok.visible = view in ["select", "stage"]
 	if view == "stage": nav_ok.text = "FIGHT!  ✔"
@@ -1972,6 +1972,7 @@ func show_race_tracks(C: Dictionary) -> void:
 		var tid: String = id
 		items.append([String(t.name).to_upper(), func(): G.start_race(tid, C), 28, {"city": "Neon towers, night traffic, two big jumps.",
 			"park": "Trees, glass offices and a hill with a jump.", "rooftop": "Thirty storeys up, over the rooftops at sunset."}.get(id, "")])
+	items.append(["PLAY WITH FRIENDS", func(): G.lobby.show_menu("race", C), 24, "Online room or Wi-Fi: up to 10 players, CPU drivers fill the empty seats."])
 	items.append(["BACK", show_title, 20, "Back to the main menu."])
 	var m := _menu_list(items)
 	m.set_meta("back", show_title)
@@ -2047,6 +2048,7 @@ func show_ops_setup(C: Dictionary) -> void:
 	var go := HBoxContainer.new()
 	go.add_theme_constant_override("separation", 16)
 	go.add_child(big_btn("DEPLOY  ✔", GOLD, func(): G.start_ops(C, ops_cfg.duplicate())))
+	go.add_child(big_btn("PLAY WITH FRIENDS", P2C, func(): G.lobby.show_menu("ops", C)))
 	go.add_child(big_btn("BACK", Color(0.55, 0.62, 0.75), show_title))
 	col.add_child(go)
 	col.set_meta("back", show_title)

@@ -61,6 +61,7 @@ class Racer:
 	var prev_heading := 0.0
 
 class Shot:
+	var uid := 0
 	var kind := ""             # stapler / plane / homing (signature props) / goat / logo
 	var prop := ""             # what it looks like
 	var owner := 0
@@ -73,6 +74,7 @@ class Shot:
 	var idx := 0               # nearest track sample (charges follow the road)
 
 class Hazard:
+	var uid := 0
 	var kind := ""             # coffee / peel / prop spill
 	var prop := ""
 	var owner := 0
@@ -107,6 +109,7 @@ var state := "countdown"       # countdown / race / done
 var countdown := 3 * 60
 var events: Array = []         # things the view should show this tick: [kind, pos, extra]
 var rng := RandomNumberGenerator.new()
+var next_uid := 1
 
 
 ## Build the track samples and line up racers on the grid. people = Array of roster dicts (first = player 0 ...).
@@ -217,6 +220,8 @@ func tick(inputs: Dictionary) -> void:
 	_update_hazards()
 	_update_boxes()
 	_rank()
+	for o in shots + hazards:
+		if o.uid == 0: o.uid = next_uid; next_uid += 1
 
 
 func _drive(r: Racer, inp: Dictionary) -> void:
@@ -560,15 +565,74 @@ func _cpu(r: Racer) -> Dictionary:
 
 
 # ---------------------------------------------------------------- snapshot (multiplayer)
-## Compact state for guests to draw: racer transforms + race info, shots, hazards, traffic.
+## Compact state for guests to draw: racer transforms + race info, shots, hazards, traffic, boxes, cones.
 func snapshot() -> Dictionary:
 	var rs := []
 	for r in racers:
-		rs.append([r.pos.x, r.pos.y, r.pos.z, r.heading, r.speed, r.lap, r.place, r.item, roundi(r.power), r.stun, r.boost, r.finished, r.drifting, r.flash, roundi(r.nitro), r.nitro_on])
+		rs.append(Party.pack([r.pos.x, r.pos.y, r.pos.z, r.heading, r.speed, r.lap, r.place, r.item, roundi(r.power), r.stun, r.boost, r.finished,
+			r.drifting, r.flash, roundi(r.nitro), r.nitro_on, r.vel.x, r.vel.z, r.air, r.progress, r.vy, r.hits, r.idx]))
 	var ss := []
-	for s in shots: ss.append([s.prop, s.pos.x, s.pos.y, s.pos.z, s.big])
+	for o in shots: ss.append(Party.pack([o.uid, o.prop, o.pos.x, o.pos.y, o.pos.z, o.big, o.dir.x, o.dir.z, o.speed]))
 	var hs := []
-	for h in hazards: hs.append([h.prop, h.pos.x, h.pos.y, h.pos.z])
+	for h in hazards: hs.append(Party.pack([h.uid, h.prop, h.pos.x, h.pos.y, h.pos.z]))
 	var ts := []
-	for t in traffic: ts.append([t.pos.x, t.pos.y, t.pos.z, t.heading])
-	return {t = tick_n, st = state, cd = countdown, time = time, r = rs, s = ss, h = hs, tr = ts}
+	for t in traffic: ts.append(Party.pack([t.pos.x, t.pos.y, t.pos.z, t.heading]))
+	var bx := ""
+	for b in boxes: bx += "1" if b.respawn > 0 else "0"
+	var cn := ""
+	for c in cones: cn += "1" if c.knocked > 0 else "0"
+	return {t = tick_n, st = state, cd = countdown, time = snappedf(time, 0.001), r = rs, s = ss, h = hs, tr = ts, bx = bx, cn = cn}
+
+
+## Guests: take the host's state. The racers' previous positions are kept so the view can smooth between ticks.
+func apply(sn: Dictionary) -> void:
+	tick_n = int(sn.t); state = String(sn.st); countdown = int(sn.cd); time = float(sn.time)
+	var rs: Array = sn.r
+	for k in mini(rs.size(), racers.size()):
+		var r: Racer = racers[k]
+		var a: Array = rs[k]
+		r.prev_pos = r.pos; r.prev_heading = r.heading
+		r.pos = Vector3(a[0], a[1], a[2]); r.heading = float(a[3]); r.speed = float(a[4])
+		r.lap = int(a[5]); r.place = int(a[6]); r.item = String(a[7]); r.power = float(a[8]); r.stun = int(a[9]); r.boost = int(a[10])
+		r.finished = float(a[11]); r.drifting = bool(a[12]); r.flash = int(a[13]); r.nitro = float(a[14]); r.nitro_on = bool(a[15])
+		r.vel = Vector3(a[16], 0, a[17]); r.air = bool(a[18]); r.progress = float(a[19]); r.vy = float(a[20]); r.hits = int(a[21]); r.idx = int(a[22])
+		r.dist = r.progress - r.lap * length
+	var by_uid := {}
+	for o in shots: by_uid[o.uid] = o
+	var ns := []
+	for a in sn.s:
+		var o: Shot = by_uid.get(int(a[0]), null)
+		if o == null:
+			o = Shot.new(); o.uid = int(a[0])
+		o.prop = String(a[1]); o.pos = Vector3(a[2], a[3], a[4]); o.big = bool(a[5]); o.dir = Vector3(a[6], 0, a[7]); o.speed = float(a[8])
+		ns.append(o)
+	shots = ns
+	var hu := {}
+	for h in hazards: hu[h.uid] = h
+	var nh := []
+	for a in sn.h:
+		var h: Hazard = hu.get(int(a[0]), null)
+		if h == null:
+			h = Hazard.new(); h.uid = int(a[0])
+		h.prop = String(a[1]); h.pos = Vector3(a[2], a[3], a[4])
+		nh.append(h)
+	hazards = nh
+	var ts: Array = sn.tr
+	for k in mini(ts.size(), traffic.size()):
+		var t: Traffic = traffic[k]
+		t.pos = Vector3(ts[k][0], ts[k][1], ts[k][2]); t.heading = float(ts[k][3])
+	var bx: String = sn.get("bx", "")
+	for k in mini(bx.length(), boxes.size()): boxes[k].respawn = 1 if bx[k] == "1" else 0
+	var cn: String = sn.get("cn", "")
+	for k in mini(cn.length(), cones.size()): cones[k].knocked = 1 if cn[k] == "1" else 0
+
+
+## Guests, between snapshots: keep things moving the way they were going.
+func coast() -> void:
+	for r in racers:
+		r.prev_pos = r.pos; r.prev_heading = r.heading
+		if state == "race":
+			r.pos += r.vel * DT
+			if r.air:
+				r.vy -= 30.0 * DT; r.pos.y += r.vy * DT
+	for o in shots: o.pos += o.dir.normalized() * o.speed * DT
