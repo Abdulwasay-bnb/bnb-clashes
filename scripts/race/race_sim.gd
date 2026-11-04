@@ -223,10 +223,9 @@ func _drive(r: Racer, inp: Dictionary) -> void:
 	var steer: float = clampf(float(inp.get("steer", 0.0)), -1.0, 1.0)
 	var gas: float = float(inp.get("gas", 0.0))
 	var brake: float = float(inp.get("brake", 0.0))
-	if r.stun > 0:
-		r.stun -= 1
-		r.heading += 0.25 * (1.0 if r.id % 2 else -1.0)   # spinning out
-		steer = 0.0; gas = 0.0
+	var slowed := r.stun > 0
+	if slowed:
+		r.stun -= 1   # after a hit: no spin, the car just can't get back to full speed for a moment
 	var top := BOOST_SPEED if r.boost > 0 else MAX_SPEED * (0.92 + float(r.C.get("speed", 1.0)) * 0.08)
 	if r.human < 0: top *= _cpu_pace(r)
 	# nitro: hold to burn the tank for a big push (refills slowly, faster from drifts and pickups)
@@ -239,6 +238,7 @@ func _drive(r: Racer, inp: Dictionary) -> void:
 	else:
 		r.nitro = minf(100.0, r.nitro + 4.0 * DT)
 	if r.boost > 0: r.boost -= 1; gas = 1.0; r.speed += 10.0 * DT
+	if slowed: top *= 0.55
 	var accel := 26.0 if r.speed < top else -18.0
 	r.speed += (gas * accel - brake * 40.0 - r.speed * 0.25) * DT
 	r.speed = clampf(r.speed, -10.0, BOOST_SPEED)
@@ -436,7 +436,7 @@ func _use_power(r: Racer) -> void:
 func _hit(r: Racer, by: int, kind: String) -> void:
 	if r.stun > 0: return
 	r.stun = 55 if kind != "spill" else 35
-	r.speed *= 0.3
+	r.speed *= 0.5
 	r.item = ""
 	r.hits += 1
 	r.flash = 20
