@@ -557,6 +557,36 @@ func start_race(track_id: String, C: Dictionary) -> void:
 	loader.close()
 
 
+# ------------------------------------------------------------------ BNB Office Ops
+var ops: OpsGame
+
+
+func start_ops(C: Dictionary, cfg: Dictionary) -> void:
+	loader.open("DEPLOYING")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	clear_preview()
+	if stage != null: stage.visible = false
+	ui.hide_screen(); ui.view = "ops"; ui.hide_hud()
+	# teams: you + colleagues vs colleagues; the CEO / bosses are fair game too
+	var pool := Data.ROSTER.filter(func(c): return c.id != C.id)
+	pool.shuffle()
+	var a := [C] + pool.slice(0, int(cfg.mine) - 1)
+	var b := pool.slice(int(cfg.mine) - 1, int(cfg.mine) - 1 + int(cfg.them))
+	ops = OpsGame.new()
+	add_child(ops)
+	ops.start(self, a, b, String(cfg.gun), float(cfg.skill))
+	ops.finished.connect(end_ops)
+	loader.close()
+
+
+func end_ops() -> void:
+	if ops != null:
+		ops.stop(); ops.queue_free(); ops = null
+	if stage != null: stage.visible = true
+	camera.current = true
+
+
 func end_race() -> void:
 	if race != null:
 		race.stop(); race.queue_free(); race = null
@@ -1121,6 +1151,12 @@ func _run_autotest() -> void:
 			ui.show_title()
 			await get_tree().create_timer(1.0).timeout
 			await shot.call("title")
+		"menus":
+			ui.show_title(); await get_tree().create_timer(1.0).timeout; await shot.call("m_title")
+			ui.show_clash_menu(); await get_tree().create_timer(0.6).timeout; await shot.call("m_clash")
+			ui.show_select({mode = "race"}); await get_tree().create_timer(1.0).timeout; await shot.call("m_select_race")
+			ui.show_race_tracks(Data.by_id("abdul_wasay")); await get_tree().create_timer(0.6).timeout; await shot.call("m_tracks")
+			ui.show_ops_setup(Data.by_id("abdul_wasay")); await get_tree().create_timer(0.6).timeout; await shot.call("m_ops")
 		"stagesel":
 			ui.show_stage({mode = "cpu", lv = 1}, [Data.by_id("ember"), Data.by_id("bastion")])
 			ui.stage_sel.i = 2
@@ -1567,6 +1603,45 @@ func _run_autotest() -> void:
 				var lats := []
 				for r in sim.racers: lats.append("%.1f" % r.lat)
 				print("AUTOTEST racesim %s final lats %s" % [tid, lats])
+		"opssim":
+			# whole matches with bots on both sides, as fast as possible
+			for sizes in [[1, 1], [2, 1], [4, 4]]:
+				var sim := OpsSim.new()
+				var pool := Data.ROSTER.duplicate()
+				sim.setup(pool.slice(0, sizes[0]), pool.slice(10, 10 + sizes[1]), {}, {}, 7)
+				var counts := {}
+				var ticks := 0
+				while sim.state != "done" and ticks < 60 * 360:
+					sim.tick({}); ticks += 1
+					for e in sim.events: counts[e[0]] = counts.get(e[0], 0) + 1
+				var heads := 0
+				print("AUTOTEST opssim %dv%d done=%s time=%.0fs score=%s goal=%d shots=%d hits=%d kills=%d vest_breaks=%d" % [sizes[0], sizes[1], sim.state == "done", sim.time, sim.score, sim.goal,
+					counts.get("shot", 0), counts.get("hit", 0), counts.get("kill", 0), counts.get("vest_break", 0)])
+				print("AUTOTEST opssim %dv%d players %s" % [sizes[0], sizes[1], " ".join(sim.soldiers.map(func(o): return "%s(%s %dk/%dd vest%d)" % [o.C.person.get("short", ""), o.guns[0], o.kills, o.deaths, o.max_armor]))])
+		"ops":
+			await start_ops(Data.by_id("abdul_wasay"), {mine = 4, them = 4, gun = "rifle", skill = 1.0})
+			ops.autopilot = true
+			for k in 4:
+				await get_tree().create_timer(5.0).timeout
+				await shot.call("ops_%d" % k)
+			print("AUTOTEST ops t=%.1f score=%s events=%s" % [ops.sim.time, ops.sim.score, ops.stats])
+			# aim down sights with the sniper: the scope overlay
+			ops.sim.soldiers[0].guns[0] = "sniper"; ops._rebuild_view_gun()
+			ops.autopilot = false
+			ops.hold_ads = true
+			ops.sim.soldiers[0].hp = 100; ops.sim.soldiers[0].alive = true
+			for k in 40: await get_tree().physics_frame
+			await shot.call("ops_scope")
+			# a close look at an enemy soldier (rig, rifle clip, gun in hand)
+			ops.hold_ads = false
+			var me0: OpsSim.Soldier = ops.sim.soldiers[0]
+			for o in ops.sim.soldiers:
+				if o.team != me0.team:
+					o.pos = me0.pos + Vector3(sin(me0.yaw), 0, cos(me0.yaw)) * 4.0; o.prev_pos = o.pos; me0.pitch = 0.0
+					break
+			for k in 3: await get_tree().physics_frame
+			await shot.call("ops_enemy")
+			end_ops()
 		"trade":
 			for setup in [["throw vs jab", "12", "1", 2], ["jab vs throw", "1", "12", -2], ["throw vs throw", "12", "12", 0]]:
 				await start_match({mode = "training"}, [Data.by_id("tao"), Data.by_id("lio")])

@@ -384,7 +384,7 @@ func big_btn(text: String, accent: Color, cb: Callable) -> Button:
 func _process(_dt: float) -> void:
 	_process_online()
 	if nav_back == null: return
-	var menus := ["diff", "select", "stage", "moves", "info", "online", "ladder", "race_tracks"]
+	var menus := ["diff", "select", "stage", "moves", "info", "online", "ladder", "race_tracks", "ops_setup"]
 	nav_back.visible = view in menus
 	nav_ok.visible = view in ["select", "stage"]
 	if view == "stage": nav_ok.text = "FIGHT!  ✔"
@@ -723,15 +723,20 @@ func _menu_list(items: Array) -> VBoxContainer:
 
 
 const MENU_DESC := [
+	"The fighting game: Arcade up to the CEO, versus, online rooms and training.",
 	"BNB Rush Hour: a ten-car street race. Grab pickups, throw them at rivals, unleash your power.",
+	"BNB Office Ops: team deathmatch, 1v1 up to 4v4. Pick a gun, wear a vest, hold the office.",
+	"Hit levels, frame advantage, sidesteps, juggles, throws and Surge Arts, explained.",
+	"Keyboard and gamepad layouts for both players.",
+	"Close the game.",
+]
+const CLASH_DESC := [
 	"Climb the office ladder: four colleagues, then HR, the PM, and the CEO himself.",
 	"Fight the computer. Pick a difficulty, choose your fighter, best of three rounds.",
 	"Two players on one keyboard or with two gamepads.",
 	"Play a friend over the internet with a room code, or on the same Wi-Fi.",
 	"Practice against a dummy. Live frame data shows startup, block and hit advantage.",
-	"Hit levels, frame advantage, sidesteps, juggles, throws and Surge Arts, explained.",
-	"Keyboard and gamepad layouts for both players.",
-	"Close the game.",
+	"Back to the main menu.",
 ]
 
 
@@ -766,7 +771,7 @@ func show_title() -> void:
 	var tag := PanelContainer.new()
 	tag.add_theme_stylebox_override("panel", sbox(GOLD, Color(0, 0, 0, 0), 0, 0.35))
 	tag.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	tag.add_child(lbl("ONE OFFICE  ·  EVERY TEAM  ·  ONE CEO", 17, F_TITLE, Color(0.04, 0.05, 0.08)))
+	tag.add_child(lbl("FIGHT  ·  RACE  ·  SHOOT  ·  ONE OFFICE", 17, F_TITLE, Color(0.04, 0.05, 0.08)))
 	col.add_child(tag)
 	var wm := TextureRect.new()
 	wm.texture = load("res://assets/brand/bnb_wordmark_light.png")
@@ -776,8 +781,8 @@ func show_title() -> void:
 	wm.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	col.add_child(wm)
 	var sp := Control.new(); sp.custom_minimum_size = Vector2(0, 34 if not touch_enabled else 12); col.add_child(sp)
-	var labels := ["RUSH HOUR", "ARCADE", "VS CPU", "VERSUS", "ONLINE", "TRAINING", "HOW TO PLAY", "CONTROLS", "QUIT"]
-	var cbs := [func(): show_select({mode = "race"}), func(): show_select({mode = "arcade", lv = 1}), show_difficulty, func(): show_select({mode = "2p"}), show_online, func(): show_select({mode = "training"}), show_how, show_controls, func(): G.get_tree().quit()]
+	var labels := ["CLASH  ·  FIGHT", "RUSH HOUR  ·  RACE", "OFFICE OPS  ·  SHOOT", "HOW TO PLAY", "CONTROLS", "QUIT"]
+	var cbs := [show_clash_menu, func(): show_select({mode = "race"}), func(): show_select({mode = "ops"}), show_how, show_controls, func(): G.get_tree().quit()]
 	var items: Array = []
 	for i in labels.size():
 		items.append(["%02d   %s" % [i + 1, labels[i]], cbs[i], 28, MENU_DESC[i]])
@@ -835,8 +840,8 @@ func show_difficulty() -> void:
 		["EASY", func(): show_select({mode = "cpu", lv = 0}), 26, "Slow reactions, rarely blocks lows. Good for exploring move lists."],
 		["NORMAL", func(): show_select({mode = "cpu", lv = 1}), 26, "Blocks, punishes sometimes, uses strings and launchers."],
 		["HARD", func(): show_select({mode = "cpu", lv = 2}), 26, "Reads lows, sidesteps linear moves, punishes almost everything."],
-		["BACK", show_title, 20, "Return to the main menu."]])
-	m.set_meta("back", show_title)
+		["BACK", show_clash_menu, 20, "Back to the CLASH menu."]])
+	m.set_meta("back", show_clash_menu)
 	col.add_child(m)
 	desc_lbl = lbl("", 20, F_MED, Color(0.79, 0.83, 0.88))
 	desc_lbl.custom_minimum_size = Vector2(440, 60)
@@ -890,7 +895,7 @@ func show_select(c: Dictionary) -> void:
 	var t := lbl("SELECT YOUR FIGHTER", 30, F_TITLE, INK, 6)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bv.add_child(t)
-	var sub := lbl({"cpu": "VS CPU  ·  " + ["EASY", "NORMAL", "HARD", "BOSS"][c.get("lv", 1)], "2p": "VERSUS  ·  LOCAL", "training": "TRAINING", "arcade": "ARCADE  ·  CLIMB TO THE CEO", "race": "RUSH HOUR  ·  PICK YOUR DRIVER", "online": "ONLINE  ·  " + ("WI-FI" if G.net.via == "lan" else "ROOM " + G.net.code)}[c.mode], 14, F_BODY, GOLD)
+	var sub := lbl({"cpu": "VS CPU  ·  " + ["EASY", "NORMAL", "HARD", "BOSS"][c.get("lv", 1)], "2p": "VERSUS  ·  LOCAL", "training": "TRAINING", "arcade": "ARCADE  ·  CLIMB TO THE CEO", "race": "RUSH HOUR  ·  PICK YOUR DRIVER", "ops": "OFFICE OPS  ·  PICK YOUR OPERATOR", "online": "ONLINE  ·  " + ("WI-FI" if G.net.via == "lan" else "ROOM " + G.net.code)}[c.mode], 14, F_BODY, GOLD)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bv.add_child(sub)
 	# per-side info: watermark, name plate, radar, signature
@@ -1031,6 +1036,7 @@ func _render_select() -> void:
 	for s in 2:
 		var u: Dictionary = side_ui[s]
 		var waiting: bool = (sel.cfg.mode != "2p" and sel.cfg.mode != "online" and s == 1 and not sel.locked[0]) \
+			or (sel.cfg.mode in ["race", "ops"] and s == 1) \
 			or (sel.cfg.mode == "online" and s != G.local_side and not sel.get("seen", false))
 		u.box.visible = not waiting
 		if waiting:
@@ -1117,6 +1123,11 @@ func _select_confirm(s: int) -> void:
 		G.net.send({t = "pick", i = sel.cur[s], cos = sel.cos[s]})
 		_render_select()
 		_online_both_picked()
+		return
+	if sel.cfg.mode == "ops":
+		var oc: Dictionary = Data.ROSTER[sel.cur[0]]
+		_render_select()
+		get_tree().create_timer(0.5).timeout.connect(func(): show_ops_setup(oc))
 		return
 	if sel.cfg.mode == "race":
 		var rc: Dictionary = Data.ROSTER[sel.cur[0]]
@@ -1970,3 +1981,72 @@ func show_race_tracks(C: Dictionary) -> void:
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 	col.add_child(desc_lbl)
 	_focus_first(m)
+
+
+## The fighting game's own menu (CLASH on the hub).
+func show_clash_menu() -> void:
+	clear_screen(); screen.visible = true; view = "diff"
+	var bg := full(hgrad(Color(0.02, 0.03, 0.06, 0.95), Color(0.02, 0.03, 0.06, 0.0)))
+	bg.anchor_right = 0.75
+	screen.add_child(bg)
+	var col := VBoxContainer.new()
+	screen.add_child(col)
+	col.position = Vector2(110, 120) if not touch_enabled else Vector2(90, 90)
+	col.add_child(lbl("CLASH", 72, F_TITLE, P1C, 12))
+	var labels := ["ARCADE", "VS CPU", "VERSUS", "ONLINE", "TRAINING", "BACK"]
+	var cbs := [func(): show_select({mode = "arcade", lv = 1}), show_difficulty, func(): show_select({mode = "2p"}), show_online,
+		func(): show_select({mode = "training"}), show_title]
+	var items := []
+	for k in labels.size():
+		items.append([labels[k], cbs[k], 26 if k < labels.size() - 1 else 20, CLASH_DESC[k]])
+	var m := _menu_list(items)
+	m.set_meta("back", show_title)
+	col.add_child(m)
+	desc_lbl = lbl(CLASH_DESC[0], 20, F_MED, Color(0.79, 0.83, 0.88))
+	desc_lbl.custom_minimum_size = Vector2(460, 60)
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	col.add_child(desc_lbl)
+	_focus_first(m)
+
+
+# ---------------------------------------------------------------- BNB Office Ops
+var ops_cfg := {mine = 4, them = 4, gun = "rifle", skill = 1.0}
+
+
+func show_ops_setup(C: Dictionary) -> void:
+	clear_screen(); screen.visible = true; view = "ops_setup"
+	G.set_preview(0, C)
+	var dim := full(hgrad(Color(0.03, 0.01, 0.06, 0.95), Color(0.03, 0.01, 0.06, 0.2)))
+	screen.add_child(dim)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 10)
+	screen.add_child(col)
+	col.position = Vector2(90, 80) if not touch_enabled else Vector2(70, 90)
+	col.add_child(lbl("OFFICE OPS", 64, F_TITLE, P1C, 10))
+	col.add_child(lbl("%s  ·  TEAM DEATHMATCH" % C.name, 20, F_BODY, GOLD))
+	var row := func(title: String, opts: Array, key: String, names: Array) -> void:
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 10)
+		var t := lbl(title, 22, F_TITLE, INK)
+		t.custom_minimum_size = Vector2(170, 0)
+		h.add_child(t)
+		for k in opts.size():
+			var v = opts[k]
+			var b := big_btn(String(names[k]), P2C if ops_cfg[key] == v else Color(0.35, 0.38, 0.5), func(): ops_cfg[key] = v; show_ops_setup(C))
+			b.custom_minimum_size = Vector2(110 if names[k].length() < 4 else 150, 58)
+			b.add_theme_font_size_override("font_size", 22)
+			h.add_child(b)
+		col.add_child(h)
+	row.call("YOUR TEAM", [1, 2, 3, 4], "mine", ["1", "2", "3", "4"])
+	row.call("ENEMY TEAM", [1, 2, 3, 4], "them", ["1", "2", "3", "4"])
+	row.call("GUN", ["rifle", "smg", "shotgun", "sniper"], "gun", ["RIFLE", "SMG", "SHOTGUN", "SNIPER"])
+	row.call("BOTS", [0.7, 1.0, 1.4], "skill", ["EASY", "NORMAL", "HARD"])
+	var g: Dictionary = OpsSim.GUNS[ops_cfg.gun]
+	col.add_child(lbl("%s  ·  %d damage  ·  %d rounds  ·  %d rpm   (plus a P-9 pistol)" % [g.name, g.dmg * g.pellets, g.mag, g.rpm], 18, F_MED, Color(0.79, 0.83, 0.88)))
+	col.add_child(lbl("%d v %d   ·   bots fill the empty slots   ·   first to %d kills or 5 minutes" % [ops_cfg.mine, ops_cfg.them, 10 + maxi(ops_cfg.mine, ops_cfg.them) * 5], 18, F_MED, Color(0.79, 0.83, 0.88)))
+	var go := HBoxContainer.new()
+	go.add_theme_constant_override("separation", 16)
+	go.add_child(big_btn("DEPLOY  ✔", GOLD, func(): G.start_ops(C, ops_cfg.duplicate())))
+	go.add_child(big_btn("BACK", Color(0.55, 0.62, 0.75), show_title))
+	col.add_child(go)
+	col.set_meta("back", show_title)
