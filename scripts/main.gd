@@ -537,6 +537,33 @@ func arcade_fight() -> void:
 	ui.show_vs({mode = "cpu", lv = e.lv, stage = e.stage, arcade = true, costumes = [arcade.cos, opp_cos]}, [arcade.player, e.C])
 
 
+# ------------------------------------------------------------------ BNB Rush Hour
+var race: RaceGame
+
+
+func start_race(track_id: String, C: Dictionary) -> void:
+	loader.open("LOADING RACE")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	clear_preview()
+	if stage != null: stage.visible = false
+	ui.hide_screen()
+	ui.view = "race"
+	ui.hide_hud()
+	race = RaceGame.new()
+	add_child(race)
+	race.start(self, track_id, C)
+	race.finished.connect(end_race)
+	loader.close()
+
+
+func end_race() -> void:
+	if race != null:
+		race.stop(); race.queue_free(); race = null
+	if stage != null: stage.visible = true
+	camera.current = true
+
+
 func leave_game() -> void:
 	for f in F:
 		f.rig.queue_free()
@@ -1460,6 +1487,76 @@ func _run_autotest() -> void:
 				await get_tree().create_timer(0.15).timeout
 				await shot.call("back%d" % k)
 				set_process(true)
+		"race":
+			# a race on each track with the CPU driving the player too: places change, items fly, laps count
+			var tracks := ["city", "park", "rooftop"]
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--track="): tracks = [a.substr(8)]
+			for tid in tracks:
+				await start_race(tid, Data.by_id("hamza_khan"))
+				race.autopilot = true
+				for k in 3:
+					await get_tree().create_timer(6.0 if k == 0 else 7.0).timeout
+					await shot.call("race_%s_%d" % [tid, k])
+				var me: RaceSim.Racer = race.sim.racers[0]
+				var places := race.sim.racers.map(func(r): return "%s:%d/L%d" % [r.C.person.get("short", r.C.id), r.place, r.lap])
+				print("AUTOTEST race %s t=%.1f state=%s me lap=%d place=%d speed=%.0f events=%s" % [tid, race.sim.time, race.sim.state, me.lap, me.place, me.speed, race.stats])
+				print("AUTOTEST race %s places %s" % [tid, " ".join(places)])
+				end_race()
+		"racecar":
+			# close-up of a car and its driver
+			await start_race("park", Data.by_id("kashaf_ud_duja"))
+			await get_tree().create_timer(1.0).timeout
+			race.set_process(false)
+			var c: Node3D = race.world.cars[0].root
+			race.world.draw(1.0, 0.016)
+			var rg: Node3D = race.world.cars[0].rig
+			var vis := []
+			for mi in rg.find_children("*", "MeshInstance3D", true, false):
+				if (mi as MeshInstance3D).is_visible_in_tree(): vis.append(mi.name)
+			print("AUTOTEST racecar rig=%s at %s scale %s visible_meshes=%d model=%s" % [rg.get_class(), rg.global_position, rg.scale, vis.size(), (rg.get("model") as Node3D).global_position if rg.get("model") != null else "-"])
+			race.world.cam.position = c.global_position + Vector3(3.2, 2.2, 3.5)
+			race.world.cam.look_at(c.global_position + Vector3(0, 1.0, 0))
+			await get_tree().create_timer(0.3).timeout
+			await shot.call("racecar")
+			end_race()
+		"racefull":
+			await start_race("park", Data.by_id("ali"))
+			race.autopilot = true
+			for k in 400:
+				await get_tree().create_timer(0.5).timeout
+				if race.results_shown: break
+			await get_tree().create_timer(2.0).timeout
+			await shot.call("raceresults")
+			var res := race.sim.racers.duplicate()
+			res.sort_custom(func(a, b): return a.place < b.place)
+			print("AUTOTEST racefull state=%s time=%.1f results=%s events=%s" % [race.sim.state, race.sim.time,
+				" ".join(res.map(func(r): return "%d.%s(%s)" % [r.place, r.C.person.get("short", ""), "%.1f" % r.finished if r.finished >= 0 else "dnf"])), race.stats])
+			end_race()
+		"racesim":
+			# the race rules alone, every track, all CPU, as fast as possible: everyone should finish
+			var count := 10
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--cars="): count = int(a.substr(7))
+			for tid in RaceSim.TRACKS:
+				var people := Data.ROSTER.slice(0, count)
+				var sim := RaceSim.new()
+				sim.setup(tid, people, 0, 42)
+				var counts := {}
+				var ticks := 0
+				while sim.state != "done" and ticks < 60 * 60 * 6:
+					sim.tick({})
+					ticks += 1
+					for e in sim.events: counts[e[0]] = counts.get(e[0], 0) + 1
+				var res := sim.racers.duplicate()
+				res.sort_custom(func(x, y): return x.place < y.place)
+				print("AUTOTEST racesim %s len=%dm done=%s time=%.1fs finishers=%d" % [tid, sim.length, sim.state == "done", sim.time, res.filter(func(r): return r.finished >= 0.0).size()])
+				print("AUTOTEST racesim %s top: %s" % [tid, " ".join(res.slice(0, 5).map(func(r): return "%d.%s %.1fs hits=%d" % [r.place, r.C.person.get("short", ""), r.finished, r.hits]))])
+				print("AUTOTEST racesim %s events %s" % [tid, counts])
+				var walltime := 0
+				var lats := []
+				for r in sim.racers: lats.append("%.1f" % r.lat)
+				print("AUTOTEST racesim %s final lats %s" % [tid, lats])
 		"trade":
 			for setup in [["throw vs jab", "12", "1", 2], ["jab vs throw", "1", "12", -2], ["throw vs throw", "12", "12", 0]]:
 				await start_match({mode = "training"}, [Data.by_id("tao"), Data.by_id("lio")])

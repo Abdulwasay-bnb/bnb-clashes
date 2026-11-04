@@ -1,0 +1,302 @@
+class_name RaceGame
+extends Node
+## BNB Rush Hour: runs a RaceSim at 60 ticks/s, feeds it the player's controls, draws it with RaceWorld,
+## and shows the HUD, countdown and results. (Multiplayer will swap the local sim for the host's snapshots.)
+
+signal finished
+
+const ITEM_NAMES := {"stapler": "STAPLER", "coffee": "COFFEE SPILL", "planes": "PAPER PLANES", "peel": "BANANA PEEL", "energy": "ENERGY DRINK"}
+
+var G                      # Main
+var sim: RaceSim
+var world: RaceWorld
+var hud: Control
+var layer: CanvasLayer
+var me := 0
+var steer_s := 0.0         # smoothed steering
+var toast := ""
+var toast_t := 0.0
+var results_shown := false
+var font: Font
+var small: Font
+var touch_btn := {}        # touch buttons: name -> {rect, held}
+var touches := {}          # touch index -> button name
+var minimap: PackedVector2Array
+var mm_scale := 1.0
+var mm_min := Vector2.ZERO
+var autopilot := false     # autotest: the CPU drives the player's car too
+var stats := {}            # autotest: event counts
+
+
+func start(g, track_id: String, player: Dictionary) -> void:
+	G = g
+	font = load("res://assets/fonts/RussoOne-Regular.ttf")
+	small = load("res://assets/fonts/Rajdhani-Bold.ttf")
+	# ten racers: the player plus nine colleagues (bosses included)
+	var others := Data.ROSTER.filter(func(c): return c.id != player.id)
+	others.shuffle()
+	var people := [player] + others.slice(0, 9)
+	sim = RaceSim.new()
+	sim.setup(track_id, people, 1, randi())
+	world = RaceWorld.new()
+	G.add_child(world)
+	world.build(sim, people, me)
+	layer = CanvasLayer.new()
+	layer.layer = 5
+	G.add_child(layer)
+	hud = Control.new()
+	hud.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.draw.connect(_draw_hud)
+	layer.add_child(hud)
+	_build_minimap()
+	_layout_touch()
+
+
+func stop() -> void:
+	if world != null: world.queue_free()
+	if layer != null: layer.queue_free()
+	world = null; layer = null
+
+
+# ---------------------------------------------------------------- loop
+func _physics_process(_dt: float) -> void:
+	if sim == null: return
+	sim.tick({me: sim._cpu(sim.racers[me]) if autopilot else _controls()})
+	for e in sim.events:
+		stats[e[0]] = stats.get(e[0], 0) + 1
+		_event(e)
+	if sim.state == "done" and not results_shown:
+		results_shown = true
+		await get_tree().create_timer(1.2).timeout
+		_show_results()
+
+
+func _process(dt: float) -> void:
+	if sim == null or world == null: return
+	world.draw(Engine.get_physics_interpolation_fraction(), dt)
+	toast_t = maxf(0.0, toast_t - dt)
+	hud.queue_redraw()
+
+
+func _controls() -> Dictionary:
+	var k := func(keys: Array) -> bool:
+		for key in keys:
+			if Input.is_physical_key_pressed(key): return true
+		return false
+	var left: bool = k.call([KEY_A, KEY_LEFT]) or _t("left")
+	var right: bool = k.call([KEY_D, KEY_RIGHT]) or _t("right")
+	var target := (1.0 if right else 0.0) - (1.0 if left else 0.0)
+	var pads := Input.get_connected_joypads()
+	var pad_gas := 0.0
+	var pad_brake := 0.0
+	var pad_drift := false
+	var pad_item := false
+	var pad_power := false
+	if not pads.is_empty():
+		var d: int = pads[0]
+		var ax := Input.get_joy_axis(d, JOY_AXIS_LEFT_X)
+		if absf(ax) > 0.2: target = ax
+		pad_gas = maxf(Input.get_joy_axis(d, JOY_AXIS_TRIGGER_RIGHT), 1.0 if Input.is_joy_button_pressed(d, JOY_BUTTON_A) else 0.0)
+		pad_brake = maxf(Input.get_joy_axis(d, JOY_AXIS_TRIGGER_LEFT), 1.0 if Input.is_joy_button_pressed(d, JOY_BUTTON_B) else 0.0)
+		pad_drift = Input.is_joy_button_pressed(d, JOY_BUTTON_RIGHT_SHOULDER)
+		pad_item = Input.is_joy_button_pressed(d, JOY_BUTTON_X)
+		pad_power = Input.is_joy_button_pressed(d, JOY_BUTTON_Y)
+	steer_s = move_toward(steer_s, target, 0.12)
+	return {
+		steer = steer_s,
+		gas = maxf(pad_gas, 1.0 if (k.call([KEY_W, KEY_UP]) or _t("gas")) else 0.0),
+		brake = maxf(pad_brake, 1.0 if (k.call([KEY_S, KEY_DOWN]) or _t("brake")) else 0.0),
+		drift = pad_drift or k.call([KEY_SPACE, KEY_SHIFT]) or _t("drift"),
+		item = pad_item or k.call([KEY_J, KEY_E]) or _t("item"),
+		power = pad_power or k.call([KEY_K, KEY_Q]) or _t("power"),
+	}
+
+
+func _t(name: String) -> bool:
+	return touch_btn.has(name) and touch_btn[name].held
+
+
+func _event(e: Array) -> void:
+	var kind: String = e[0]
+	var who: int = int(e[2]) if e[2] is int else -1
+	var mine := who == me
+	match kind:
+		"count": G.sfx("ui"); _toast(str(e[2]))
+		"go": G.sfx("ok"); _toast("GO!")
+		"boost": if mine: G.sfx("whoosh"); _toast("BOOST!")
+		"hit":
+			G.sfx("heavy")
+			if who >= 0: _voice(who, "hurt")
+			if mine: _toast("HIT!")
+		"crash": G.sfx("thud"); if mine: _toast("CRASH!")
+		"pickup": if mine: G.sfx("ok")
+		"power":
+			G.sfx("surge")
+			_voice(who, "power")
+			var r: RaceSim.Racer = sim.racers[who]
+			_toast(String(r.C.get("surge_name", "POWER")) if mine else "%s: %s" % [r.C.person.get("short", r.C.name) if r.C.has("person") else r.C.name, r.C.get("surge_name", "")])
+		"use": if mine: G.sfx("whoosh")
+		"lap": if mine: G.sfx("vs"); _toast("LAP %d / %d" % [mini((sim.racers[me] as RaceSim.Racer).lap + 1, RaceSim.LAPS), RaceSim.LAPS])
+		"finish":
+			if mine: G.sfx("ko"); _toast("FINISH!  %s" % _ord((sim.racers[me] as RaceSim.Racer).place))
+			if who >= 0 and (sim.racers[who] as RaceSim.Racer).place == 1: _voice(who, "win")
+		"boom": G.sfx("hit")
+		"scrape": if mine: G.sfx("block")
+		"jump": if mine: G.sfx("whoosh")
+		"bump": G.sfx("thud")
+
+
+func _voice(who: int, kind: String) -> void:
+	var r: RaceSim.Racer = sim.racers[who]
+	var s := Voices.get_sound(r.C, kind)
+	if s == null: return
+	var p := AudioStreamPlayer.new()
+	p.stream = s
+	p.volume_db = -2.0 if who == me else -9.0
+	add_child(p)
+	p.play()
+	p.finished.connect(p.queue_free)
+
+
+func _toast(t: String) -> void:
+	toast = t; toast_t = 1.4
+
+
+static func _ord(n: int) -> String:
+	var suf := "th"
+	if n % 100 < 11 or n % 100 > 13:
+		suf = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+	return "%d%s" % [n, suf]
+
+
+# ---------------------------------------------------------------- HUD
+func _build_minimap() -> void:
+	var lo := Vector2(INF, INF)
+	var hi := Vector2(-INF, -INF)
+	for p in sim.P:
+		lo = lo.min(Vector2(p.x, p.z)); hi = hi.max(Vector2(p.x, p.z))
+	mm_min = lo
+	mm_scale = 170.0 / maxf(hi.x - lo.x, hi.y - lo.y)
+	minimap = PackedVector2Array()
+	for i in range(0, sim.P.size(), 4):
+		minimap.append((Vector2(sim.P[i].x, sim.P[i].z) - lo) * mm_scale)
+
+
+func _draw_hud() -> void:
+	var s := hud.size
+	var r: RaceSim.Racer = sim.racers[me]
+	var ink := Color(0.95, 0.95, 1.0)
+	# place
+	hud.draw_string(font, Vector2(30, 92), _ord(r.place), HORIZONTAL_ALIGNMENT_LEFT, -1, 80, Color(1.0, 0.8, 0.3))
+	hud.draw_string(small, Vector2(34, 122), "OF %d" % sim.racers.size(), HORIZONTAL_ALIGNMENT_LEFT, -1, 24, ink)
+	hud.draw_string(font, Vector2(30, 165), "LAP %d / %d" % [clampi(r.lap + 1, 1, RaceSim.LAPS), RaceSim.LAPS], HORIZONTAL_ALIGNMENT_LEFT, -1, 30, ink)
+	hud.draw_string(small, Vector2(30, 195), "%02d:%05.2f" % [int(sim.time) / 60, fmod(sim.time, 60.0)], HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color(0.75, 0.8, 0.9))
+	# item + power
+	var ib := Rect2(Vector2(s.x / 2 - 110, 20), Vector2(220, 64))
+	hud.draw_rect(ib, Color(0, 0, 0, 0.45))
+	hud.draw_rect(ib, Color(0.13, 0.78, 0.92, 0.9), false, 3.0)
+	hud.draw_string(font, ib.position + Vector2(0, 42), ITEM_NAMES.get(r.item, "—"), HORIZONTAL_ALIGNMENT_CENTER, ib.size.x, 22, ink)
+	var pw := Rect2(Vector2(s.x / 2 - 110, 92), Vector2(220, 14))
+	hud.draw_rect(pw, Color(0, 0, 0, 0.45))
+	var full := r.power >= 100.0
+	hud.draw_rect(Rect2(pw.position, Vector2(pw.size.x * r.power / 100.0, pw.size.y)), Color(0.58, 0.3, 0.85) if not full else Color(1.0, 0.8, 0.3).lerp(Color.WHITE, 0.5 + 0.5 * sin(sim.time * 10.0)))
+	hud.draw_string(small, pw.position + Vector2(0, 34), ("POWER READY  [K]" if full else "POWER") if not _touch() else ("POWER READY" if full else "POWER"), HORIZONTAL_ALIGNMENT_CENTER, pw.size.x, 18, ink)
+	# speed
+	hud.draw_string(font, Vector2(s.x - 240, s.y - 40 if not _touch() else 120), "%d km/h" % roundi(absf(r.speed) * 3.6), HORIZONTAL_ALIGNMENT_RIGHT, 200, 34, ink)
+	# minimap
+	var mo := Vector2(s.x - 210, 20)
+	hud.draw_rect(Rect2(mo - Vector2(10, 10), Vector2(190, 190)), Color(0, 0, 0, 0.35))
+	if minimap.size() > 1:
+		var pts := PackedVector2Array()
+		for p in minimap: pts.append(mo + p)
+		pts.append(pts[0])
+		hud.draw_polyline(pts, Color(1, 1, 1, 0.6), 3.0)
+	for o in sim.racers:
+		var d := mo + (Vector2(o.pos.x, o.pos.z) - mm_min) * mm_scale
+		hud.draw_circle(d, 6.0 if o.id == me else 4.0, (o.C.accent as Color) if o.id != me else Color(1, 0.8, 0.3))
+	# countdown / toasts
+	if toast_t > 0.0:
+		var a := clampf(toast_t / 0.4, 0.0, 1.0)
+		hud.draw_string(font, Vector2(0, s.y * 0.38), toast, HORIZONTAL_ALIGNMENT_CENTER, s.x, 72, Color(1, 1, 1, a))
+	if not _touch():
+		hud.draw_string(small, Vector2(0, s.y - 14), "W / S  gas / brake   ·   A / D  steer   ·   SPACE  drift   ·   J  item   ·   K  power", HORIZONTAL_ALIGNMENT_CENTER, s.x, 18, Color(0.8, 0.82, 0.9, 0.75))
+	_draw_touch()
+
+
+# ---------------------------------------------------------------- touch controls
+func _touch() -> bool:
+	return G.ui.touch_enabled
+
+
+func _layout_touch() -> void:
+	if not _touch(): return
+	var s: Vector2 = G.get_viewport().get_visible_rect().size
+	var r := clampf(s.y * 0.09, 40.0, 70.0)
+	touch_btn = {
+		left = {c = Vector2(r * 1.6, s.y - r * 1.8), r = r * 1.1, label = "◀", held = false},
+		right = {c = Vector2(r * 4.2, s.y - r * 1.8), r = r * 1.1, label = "▶", held = false},
+		gas = {c = Vector2(s.x - r * 1.6, s.y - r * 1.8), r = r * 1.2, label = "GAS", held = false},
+		brake = {c = Vector2(s.x - r * 4.1, s.y - r * 1.4), r = r * 0.85, label = "BRAKE", held = false},
+		drift = {c = Vector2(s.x - r * 4.1, s.y - r * 3.6), r = r * 0.8, label = "DRIFT", held = false},
+		item = {c = Vector2(s.x - r * 1.6, s.y - r * 4.4), r = r * 0.85, label = "ITEM", held = false},
+		power = {c = Vector2(s.x - r * 6.2, s.y - r * 1.4), r = r * 0.8, label = "POWER", held = false},
+	}
+
+
+func _input(e: InputEvent) -> void:
+	if not _touch() or touch_btn.is_empty(): return
+	if e is InputEventScreenTouch or e is InputEventScreenDrag:
+		var hit := ""
+		for n in touch_btn:
+			if e.position.distance_to(touch_btn[n].c) <= touch_btn[n].r * 1.15: hit = n
+		if e is InputEventScreenTouch and not e.pressed:
+			touches.erase(e.index)
+		elif hit != "":
+			touches[e.index] = hit
+		for n in touch_btn: touch_btn[n].held = touches.values().has(n)
+
+
+func _draw_touch() -> void:
+	for n in touch_btn:
+		var b: Dictionary = touch_btn[n]
+		var col := Color(0.13, 0.78, 0.92) if n in ["gas", "left", "right"] else Color(0.58, 0.3, 0.85)
+		hud.draw_circle(b.c, b.r, Color(col, 0.5 if b.held else 0.18))
+		hud.draw_arc(b.c, b.r, 0, TAU, 40, Color(col, 0.9), 3.0)
+		var fs := int(b.r * (0.55 if String(b.label).length() <= 2 else 0.36))
+		hud.draw_string(font, b.c + Vector2(-b.r, fs * 0.36), b.label, HORIZONTAL_ALIGNMENT_CENTER, b.r * 2.0, fs, Color.WHITE)
+
+
+# ---------------------------------------------------------------- results
+func _show_results() -> void:
+	var ui = G.ui
+	var order := sim.racers.duplicate()
+	order.sort_custom(func(a, b): return a.place < b.place)
+	var panel := PanelContainer.new()
+	var sb := StyleBoxFlat.new(); sb.bg_color = Color(0.05, 0.03, 0.1, 0.92); sb.border_color = Color(0.58, 0.3, 0.85); sb.set_border_width_all(2)
+	panel.add_theme_stylebox_override("panel", sb)
+	layer.add_child(panel)
+	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 4)
+	panel.add_child(v)
+	v.add_child(ui.lbl("RACE RESULTS", 40, font, Color(1.0, 0.8, 0.3), 8))
+	for r in order:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 14)
+		var nm: String = r.C.name
+		var t := ("%02d:%05.2f" % [int(r.finished) / 60, fmod(r.finished, 60.0)]) if r.finished >= 0.0 else "—"
+		row.add_child(ui.lbl(_ord(r.place), 24, font, Color(1.0, 0.8, 0.3) if r.place <= 3 else Color(0.8, 0.82, 0.9)))
+		var n: Label = ui.lbl(nm + ("  (YOU)" if r.id == me else ""), 22, font, r.C.accent.lightened(0.3) if r.id != me else Color.WHITE)
+		n.custom_minimum_size = Vector2(420, 0)
+		row.add_child(n)
+		row.add_child(ui.lbl(t, 22, small, Color(0.85, 0.88, 0.95)))
+		v.add_child(row)
+	var btns := HBoxContainer.new()
+	btns.alignment = BoxContainer.ALIGNMENT_CENTER
+	btns.add_theme_constant_override("separation", 16)
+	btns.add_child(ui.big_btn("RACE AGAIN", Color(0.13, 0.78, 0.92), func(): finished.emit(); ui.show_race_tracks(sim.racers[me].C)))
+	btns.add_child(ui.big_btn("MAIN MENU", Color(0.55, 0.62, 0.75), func(): finished.emit(); ui.show_title()))
+	v.add_child(btns)
+	panel.reset_size()
+	panel.position = (G.get_viewport().get_visible_rect().size - panel.size) / 2.0

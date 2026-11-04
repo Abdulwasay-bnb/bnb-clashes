@@ -384,7 +384,7 @@ func big_btn(text: String, accent: Color, cb: Callable) -> Button:
 func _process(_dt: float) -> void:
 	_process_online()
 	if nav_back == null: return
-	var menus := ["diff", "select", "stage", "moves", "info", "online", "ladder"]
+	var menus := ["diff", "select", "stage", "moves", "info", "online", "ladder", "race_tracks"]
 	nav_back.visible = view in menus
 	nav_ok.visible = view in ["select", "stage"]
 	if view == "stage": nav_ok.text = "FIGHT!  ✔"
@@ -723,6 +723,7 @@ func _menu_list(items: Array) -> VBoxContainer:
 
 
 const MENU_DESC := [
+	"BNB Rush Hour: a ten-car street race. Grab pickups, throw them at rivals, unleash your power.",
 	"Climb the office ladder: four colleagues, then HR, the PM, and the CEO himself.",
 	"Fight the computer. Pick a difficulty, choose your fighter, best of three rounds.",
 	"Two players on one keyboard or with two gamepads.",
@@ -775,8 +776,8 @@ func show_title() -> void:
 	wm.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	col.add_child(wm)
 	var sp := Control.new(); sp.custom_minimum_size = Vector2(0, 34 if not touch_enabled else 12); col.add_child(sp)
-	var labels := ["ARCADE", "VS CPU", "VERSUS", "ONLINE", "TRAINING", "HOW TO PLAY", "CONTROLS", "QUIT"]
-	var cbs := [func(): show_select({mode = "arcade", lv = 1}), show_difficulty, func(): show_select({mode = "2p"}), show_online, func(): show_select({mode = "training"}), show_how, show_controls, func(): G.get_tree().quit()]
+	var labels := ["RUSH HOUR", "ARCADE", "VS CPU", "VERSUS", "ONLINE", "TRAINING", "HOW TO PLAY", "CONTROLS", "QUIT"]
+	var cbs := [func(): show_select({mode = "race"}), func(): show_select({mode = "arcade", lv = 1}), show_difficulty, func(): show_select({mode = "2p"}), show_online, func(): show_select({mode = "training"}), show_how, show_controls, func(): G.get_tree().quit()]
 	var items: Array = []
 	for i in labels.size():
 		items.append(["%02d   %s" % [i + 1, labels[i]], cbs[i], 28, MENU_DESC[i]])
@@ -789,7 +790,7 @@ func show_title() -> void:
 	col.add_child(desc_lbl)
 	if touch_enabled:
 		sp2.visible = false; desc_lbl.visible = false
-		for btn in m.get_children(): btn.custom_minimum_size.y = 50
+		for btn in m.get_children(): btn.custom_minimum_size.y = 45
 	# staggered slide-in
 	var i := 0
 	for btn in m.get_children():
@@ -889,7 +890,7 @@ func show_select(c: Dictionary) -> void:
 	var t := lbl("SELECT YOUR FIGHTER", 30, F_TITLE, INK, 6)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bv.add_child(t)
-	var sub := lbl({"cpu": "VS CPU  ·  " + ["EASY", "NORMAL", "HARD", "BOSS"][c.get("lv", 1)], "2p": "VERSUS  ·  LOCAL", "training": "TRAINING", "arcade": "ARCADE  ·  CLIMB TO THE CEO", "online": "ONLINE  ·  " + ("WI-FI" if G.net.via == "lan" else "ROOM " + G.net.code)}[c.mode], 14, F_BODY, GOLD)
+	var sub := lbl({"cpu": "VS CPU  ·  " + ["EASY", "NORMAL", "HARD", "BOSS"][c.get("lv", 1)], "2p": "VERSUS  ·  LOCAL", "training": "TRAINING", "arcade": "ARCADE  ·  CLIMB TO THE CEO", "race": "RUSH HOUR  ·  PICK YOUR DRIVER", "online": "ONLINE  ·  " + ("WI-FI" if G.net.via == "lan" else "ROOM " + G.net.code)}[c.mode], 14, F_BODY, GOLD)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bv.add_child(sub)
 	# per-side info: watermark, name plate, radar, signature
@@ -1116,6 +1117,11 @@ func _select_confirm(s: int) -> void:
 		G.net.send({t = "pick", i = sel.cur[s], cos = sel.cos[s]})
 		_render_select()
 		_online_both_picked()
+		return
+	if sel.cfg.mode == "race":
+		var rc: Dictionary = Data.ROSTER[sel.cur[0]]
+		_render_select()
+		get_tree().create_timer(0.5).timeout.connect(func(): show_race_tracks(rc))
 		return
 	if sel.cfg.mode == "arcade":
 		var pc: Dictionary = Data.ROSTER[sel.cur[0]]
@@ -1935,3 +1941,32 @@ func show_arcade_win() -> void:
 	row.add_child(big_btn("MAIN MENU", P2C, show_title))
 	v.add_child(row)
 	v.set_meta("back", show_title)
+
+
+# ---------------------------------------------------------------- BNB Rush Hour
+func show_race_tracks(C: Dictionary) -> void:
+	clear_screen(); screen.visible = true; view = "race_tracks"
+	G.set_preview(0, C)
+	var dim := full(hgrad(Color(0.03, 0.01, 0.06, 0.95), Color(0.03, 0.01, 0.06, 0.2)))
+	screen.add_child(dim)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 6)
+	screen.add_child(col)
+	col.position = Vector2(90, 90) if not touch_enabled else Vector2(70, 100)
+	col.add_child(lbl("RUSH HOUR", 64, F_TITLE, P2C, 10))
+	col.add_child(lbl("%s  ·  10 RACERS  ·  %d LAPS" % [C.name, RaceSim.LAPS], 20, F_BODY, GOLD))
+	var items := []
+	for id in RaceSim.TRACKS:
+		var t: Dictionary = RaceSim.TRACKS[id]
+		var tid: String = id
+		items.append([String(t.name).to_upper(), func(): G.start_race(tid, C), 28, {"city": "Neon towers, night traffic, two big jumps.",
+			"park": "Trees, glass offices and a hill with a jump.", "rooftop": "Thirty storeys up, over the rooftops at sunset."}.get(id, "")])
+	items.append(["BACK", show_title, 20, "Back to the main menu."])
+	var m := _menu_list(items)
+	m.set_meta("back", show_title)
+	col.add_child(m)
+	desc_lbl = lbl("", 20, F_MED, Color(0.79, 0.83, 0.88))
+	desc_lbl.custom_minimum_size = Vector2(480, 50)
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	col.add_child(desc_lbl)
+	_focus_first(m)
