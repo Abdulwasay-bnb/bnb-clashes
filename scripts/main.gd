@@ -561,7 +561,7 @@ func start_race(track_id: String, C: Dictionary) -> void:
 
 ## Online / Wi-Fi race (see PartyLobby).
 func start_race_net(track_id: String, people: Array, humans: int, seed: int, me: int, party: Party, is_guest: bool, pids: Dictionary) -> void:
-	end_race(); end_ops(); end_ludo()
+	end_race(); end_ops(); end_ludo(); end_mafia()
 	loader.open("LOADING RACE")
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -593,7 +593,7 @@ func start_ludo_net(people: Array, seed: int, slot: int, party: Party, is_guest:
 
 
 func _begin_ludo(init: Callable) -> void:
-	end_race(); end_ops(); end_ludo()
+	end_race(); end_ops(); end_ludo(); end_mafia()
 	loader.open("SETTING UP THE BOARD")
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -614,13 +614,41 @@ func end_ludo() -> void:
 		camera.current = true
 
 
+# ------------------------------------------------------------------ BNB Mafia
+var mafia: MafiaGame
+
+
+## people: [{C, human, slot}] (index = agent id); me: this player's agent.
+func start_mafia(people: Array, cfg: Dictionary, seed: int, me: int, party: Party = null, is_guest := false, pids := {}) -> void:
+	end_race(); end_ops(); end_ludo(); end_mafia()
+	loader.open("CLOCKING IN")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	clear_preview()
+	if stage != null: stage.visible = false
+	ui.hide_screen(); ui.view = "mafia"; ui.hide_hud()
+	mafia = MafiaGame.new()
+	add_child(mafia)
+	if party != null: mafia.start_net(self, people, cfg, seed, me, party, is_guest, pids)
+	else: mafia.start(self, people, cfg, seed, me)
+	mafia.finished.connect(end_mafia)
+	loader.close()
+
+
+func end_mafia() -> void:
+	if mafia != null:
+		mafia.stop(); mafia.queue_free(); mafia = null
+		if stage != null: stage.visible = true
+		camera.current = true
+
+
 # ------------------------------------------------------------------ BNB Office Ops
 var ops: OpsGame
 var lobby: PartyLobby
 
 
 func start_ops_net(a: Array, b: Array, humans: Dictionary, guns: Dictionary, skill: float, seed: int, me: int, party: Party, is_guest: bool, pids: Dictionary) -> void:
-	end_race(); end_ops(); end_ludo()
+	end_race(); end_ops(); end_ludo(); end_mafia()
 	loader.open("DEPLOYING")
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -1276,11 +1304,12 @@ func _run_autotest() -> void:
 				if race != null or ops != null: break
 				await get_tree().create_timer(0.1).timeout
 			for k in 100:
-				if race != null or ops != null or ludo != null: break
+				if race != null or ops != null or ludo != null or mafia != null: break
 				await get_tree().create_timer(0.1).timeout
 			if race != null: race.autopilot = true
 			if ops != null: ops.autopilot = true
 			if ludo != null: ludo.autoplay = true
+			if mafia != null: mafia.autoplay = true
 			var tag := "host" if host else "guest_" + char_id
 			for k in 3:
 				await get_tree().create_timer(7.0).timeout
@@ -1292,10 +1321,63 @@ func _run_autotest() -> void:
 			if ops != null:
 				var me: OpsSim.Soldier = ops.sim.soldiers[ops.me]
 				print("AUTOTEST party %s ops t=%.1f state=%s me=%d team=%d score=%s kills=%d deaths=%d events=%s" % [tag, ops.sim.time, ops.sim.state, ops.me, me.team, ops.sim.score, me.kills, me.deaths, ops.stats])
+			if mafia != null:
+				var ms: MafiaSim = mafia.sim
+				print("AUTOTEST party %s mafia me=%d phase=%s t=%.1f my_role=%s known_mafia=%d my_tasks=%d task_bar=%d/%d alive=%d stats=%s" % [tag, mafia.me, ms.phase, ms.time, "MAFIA" if mafia._me().mafia else "staff",
+					ms.agents.filter(func(a): return a.mafia).size(), mafia._me().tasks.size(), ms.tasks_done, ms.tasks_total, ms.agents.filter(func(a): return a.alive).size(), mafia.stats])
 			if ludo != null:
 				print("AUTOTEST party %s ludo me=%d turn=%d phase=%s rev=%d tokens=%s" % [tag, ludo.my_slot, ludo.sim.turn, ludo.sim.phase, ludo.sim.rev, ludo.sim.players.map(func(p): return p.tokens)])
 			# the host stays a while so slower guests finish their checks too
 			await get_tree().create_timer(30.0 if host else 2.0).timeout
+		"mafia":
+			# solo vs bots as the Mafia: reveal, floor, map, a task, a meeting with chat and votes
+			lobby.C = Data.by_id("hamza_khan"); lobby.mode = "mafia"; lobby.cfg.total = 8; lobby.cfg.mafia = 2
+			await lobby.start_mafia_solo(0)
+			await get_tree().create_timer(1.5).timeout
+			await shot.call("mafia_intro")
+			await get_tree().create_timer(3.5).timeout
+			mafia.autoplay = true
+			await get_tree().create_timer(6.0).timeout
+			await shot.call("mafia_play")
+			mafia.show_map = true; await get_tree().create_timer(0.3).timeout; await shot.call("mafia_map"); mafia.show_map = false
+			mafia.autoplay = false
+			mafia._open_task(mafia.sim.station("code")); await get_tree().create_timer(0.4).timeout; await shot.call("mafia_task_code")
+			mafia._close_task()
+			mafia._open_task(mafia.sim.station("cables")); await get_tree().create_timer(0.4).timeout; await shot.call("mafia_task_cables")
+			mafia._close_task()
+			mafia.sim._meeting(0, -1)
+			await get_tree().create_timer(1.0).timeout
+			mafia._send_chat("i was in the boardroom the whole time")
+			await get_tree().create_timer(3.0).timeout
+			await shot.call("mafia_meeting")
+			mafia.sim.phase_t = 0.2
+			await get_tree().create_timer(4.0).timeout
+			mafia._vote(-1)
+			await shot.call("mafia_vote")
+			for k in 120:
+				if mafia.sim.phase == "result": break
+				await get_tree().create_timer(0.25).timeout
+			await get_tree().create_timer(1.0).timeout
+			await shot.call("mafia_result")
+			print("AUTOTEST mafia phase=%s me_mafia=%s alive=%d stats=%s chat=%d" % [mafia.sim.phase, mafia._me().mafia, mafia.sim.agents.filter(func(a): return a.alive).size(), mafia.stats, mafia.sim.chat.size()])
+		"mafiasim":
+			# whole games of bots only, no visuals: kills, reports, meetings, votes, a winner
+			for n in [6, 8, 10]:
+				var people := []
+				for k in n: people.append({C = Data.ROSTER[k], human = false, slot = -1})
+				var sim := MafiaSim.new()
+				sim.setup(people, {mafia = 1 if n < 8 else 2, cool = 25.0, talk = 6.0, vote = 10.0}, 5 + n)
+				var counts := {}
+				var t := 0.0
+				var lines := []
+				while not sim.finished() and t < 900.0:
+					sim.tick({}); t += MafiaSim.DT
+					for e in sim.events:
+						counts[e[0]] = counts.get(e[0], 0) + 1
+						if e[0] == "chat" and lines.size() < 6: lines.append("%s: %s" % [sim._nm(sim.agents[e[1]]), e[2]])
+						if e[0] == "result": lines.append("-> fired %s (mafia=%s)" % [sim._nm(sim.agents[e[1]]) if e[1] >= 0 else "nobody", e[2]])
+				print("AUTOTEST mafiasim %dp t=%.0fs winner=%s why=%s tasks=%d/%d events=%s" % [n, t, sim.winner, sim.win_why, sim.tasks_done, sim.tasks_total, counts])
+				print("AUTOTEST mafiasim %dp chat %s" % [n, " | ".join(lines.slice(0, 10))])
 		"ludosim":
 			# whole games with 2, 3 and 4 CPU players, no visuals: rules finish, places handed out
 			for n in [2, 3, 4]:

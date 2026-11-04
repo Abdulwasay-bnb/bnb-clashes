@@ -11,7 +11,7 @@ var mode := ""                 # race / ops
 var C: Dictionary              # this player's character
 var gun := "rifle"
 var players: Array = []        # [{pid, c, gun}] — pid 0 is the host
-var cfg := {track = "city", mine = 4, them = 4, skill = 1.0, fill = true}
+var cfg := {track = "city", mine = 4, them = 4, skill = 1.0, fill = true, total = 8, mafia = 2, cool = 30.0, reveal = true}
 var status: Label
 var list_box: VBoxContainer
 var found_box: VBoxContainer
@@ -61,9 +61,12 @@ func show_menu(m: String, who: Dictionary, msg := "") -> void:
 	col.add_child(ui.lbl(title(), 64, ui.F_TITLE, {"race": Color(0.13, 0.78, 0.92), "ludo": Color(1.0, 0.81, 0.35), "mafia": Color(0.95, 0.3, 0.35)}.get(mode, Color(0.66, 0.4, 1.0)), 10))
 	col.add_child(ui.lbl("%s  ·  PLAY WITH FRIENDS  ·  UP TO %d PLAYERS" % [C.name, max_players()], 20, ui.F_BODY, Color(1.0, 0.81, 0.35)))
 	var back := _back_cb()
-	var items := [
+	var items := []
+	if mode == "mafia":
+		items.append(["PLAY WITH BOTS", _mafia_solo_setup, 26, "You and office bots. Find the Mafia — or be them."])
+	items.append_array([
 		["CREATE ROOM", _create, 26, "Get a room code to send to your friends. Works over the internet."],
-		["JOIN WITH CODE", _show_join, 26, "Type the code a friend sent you."]]
+		["JOIN WITH CODE", _show_join, 26, "Type the code a friend sent you."]])
 	if Net.lan_supported():
 		items.append(["HOST ON THIS WI-FI", _host_lan, 26, "Friends on the same Wi-Fi join you. No internet needed."])
 		items.append(["FIND WI-FI GAMES", _find_lan, 26, "Look for a game hosted on this Wi-Fi network."])
@@ -262,6 +265,14 @@ func _render_lobby() -> void:
 			v.add_child(r)
 		else:
 			v.add_child(_centered_lbl("TRACK:  " + String(RaceSim.TRACKS.get(cfg.track, RaceSim.TRACKS.city).name).to_upper()))
+	elif mode == "mafia":
+		if host:
+			v.add_child(_opt_row("PLAYERS", [5, 6, 8, 10], "total", ["5", "6", "8", "10"]))
+			v.add_child(_opt_row("MAFIA", [1, 2, 3], "mafia", ["1", "2", "3"]))
+			v.add_child(_opt_row("KNIFE COOLDOWN", [20.0, 30.0, 45.0], "cool", ["20s", "30s", "45s"]))
+			v.add_child(_opt_row("REVEAL FIRED", [true, false], "reveal", ["YES", "NO"]))
+		else:
+			v.add_child(_centered_lbl("%d PLAYERS  ·  %d MAFIA  ·  KNIFE %ds" % [maxi(int(cfg.total), players.size()), int(cfg.mafia), int(cfg.cool)]))
 	elif mode == "ludo":
 		if host: v.add_child(_opt_row("EMPTY SEATS", [true, false], "fill", ["CPU PLAYERS", "LEAVE EMPTY"]))
 		else: v.add_child(_centered_lbl("EMPTY SEATS:  " + ("CPU PLAYERS" if cfg.fill else "LEFT EMPTY")))
@@ -308,6 +319,7 @@ func _opt_row(title: String, opts: Array, key: String, names: Array) -> HBoxCont
 
 func _seats() -> int:
 	if mode == "race": return 10
+	if mode == "mafia": return maxi(int(cfg.total), players.size())
 	if mode == "ludo": return 4 if cfg.fill else maxi(2, players.size())
 	var ab := _team_sizes()
 	return ab[0] + ab[1]
@@ -320,6 +332,8 @@ func _team_sizes() -> Array:
 
 
 func _changed() -> void:
+	if view == "solo":
+		_mafia_solo_setup(); return
 	_broadcast_lobby()
 	_render_lobby()
 
@@ -337,7 +351,7 @@ func _on_left(pid: int) -> void:
 func _gone(msg: String) -> void:
 	if in_game:
 		in_game = false
-		G.end_race(); G.end_ops(); G.end_ludo()
+		G.end_race(); G.end_ops(); G.end_ludo(); G.end_mafia()
 	show_menu(mode, C, msg)
 
 
@@ -394,6 +408,21 @@ func start_match() -> void:
 	pool.shuffle()
 	party.lock_room(true)
 	in_game = true
+	if mode == "mafia":
+		var ids := []
+		for p in players: ids.append(String(p.c))
+		for c in pool:
+			if ids.size() >= _seats(): break
+			ids.append(String(c.id))
+		var mc := _mafia_cfg()
+		var pids := {}
+		for k in players.size():
+			var pid := int(players[k].pid)
+			if pid != 0:
+				pids[pid] = k
+				party.send_to(pid, {t = "start", mode = "mafia", people = ids, humans = players.size(), cfg = mc, seed = seed, me = k})
+		G.start_mafia(_ludo_people(ids, players.size()), mc, seed, 0, party, false, pids)
+		return
 	if mode == "ludo":
 		var ids := []
 		for p in players: ids.append(String(p.c))
@@ -453,14 +482,47 @@ func start_match() -> void:
 
 func _start_guest(d: Dictionary) -> void:
 	if in_game:
-		G.end_race(); G.end_ops(); G.end_ludo()
+		G.end_race(); G.end_ops(); G.end_ludo(); G.end_mafia()
 	in_game = true
-	if String(d.mode) == "ludo":
+	if String(d.mode) == "mafia":
+		G.start_mafia(_ludo_people(d.people, int(d.humans)), d.cfg, int(d.seed), int(d.me), party, true, {})
+	elif String(d.mode) == "ludo":
 		G.start_ludo_net(_ludo_people(d.people, int(d.humans)), int(d.seed), int(d.me), party, true, {})
 	elif String(d.mode) == "race":
 		G.start_race_net(String(d.track), _people(d.people), int(d.humans), int(d.seed), int(d.me), party, true, {})
 	else:
 		G.start_ops_net(_people(d.a), _people(d.b), _int_keys(d.humans), _int_keys(d.guns), float(d.skill), int(d.seed), int(d.me), party, true, {})
+
+
+func _mafia_cfg() -> Dictionary:
+	return {mafia = int(cfg.mafia), cool = float(cfg.cool), reveal = bool(cfg.reveal), talk = 20.0, vote = 40.0, tasks = 5}
+
+
+## Solo: you plus office bots.
+func _mafia_solo_setup() -> void:
+	var ui = G.ui
+	var v := _panel("MAFIA  ·  WITH BOTS", "You and office bots. Roles are dealt at random.")
+	view = "solo"
+	v.set_meta("back", func(): show_menu(mode, C))
+	v.add_child(_opt_row("PLAYERS", [5, 6, 8, 10], "total", ["5", "6", "8", "10"]))
+	v.add_child(_opt_row("MAFIA", [1, 2, 3], "mafia", ["1", "2", "3"]))
+	v.add_child(_opt_row("KNIFE COOLDOWN", [20.0, 30.0, 45.0], "cool", ["20s", "30s", "45s"]))
+	var r := _row()
+	r.add_child(ui.big_btn("START  ✔", Color(1.0, 0.81, 0.35), func(): start_mafia_solo()))
+	r.add_child(ui.big_btn("BACK", Color(0.55, 0.62, 0.75), func(): show_menu(mode, C)))
+	v.add_child(r)
+
+
+func start_mafia_solo(force_mafia := -1) -> void:
+	var pool := Data.ROSTER.filter(func(c): return c.id != C.id)
+	pool.shuffle()
+	var ids := [String(C.id)]
+	for c in pool:
+		if ids.size() >= int(cfg.total): break
+		ids.append(String(c.id))
+	var mc := _mafia_cfg()
+	if force_mafia >= 0: mc.force = force_mafia
+	G.start_mafia(_ludo_people(ids, 1), mc, randi(), 0)
 
 
 func _ludo_people(ids: Array, humans: int) -> Array:
