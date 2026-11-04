@@ -1519,6 +1519,16 @@ func _run_autotest() -> void:
 			race.world.cam.look_at(c.global_position + Vector3(0, 1.0, 0))
 			await get_tree().create_timer(0.3).timeout
 			await shot.call("racecar")
+			# the grid from the side and from behind
+			var c3: Node3D = race.world.cars[3].root
+			race.world.cam.position = c3.global_position + c3.global_transform.basis.x * 9.0 + Vector3(0, 2.5, 0)
+			race.world.cam.look_at(c3.global_position + Vector3(0, 0.8, 0))
+			await get_tree().create_timer(0.3).timeout
+			await shot.call("racegrid")
+			race.world.cam.position = c.global_position - c.global_transform.basis.z * 6.0 + Vector3(1.5, 2.0, 0)
+			race.world.cam.look_at(c.global_position + Vector3(0, 0.8, 0))
+			await get_tree().create_timer(0.3).timeout
+			await shot.call("racerear")
 			end_race()
 		"racefull":
 			await start_race("park", Data.by_id("ali"))

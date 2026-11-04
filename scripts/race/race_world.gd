@@ -221,36 +221,94 @@ func _scenery(theme: String) -> void:
 
 
 # ---------------------------------------------------------------- cars
-## Open-top car in the racer's colour, with them in the driver's seat.
+## Open-top car in the racer's colour, with them in the driver's seat. Three body styles (sports / muscle /
+## hatch, by fighting style), racing stripes, the Bit & Bytes logo, spoke rims, light strips, underglow.
 func _car(r: RaceSim.Racer) -> Dictionary:
 	var root := Node3D.new()
 	add_child(root)
 	var col: Color = r.C.accent
+	var stripe := Color(1, 1, 1) if col.get_luminance() < 0.55 else Color(0.08, 0.06, 0.12)
+	var style: String = {"bastion": "muscle", "kael": "muscle", "ember": "muscle", "sora": "sports", "lio": "sports", "vex": "sports"}.get(String(r.C.get("arch", "")), "hatch")
 	var body := Node3D.new()
 	root.add_child(body)
-	var paint := _mat(col, 0.35, 0.4)
-	# open cockpit: a low floor, side panels, bonnet and boot, so the driver is in plain view
-	_mesh(_box_mesh(2.0, 0.28, 4.3), paint, Vector3(0, 0.42, 0), Vector3.ZERO, body)                   # floor pan
-	for sx in [-0.92, 0.92]:
-		_mesh(_box_mesh(0.16, 0.38, 2.0), paint, Vector3(sx, 0.72, -0.25), Vector3.ZERO, body)        # door panels
-	_mesh(_box_mesh(1.9, 0.4, 1.6), paint, Vector3(0, 0.72, 1.35), Vector3(0.1, 0, 0), body)          # bonnet
-	_mesh(_box_mesh(1.9, 0.42, 0.9), paint, Vector3(0, 0.74, -1.7), Vector3.ZERO, body)               # boot
-	_mesh(_box_mesh(0.5, 0.5, 0.12), _mat(Color(0.1, 0.1, 0.12), 0.6), Vector3(0, 0.8, -0.75), Vector3(-0.15, 0, 0), body)   # seat back
+	var paint := _mat(col, 0.28, 0.55)
+	var dark := _mat(Color(0.07, 0.07, 0.09), 0.5, 0.3)
+	var chrome := _mat(Color(0.85, 0.86, 0.9), 0.15, 1.0)
+	var W := 2.1 if style == "muscle" else (1.95 if style == "sports" else 1.85)
+	var L := 4.4 if style == "sports" else (4.3 if style == "muscle" else 3.8)
+	var nose := L / 2.0
+	# hull
+	_mesh(_box_mesh(W, 0.3, L), paint, Vector3(0, 0.42, 0), Vector3.ZERO, body)                              # floor pan
+	for sx in [-1.0, 1.0]:
+		_mesh(_box_mesh(0.14, 0.36, L * 0.46), paint, Vector3(sx * (W / 2 - 0.07), 0.72, -0.25), Vector3.ZERO, body)   # doors
+		_mesh(_box_mesh(0.12, 0.12, L * 0.6), dark, Vector3(sx * (W / 2 + 0.02), 0.3, 0), Vector3.ZERO, body)         # side skirts
+		for wz in [-1.0, 1.0]:   # wheel arches
+			var arch := CylinderMesh.new(); arch.top_radius = 0.56; arch.bottom_radius = 0.56; arch.height = 0.3; arch.radial_segments = 14
+			_mesh(arch, paint, Vector3(sx * (W / 2 - 0.12), 0.55, wz * (L / 2 - 0.85)), Vector3(0, 0, PI / 2), body)
+		_mesh(_box_mesh(0.1, 0.08, 0.16), chrome, Vector3(sx * (W / 2 + 0.06), 1.0, 0.45), Vector3.ZERO, body)          # mirrors
+	var hood_len := L * (0.42 if style == "sports" else 0.36)
+	var hood_h := 0.32 if style == "sports" else 0.4
+	_mesh(_box_mesh(W - 0.1, hood_h, hood_len), paint, Vector3(0, 0.6 + hood_h / 2, nose - hood_len / 2 - 0.05), Vector3(0.08 if style == "sports" else 0.03, 0, 0), body)
+	_mesh(_box_mesh(W - 0.2, 0.18, 0.5), paint, Vector3(0, 0.5, nose - 0.1), Vector3(0.5, 0, 0), body)           # sloped nose
+	if style == "muscle":
+		_mesh(_box_mesh(0.6, 0.18, 0.9), dark, Vector3(0, 1.08, nose - hood_len / 2), Vector3(0.05, 0, 0), body)    # hood scoop
+	var boot_len := L * (0.22 if style != "hatch" else 0.16)
+	_mesh(_box_mesh(W - 0.1, 0.42 if style != "hatch" else 0.7, boot_len), paint, Vector3(0, 0.78 if style != "hatch" else 0.92, -nose + boot_len / 2 + 0.05), Vector3.ZERO, body)
+	# racing stripes over bonnet and boot
+	for sx in [-0.22, 0.22]:
+		_mesh(_box_mesh(0.16, 0.02, hood_len), _mat(stripe, 0.3), Vector3(sx, 0.6 + hood_h + 0.02, nose - hood_len / 2 - 0.05), Vector3(0.08 if style == "sports" else 0.03, 0, 0), body)
+	# cockpit: seats, steering wheel, roll bar, windscreen
+	_mesh(_box_mesh(0.55, 0.55, 0.14), _mat(Color(0.12, 0.1, 0.14), 0.7), Vector3(0, 0.82, -0.75), Vector3(-0.15, 0, 0), body)
 	var wheel_t := TorusMesh.new(); wheel_t.inner_radius = 0.14; wheel_t.outer_radius = 0.18
-	_mesh(wheel_t, _mat(Color(0.08, 0.08, 0.1), 0.5), Vector3(0, 1.05, 0.45), Vector3(PI / 2 - 0.5, 0, 0), body)            # steering wheel
+	_mesh(wheel_t, dark, Vector3(0, 1.05, 0.45), Vector3(PI / 2 - 0.5, 0, 0), body)
+	var bar := TorusMesh.new(); bar.inner_radius = 0.62; bar.outer_radius = 0.7; bar.rings = 24
+	_mesh(bar, chrome, Vector3(0, 0.9, -1.05), Vector3(0, 0, 0), body).scale = Vector3(1.0, 1.0, 0.25)
 	var glass := _mat(Color(0.6, 0.8, 1.0), 0.05, 0.3); glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA; glass.albedo_color.a = 0.35
-	_mesh(_box_mesh(1.8, 0.42, 0.05), glass, Vector3(0, 1.12, 0.62), Vector3(-0.55, 0, 0), body)       # windscreen
-	_mesh(_box_mesh(1.95, 0.08, 0.5), _mat(Color(0.1, 0.1, 0.12), 0.4, 0.5), Vector3(0, 1.0, -2.2), Vector3.ZERO, body)   # spoiler
-	for side in [-0.6, 0.6]:
-		_mesh(_box_mesh(0.35, 0.15, 0.05), _mat(Color(1, 1, 0.9), 0.3, 0.0, 2.0), Vector3(side, 0.7, 2.16), Vector3.ZERO, body)
-		_mesh(_box_mesh(0.35, 0.12, 0.05), _mat(Color(1, 0.15, 0.1), 0.3, 0.0, 1.5), Vector3(side, 0.75, -2.16), Vector3.ZERO, body)
+	_mesh(_box_mesh(W - 0.25, 0.42, 0.05), glass, Vector3(0, 1.12, 0.62), Vector3(-0.55, 0, 0), body)
+	# spoiler on struts
+	var sp_y := 1.25 if style == "sports" else 1.15
+	_mesh(_box_mesh(W - 0.1, 0.06, 0.45), paint if style != "muscle" else dark, Vector3(0, sp_y, -nose + 0.25), Vector3(-0.08, 0, 0), body)
+	for sx in [-0.6, 0.6]:
+		_mesh(_box_mesh(0.06, sp_y - 0.9, 0.08), dark, Vector3(sx, (sp_y + 0.9) / 2, -nose + 0.3), Vector3.ZERO, body)
+	# lights: headlight strips, taillight bar
+	for sx in [-1.0, 1.0]:
+		_mesh(_box_mesh(0.5, 0.08, 0.05), _mat(Color(1, 1, 0.92), 0.2, 0.0, 3.0), Vector3(sx * (W / 2 - 0.38), 0.68, nose + 0.01), Vector3.ZERO, body)
+	_mesh(_box_mesh(W - 0.3, 0.07, 0.05), _mat(Color(1, 0.12, 0.08), 0.2, 0.0, 2.5), Vector3(0, 0.82 if style != "hatch" else 1.05, -nose - 0.01), Vector3.ZERO, body)
+	# diffuser + exhausts
+	_mesh(_box_mesh(W - 0.4, 0.14, 0.3), dark, Vector3(0, 0.32, -nose + 0.1), Vector3.ZERO, body)
+	for sx in ([-0.35, 0.35] if style == "muscle" else [0.45]):
+		var ex := CylinderMesh.new(); ex.top_radius = 0.07; ex.bottom_radius = 0.07; ex.height = 0.25
+		_mesh(ex, chrome, Vector3(sx, 0.38, -nose - 0.05), Vector3(PI / 2, 0, 0), body)
+	# Bit & Bytes logo on the bonnet and doors; number plate with the driver's name
+	var mark: Texture2D = load("res://assets/brand/bnb_mark_trim.png")
+	var decal := func(pos: Vector3, rot: Vector3, h: float):
+		var d := Sprite3D.new(); d.texture = mark; d.pixel_size = h / mark.get_height(); d.shaded = true
+		d.position = pos; d.rotation = rot; body.add_child(d)
+	decal.call(Vector3(0, 0.6 + hood_h + 0.035, nose - hood_len / 2 - 0.1), Vector3(-PI / 2 + (0.08 if style == "sports" else 0.03), 0, 0), 0.55)
+	for sx in [-1.0, 1.0]:
+		decal.call(Vector3(sx * (W / 2 + 0.005), 0.72, -0.25), Vector3(0, sx * PI / 2, 0), 0.3)
+	var plate := Label3D.new()
+	plate.text = String(r.C.person.get("short", "BNB")) if r.C.has("person") else "BNB"
+	plate.font_size = 40; plate.outline_size = 0; plate.modulate = Color(0.1, 0.1, 0.12)
+	plate.font = load("res://assets/fonts/RussoOne-Regular.ttf")
+	plate.position = Vector3(0, 0.55, -nose - 0.04); plate.rotation = Vector3(0, PI, 0)
+	body.add_child(plate)
+	_mesh(_box_mesh(0.6, 0.18, 0.02), _mat(Color(0.95, 0.95, 0.9), 0.6), Vector3(0, 0.55, -nose - 0.025), Vector3.ZERO, body)
+	# underglow in their colour
+	var glow := _mesh(_box_mesh(W - 0.3, 0.02, L - 0.6), _mat(col.lightened(0.2), 0.2, 0.0, 2.5), Vector3(0, 0.12, 0), Vector3.ZERO, body)
+	glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# wheels with spoke rims
 	var wheels: Array = []
-	var tyre := CylinderMesh.new(); tyre.top_radius = 0.42; tyre.bottom_radius = 0.42; tyre.height = 0.32
+	var tyre := CylinderMesh.new(); tyre.top_radius = 0.44; tyre.bottom_radius = 0.44; tyre.height = 0.34; tyre.radial_segments = 18
+	var rim := CylinderMesh.new(); rim.top_radius = 0.27; rim.bottom_radius = 0.27; rim.height = 0.36; rim.radial_segments = 14
 	for wx in [-1.0, 1.0]:
-		for wz in [-1.4, 1.4]:
-			var w := _mesh(tyre, _mat(Color(0.06, 0.06, 0.07), 0.9), Vector3(wx * 1.02, 0.42, wz), Vector3(0, 0, PI / 2), body)
+		for wz in [-1.0, 1.0]:
+			var w := _mesh(tyre, _mat(Color(0.05, 0.05, 0.06), 0.9), Vector3(wx * (W / 2 - 0.12), 0.44, wz * (L / 2 - 0.85)), Vector3(0, 0, PI / 2), body)
+			_mesh(rim, chrome, Vector3.ZERO, Vector3.ZERO, w)
+			for k in 5:
+				_mesh(_box_mesh(0.05, 0.38, 0.06), dark, Vector3(0, 0, 0), Vector3(0, k * TAU / 5.0, 0), w).rotation = Vector3(k * TAU / 5.0, 0, 0)
 			wheels.append(w)
-	var flame := _mesh(_box_mesh(0.5, 0.3, 1.2), _mat(Color(0.3, 0.8, 1.0), 0.2, 0.0, 3.0), Vector3(0, 0.6, -2.8), Vector3.ZERO, body)
+	var flame := _mesh(_box_mesh(0.5, 0.3, 1.4), _mat(Color(0.3, 0.8, 1.0), 0.2, 0.0, 4.0), Vector3(0, 0.45, -nose - 0.8), Vector3.ZERO, body)
 	flame.visible = false
 	# the driver, seated
 	var rig := Main.make_rig(r.C, 0)
@@ -320,7 +378,9 @@ func draw(a: float, dt: float) -> void:
 		body.rotation.z = lerpf(body.rotation.z, (0.08 if r.drifting else 0.0) * signf(r.vel.cross(Vector3(sin(r.heading), 0, cos(r.heading))).y), 0.2)
 		body.rotation.x = lerpf(body.rotation.x, -0.12 if r.air and r.vy > 0 else 0.0, 0.15)
 		for w in c.wheels: (w as Node3D).rotate_object_local(Vector3.UP, r.speed * dt * 2.4)
-		(c.flame as Node3D).visible = r.boost > 0
+		var fl: Node3D = c.flame
+		fl.visible = r.boost > 0 or r.nitro_on
+		if fl.visible: fl.scale = Vector3(1.0, 1.0, 0.8 + randf() * 0.6)
 		var rig = c.rig
 		if r.flash > 0 and rig.has_method("set_flash"): rig.set_flash(0.6)
 		elif rig.has_method("set_flash"): rig.set_flash(0.0)
@@ -376,4 +436,4 @@ func _camera(a: float, dt: float) -> void:
 	cam_look = cam_look.lerp(p + fwd * 7.0 + Vector3(0, 1.2, 0), clampf(dt * 8.0, 0.0, 1.0))
 	cam.position = cam_pos
 	cam.look_at(cam_look, Vector3.UP)
-	cam.fov = lerpf(cam.fov, 70.0 + (12.0 if r.boost > 0 else 0.0), dt * 3.0)
+	cam.fov = lerpf(cam.fov, 70.0 + (14.0 if (r.boost > 0 or r.nitro_on) else 0.0), dt * 3.0)

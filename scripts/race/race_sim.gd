@@ -48,7 +48,9 @@ class Racer:
 	var item := ""
 	var power := 0.0           # signature meter 0..100
 	var stun := 0              # ticks spun out
-	var boost := 0             # ticks of boost
+	var boost := 0             # ticks of boost (drift release)
+	var nitro := 60.0          # nitro tank 0..100: hold the nitro button to burn it
+	var nitro_on := false
 	var drift := 0.0           # drift charge
 	var drifting := false
 	var lane_pref := 0.0       # CPU: preferred lateral position
@@ -227,7 +229,16 @@ func _drive(r: Racer, inp: Dictionary) -> void:
 		steer = 0.0; gas = 0.0
 	var top := BOOST_SPEED if r.boost > 0 else MAX_SPEED * (0.92 + float(r.C.get("speed", 1.0)) * 0.08)
 	if r.human < 0: top *= _cpu_pace(r)
-	if r.boost > 0: r.boost -= 1; gas = 1.0
+	# nitro: hold to burn the tank for a big push (refills slowly, faster from drifts and pickups)
+	r.nitro_on = bool(inp.get("nitro", false)) and r.nitro > 0.0 and r.stun == 0
+	if r.nitro_on:
+		r.nitro = maxf(0.0, r.nitro - 28.0 * DT)
+		top = BOOST_SPEED * 1.08
+		gas = 1.0
+		r.speed += 22.0 * DT
+	else:
+		r.nitro = minf(100.0, r.nitro + 4.0 * DT)
+	if r.boost > 0: r.boost -= 1; gas = 1.0; r.speed += 10.0 * DT
 	var accel := 26.0 if r.speed < top else -18.0
 	r.speed += (gas * accel - brake * 40.0 - r.speed * 0.25) * DT
 	r.speed = clampf(r.speed, -10.0, BOOST_SPEED)
@@ -242,6 +253,7 @@ func _drive(r: Racer, inp: Dictionary) -> void:
 		r.drifting = false
 		if r.drift > 0.6:
 			r.boost = int(r.drift * 50)
+			r.nitro = minf(100.0, r.nitro + r.drift * 10.0)
 			events.append(["boost", r.pos, r.id])
 		r.drift = 0.0
 	var turn := steer * (1.9 if r.drifting else 1.45) * clampf(r.speed / 14.0, 0.0, 1.0) * (1.0 - clampf(r.speed / 70.0, 0.0, 0.4))
@@ -290,7 +302,7 @@ func _drive(r: Racer, inp: Dictionary) -> void:
 	r.dist = nd
 	r.progress = r.lap * length + r.dist
 	# the signature meter fills slowly while racing (faster when behind)
-	r.power = minf(100.0, r.power + DT * (2.2 + (r.place - 1) * 0.5))
+	r.power = minf(100.0, r.power + DT * (5.0 + (r.place - 1) * 0.6))
 	if r.flash > 0: r.flash -= 1
 	if inp.get("item", false) and r.item != "": _use_item(r)
 	if inp.get("power", false) and r.power >= 100.0: _use_power(r)
@@ -381,6 +393,7 @@ func _use_item(r: Racer) -> void:
 			hazards.append(h)
 		"energy":
 			r.boost = 120
+			r.nitro = 100.0
 	events.append(["use", r.pos, r.id])
 
 
@@ -528,6 +541,7 @@ func _cpu(r: Racer) -> Dictionary:
 	var j := _index_at(r.dist + look * 2.0)
 	var bend := absf(wrapf(atan2(T[j].x, T[j].z) - atan2(T[r.idx].x, T[r.idx].z), -PI, PI))
 	var inp := {steer = clampf(steer, -1.0, 1.0), gas = 0.0 if bend > 0.9 and r.speed > 30.0 else 1.0,
+		nitro = bend < 0.25 and r.nitro > 40.0 and (r.place > 3 or r.nitro > 90.0),
 		brake = 0.8 if bend > 0.75 and r.speed > 26.0 else 0.0, drift = bend > 0.55 and r.speed > 22.0}
 	r.think -= 1
 	if r.think <= 0:
@@ -550,7 +564,7 @@ func _cpu(r: Racer) -> Dictionary:
 func snapshot() -> Dictionary:
 	var rs := []
 	for r in racers:
-		rs.append([r.pos.x, r.pos.y, r.pos.z, r.heading, r.speed, r.lap, r.place, r.item, roundi(r.power), r.stun, r.boost, r.finished, r.drifting, r.flash])
+		rs.append([r.pos.x, r.pos.y, r.pos.z, r.heading, r.speed, r.lap, r.place, r.item, roundi(r.power), r.stun, r.boost, r.finished, r.drifting, r.flash, roundi(r.nitro), r.nitro_on])
 	var ss := []
 	for s in shots: ss.append([s.prop, s.pos.x, s.pos.y, s.pos.z, s.big])
 	var hs := []

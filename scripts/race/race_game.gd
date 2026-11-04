@@ -107,7 +107,8 @@ func _controls() -> Dictionary:
 		steer = steer_s,
 		gas = maxf(pad_gas, 1.0 if (k.call([KEY_W, KEY_UP]) or _t("gas")) else 0.0),
 		brake = maxf(pad_brake, 1.0 if (k.call([KEY_S, KEY_DOWN]) or _t("brake")) else 0.0),
-		drift = pad_drift or k.call([KEY_SPACE, KEY_SHIFT]) or _t("drift"),
+		drift = pad_drift or k.call([KEY_SPACE]) or _t("drift"),
+		nitro = (not pads.is_empty() and Input.is_joy_button_pressed(pads[0], JOY_BUTTON_LEFT_SHOULDER)) or k.call([KEY_SHIFT, KEY_N, KEY_L]) or _t("nitro"),
 		item = pad_item or k.call([KEY_J, KEY_E]) or _t("item"),
 		power = pad_power or k.call([KEY_K, KEY_Q]) or _t("power"),
 	}
@@ -134,6 +135,12 @@ func _event(e: Array) -> void:
 		"power":
 			G.sfx("surge")
 			_voice(who, "power")
+			var pr: RaceSim.Racer = sim.racers[who]
+			var fx: Array = (pr.C.get("person", {}) as Dictionary).get("fx", [])
+			# their fighting-game power show, around the car (visual only)
+			var tgt: RaceSim.Racer = sim._ahead_of(pr, 200.0)
+			if not fx.is_empty() and tgt != null:
+				PowerProps.play(world, _proxy(pr), _proxy(tgt), fx, 0.6)
 			var r: RaceSim.Racer = sim.racers[who]
 			_toast(String(r.C.get("surge_name", "POWER")) if mine else "%s: %s" % [r.C.person.get("short", r.C.name) if r.C.has("person") else r.C.name, r.C.get("surge_name", "")])
 		"use": if mine: G.sfx("whoosh")
@@ -145,6 +152,11 @@ func _event(e: Array) -> void:
 		"scrape": if mine: G.sfx("block")
 		"jump": if mine: G.sfx("whoosh")
 		"bump": G.sfx("thud")
+
+
+## PowerProps expects fighters (pos, C); racers have both.
+func _proxy(r: RaceSim.Racer) -> Dictionary:
+	return {pos = r.pos, C = r.C}
 
 
 func _voice(who: int, kind: String) -> void:
@@ -202,6 +214,11 @@ func _draw_hud() -> void:
 	var full := r.power >= 100.0
 	hud.draw_rect(Rect2(pw.position, Vector2(pw.size.x * r.power / 100.0, pw.size.y)), Color(0.58, 0.3, 0.85) if not full else Color(1.0, 0.8, 0.3).lerp(Color.WHITE, 0.5 + 0.5 * sin(sim.time * 10.0)))
 	hud.draw_string(small, pw.position + Vector2(0, 34), ("POWER READY  [K]" if full else "POWER") if not _touch() else ("POWER READY" if full else "POWER"), HORIZONTAL_ALIGNMENT_CENTER, pw.size.x, 18, ink)
+	# nitro tank
+	var nb := Rect2(Vector2(s.x / 2 - 110, 136), Vector2(220, 12))
+	hud.draw_rect(nb, Color(0, 0, 0, 0.45))
+	hud.draw_rect(Rect2(nb.position, Vector2(nb.size.x * r.nitro / 100.0, nb.size.y)), Color(0.2, 0.75, 1.0) if not r.nitro_on else Color(1.0, 0.55, 0.2))
+	hud.draw_string(small, nb.position + Vector2(0, 30), "NITRO  [SHIFT]" if not _touch() else "NITRO", HORIZONTAL_ALIGNMENT_CENTER, nb.size.x, 16, ink)
 	# speed
 	hud.draw_string(font, Vector2(s.x - 240, s.y - 40 if not _touch() else 120), "%d km/h" % roundi(absf(r.speed) * 3.6), HORIZONTAL_ALIGNMENT_RIGHT, 200, 34, ink)
 	# minimap
@@ -220,7 +237,7 @@ func _draw_hud() -> void:
 		var a := clampf(toast_t / 0.4, 0.0, 1.0)
 		hud.draw_string(font, Vector2(0, s.y * 0.38), toast, HORIZONTAL_ALIGNMENT_CENTER, s.x, 72, Color(1, 1, 1, a))
 	if not _touch():
-		hud.draw_string(small, Vector2(0, s.y - 14), "W / S  gas / brake   ·   A / D  steer   ·   SPACE  drift   ·   J  item   ·   K  power", HORIZONTAL_ALIGNMENT_CENTER, s.x, 18, Color(0.8, 0.82, 0.9, 0.75))
+		hud.draw_string(small, Vector2(0, s.y - 14), "W / S  gas / brake   ·   A / D  steer   ·   SHIFT  nitro   ·   SPACE  drift   ·   J  item   ·   K  power", HORIZONTAL_ALIGNMENT_CENTER, s.x, 18, Color(0.8, 0.82, 0.9, 0.75))
 	_draw_touch()
 
 
@@ -239,6 +256,7 @@ func _layout_touch() -> void:
 		gas = {c = Vector2(s.x - r * 1.6, s.y - r * 1.8), r = r * 1.2, label = "GAS", held = false},
 		brake = {c = Vector2(s.x - r * 4.1, s.y - r * 1.4), r = r * 0.85, label = "BRAKE", held = false},
 		drift = {c = Vector2(s.x - r * 4.1, s.y - r * 3.6), r = r * 0.8, label = "DRIFT", held = false},
+		nitro = {c = Vector2(s.x - r * 6.3, s.y - r * 3.4), r = r * 0.8, label = "NITRO", held = false},
 		item = {c = Vector2(s.x - r * 1.6, s.y - r * 4.4), r = r * 0.85, label = "ITEM", held = false},
 		power = {c = Vector2(s.x - r * 6.2, s.y - r * 1.4), r = r * 0.8, label = "POWER", held = false},
 	}
