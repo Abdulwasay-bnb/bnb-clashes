@@ -9,7 +9,7 @@ export default async function handler(req) {
   const g = String(body.g || "").slice(0, 12);
   const code = String(body.code || "").toUpperCase().trim().slice(0, 8);
   if (!(await redis("EXISTS", `room:${g}:${code}`))) return reply({ error: "Room not found" }, 404);
-  if (await redis("EXISTS", `live:${g}:${code}`)) return reply({ error: "Room is full" }, 409);
+  if (await redis("EXISTS", `live:${g}:${code}`)) return reply({ error: g.startsWith("bnb-") ? "That match has already started. Wait for it to end and join again." : "Room is full" }, 409);
   const epoch = await redis("INCR", `epoch:${g}:${code}`);
   await redis("EXPIRE", `epoch:${g}:${code}`, TTL);
   return reply({ ok: true, epoch });

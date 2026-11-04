@@ -241,8 +241,8 @@ var hold_ads := false   # tests: keep aiming without a mouse
 
 
 func _physics_process(_dt: float) -> void:
-	if sim == null: return
-	var inp: Dictionary = sim._bot(sim.soldiers[me]) if autopilot else _controls()
+	if sim == null or (paused and not online_match()): return
+	var inp: Dictionary = sim._bot(sim.soldiers[me]) if autopilot else ({} if paused else _controls())
 	look = Vector2.ZERO
 	sim.tick({me: inp})
 	for e in sim.events:
@@ -256,7 +256,10 @@ func _physics_process(_dt: float) -> void:
 
 
 func _unhandled_input(e: InputEvent) -> void:
-	if sim == null or paused: return
+	if sim == null: return
+	if paused:
+		if e is InputEventKey and e.pressed and not e.echo and e.physical_keycode in [KEY_P, KEY_ESCAPE]: toggle_pause()
+		return
 	if e is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		look += e.relative
 	if e is InputEventKey and e.pressed and not e.echo:
@@ -264,7 +267,7 @@ func _unhandled_input(e: InputEvent) -> void:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
 		if e.physical_keycode == KEY_TAB: scoreboard = true
 	if e is InputEventKey and not e.pressed and e.physical_keycode == KEY_TAB: scoreboard = false
-	if e is InputEventMouseButton and e.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not _touch() and not results_shown:
+	if e is InputEventMouseButton and e.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not _touch() and not results_shown and not paused:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
@@ -504,8 +507,10 @@ func _draw_hud() -> void:
 	hud.draw_string(small, Vector2(30, sz.y - 102), "VEST %d / %d" % [roundi(s.armor), roundi(s.max_armor)], HORIZONTAL_ALIGNMENT_LEFT, -1, 18, ink)
 	hud.draw_string(font, Vector2(30, sz.y - 28), "%d" % maxi(0, roundi(s.hp)), HORIZONTAL_ALIGNMENT_LEFT, -1, 30, ink)
 	# ammo + gun
-	hud.draw_string(font, Vector2(sz.x - 330, sz.y - 30), "%d / %d" % [s.mag[s.slot], s.reserve[s.slot]], HORIZONTAL_ALIGNMENT_RIGHT, 300, 40, ink)
-	hud.draw_string(small, Vector2(sz.x - 330, sz.y - 78), String(g.name) + ("   RELOADING…" if s.reload_t > 0 else ""), HORIZONTAL_ALIGNMENT_RIGHT, 300, 20, Color(0.8, 0.82, 0.9))
+	# (on phones the fire button lives bottom-right, so the ammo goes above the health bar)
+	var ammo_at := Vector2(sz.x - 330, sz.y - 30) if not _touch() else Vector2(300, sz.y - 28)
+	hud.draw_string(font, ammo_at, "%d / %d" % [s.mag[s.slot], s.reserve[s.slot]], HORIZONTAL_ALIGNMENT_RIGHT if not _touch() else HORIZONTAL_ALIGNMENT_LEFT, 300, 40 if not _touch() else 30, ink)
+	hud.draw_string(small, ammo_at + Vector2(0, -48 if not _touch() else -100), String(g.name) + ("   RELOADING…" if s.reload_t > 0 else ""), HORIZONTAL_ALIGNMENT_RIGHT if not _touch() else HORIZONTAL_ALIGNMENT_LEFT, 300, 20, Color(0.8, 0.82, 0.9))
 	# score + time
 	var mid := sz.x / 2.0
 	hud.draw_rect(Rect2(Vector2(mid - 170, 14), Vector2(340, 50)), Color(0, 0, 0, 0.5))
@@ -570,6 +575,7 @@ func _layout_touch() -> void:
 		reload = {c = Vector2(s.x - r * 6.3, s.y - r * 1.3), r = r * 0.7, label = "R", held = false},
 		swap = {c = Vector2(s.x - r * 6.4, s.y - r * 3.2), r = r * 0.7, label = "SWAP", held = false},
 		sprint = {c = Vector2(r * 1.4, s.y - r * 4.8), r = r * 0.7, label = "RUN", held = false},
+		pause = {c = Vector2(s.x / 2 - 210, 40), r = 26.0, label = "II", held = false},
 	}
 
 
@@ -643,3 +649,41 @@ func _show_results() -> void:
 	v.add_child(btns)
 	panel.reset_size()
 	panel.position = (G.get_viewport().get_visible_rect().size - panel.size) / 2.0
+
+
+# ---------------------------------------------------------------- pause (P / Esc, or the II button on phones)
+var pause_panel: Control = null
+
+
+func toggle_pause() -> void:
+	if results_shown or layer == null: return
+	paused = not paused
+	if pause_panel != null: pause_panel.queue_free(); pause_panel = null
+	if not _touch(): Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if paused else Input.MOUSE_MODE_CAPTURED
+	if not paused: return
+	var ui = G.ui
+	var panel := PanelContainer.new()
+	var sb := StyleBoxFlat.new(); sb.bg_color = Color(0.05, 0.03, 0.1, 0.92); sb.border_color = Color(0.58, 0.3, 0.85); sb.set_border_width_all(2)
+	sb.set_content_margin_all(24)
+	panel.add_theme_stylebox_override("panel", sb)
+	layer.add_child(panel)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 14)
+	panel.add_child(v)
+	v.add_child(ui.lbl("PAUSED" if not online_match() else "MENU", 44, font, Color(1.0, 0.8, 0.3), 8))
+	if online_match(): v.add_child(ui.lbl("The match keeps going for everyone else.", 18, small, Color(0.8, 0.82, 0.9)))
+	var resume: Button = ui.big_btn("RESUME", Color(0.13, 0.78, 0.92), toggle_pause)
+	v.add_child(resume)
+	v.add_child(ui.big_btn("QUIT TO MENU", Color(0.55, 0.62, 0.75), func(): paused = false; quit_match()))
+	panel.reset_size()
+	panel.position = (G.get_viewport().get_visible_rect().size - panel.size) / 2.0
+	pause_panel = panel
+	resume.call_deferred("grab_focus")
+
+
+func online_match() -> bool:
+	return false
+
+
+func quit_match() -> void:
+	finished.emit(); G.ui.show_title()

@@ -1,6 +1,6 @@
 // WebRTC handshake mailbox, one per join attempt ("epoch"). The match itself runs peer-to-peer.
 //   POST /api/signal {g, code, to: "host"|"guest", epoch, msg}   -> {ok}
-//   GET  /api/signal?g=&code=&for=host|guest&from=N              -> {msgs: [...], next: N, epoch: E}
+//   GET  /api/signal?g=&code=&for=host|guest&from=N[&epoch=E]    -> {msgs: [...], next: N, epoch: newest}
 import { redis, reply, cors, TTL } from "./_store.js";
 export const config = { runtime: "edge" };
 
@@ -25,6 +25,8 @@ export default async function handler(req) {
   const who = u.searchParams.get("for") === "host" ? "host" : "guest";
   const from = Math.max(0, parseInt(u.searchParams.get("from") || "0", 10) || 0);
   const epoch = parseInt((await redis("GET", `epoch:${g}:${code}`)) || "0", 10);
-  const list = (await redis("LRANGE", `sig:${g}:${code}:${who}:${epoch}`, from, -1)) || [];
+  // party rooms (one host, many guests) read each guest's mailbox by its epoch
+  const want = u.searchParams.has("epoch") ? (parseInt(u.searchParams.get("epoch"), 10) || 0) : epoch;
+  const list = (await redis("LRANGE", `sig:${g}:${code}:${who}:${want}`, from, -1)) || [];
   return reply({ msgs: list.map((s) => JSON.parse(s)), next: from + list.length, epoch });
 }

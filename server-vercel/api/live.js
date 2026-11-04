@@ -6,6 +6,10 @@ export default async function handler(req) {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   const b = await req.json().catch(() => ({}));
   const g = String(b.g || "").slice(0, 12), code = String(b.code || "").toUpperCase().slice(0, 8);
-  await redis("SET", `live:${g}:${code}`, "1", "EX", TTL);
+  if (b.on === false) await redis("DEL", `live:${g}:${code}`);   // party lobby open again after a race
+  else {
+    await redis("SET", `live:${g}:${code}`, "1", "EX", TTL);
+    await redis("EXPIRE", `room:${g}:${code}`, TTL);   // keep a busy room alive
+  }
   return reply({ ok: true });
 }

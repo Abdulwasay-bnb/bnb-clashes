@@ -1151,6 +1151,21 @@ func _run_autotest() -> void:
 			ui.show_title()
 			await get_tree().create_timer(1.0).timeout
 			await shot.call("title")
+		"mobile":
+			# run with --phone: the new modes' screens and touch controls at a phone's shape
+			ui.show_title(); await get_tree().create_timer(1.0).timeout; await shot.call("p_title")
+			ui.show_select({mode = "race"}); await get_tree().create_timer(1.0).timeout; await shot.call("p_select")
+			ui.show_ops_setup(Data.by_id("abdul_wasay")); await get_tree().create_timer(0.6).timeout; await shot.call("p_ops_setup")
+			await start_race("city", Data.by_id("hamza_khan"))
+			race.autopilot = true
+			await get_tree().create_timer(6.0).timeout; await shot.call("p_race")
+			race.toggle_pause(); await get_tree().create_timer(0.5).timeout; await shot.call("p_pause")
+			end_race()
+			await start_ops(Data.by_id("abdul_wasay"), {mine = 2, them = 2, gun = "rifle", skill = 1.0})
+			ops.autopilot = true
+			await get_tree().create_timer(5.0).timeout; await shot.call("p_ops")
+			print("AUTOTEST mobile touch=%s" % ui.touch_enabled)
+			end_ops()
 		"menus":
 			ui.show_title(); await get_tree().create_timer(1.0).timeout; await shot.call("m_title")
 			ui.show_clash_menu(); await get_tree().create_timer(0.6).timeout; await shot.call("m_clash")
