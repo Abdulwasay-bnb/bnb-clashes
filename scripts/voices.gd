@@ -73,7 +73,8 @@ static func _recorded(C: Dictionary, kind: String) -> AudioStream:
 
 
 static func get_sound(C: Dictionary, kind: String) -> AudioStream:
-	var rec := _recorded(C, "power" if kind == "win" else kind)   # a victory yell for the win
+	if kind == "win": return null   # no yell on a win (long yells read as death screams); the announcer says it
+	var rec := _recorded(C, kind)
 	if rec != null: return rec
 	if kind == "win":
 		return _cached(C, "win", 0, func(): return _laugh(profile(C)))
