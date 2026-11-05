@@ -756,8 +756,8 @@ func show_title() -> void:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 0)
 	screen.add_child(col)
-	col.position = Vector2(110, 90) if not touch_enabled else Vector2(90, 24)
-	var logo_size := 118 if not touch_enabled else 80   # phones: room for the bigger menu buttons
+	col.position = Vector2(110, 60) if not touch_enabled else Vector2(90, 20)
+	var logo_size := 100 if not touch_enabled else 70   # phones: room for the bigger menu buttons
 	# logo with a split cyan/pink "chromatic" shadow
 	for word in ["BNB", "CLASHES"]:
 		var holder := Control.new()
@@ -782,13 +782,13 @@ func show_title() -> void:
 	wm.custom_minimum_size = Vector2(300, 46 if not touch_enabled else 34)
 	wm.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	col.add_child(wm)
-	var sp := Control.new(); sp.custom_minimum_size = Vector2(0, 34 if not touch_enabled else 12); col.add_child(sp)
+	var sp := Control.new(); sp.custom_minimum_size = Vector2(0, 16 if not touch_enabled else 6); col.add_child(sp)
 	var labels := ["CLASH  ·  FIGHT", "RUSH HOUR  ·  RACE", "OFFICE OPS  ·  SHOOT", "LUDO  ·  BOARD", "MAFIA  ·  WHODUNIT", "HOW TO PLAY", "CONTROLS", "QUIT"]
 	var cbs := [show_clash_menu, func(): show_select({mode = "race"}), func(): show_select({mode = "ops"}), func(): show_select({mode = "ludo"}),
 		func(): show_select({mode = "mafia"}), show_how, show_controls, func(): G.get_tree().quit()]
 	var items: Array = []
 	for i in labels.size():
-		items.append(["%02d   %s" % [i + 1, labels[i]], cbs[i], 28, MENU_DESC[i]])
+		items.append(["%02d   %s" % [i + 1, labels[i]], cbs[i], 25, MENU_DESC[i]])
 	var m := _menu_list(items)
 	col.add_child(m)
 	desc_lbl = lbl(MENU_DESC[0], 20, F_MED, Color(0.79, 0.83, 0.88))
@@ -798,7 +798,7 @@ func show_title() -> void:
 	col.add_child(desc_lbl)
 	if touch_enabled:
 		sp2.visible = false; desc_lbl.visible = false
-		for btn in m.get_children(): btn.custom_minimum_size.y = 45
+		for btn in m.get_children(): btn.custom_minimum_size.y = 40
 	# staggered slide-in
 	var i := 0
 	for btn in m.get_children():
