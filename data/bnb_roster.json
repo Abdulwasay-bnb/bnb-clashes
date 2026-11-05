@@ -20,7 +20,7 @@
    ],
    "idle": "idle_fight_c",
    "pose": "",
-   "intro": "in_battlecry",
+   "intro": "intro_magic_area",
    "hair_style": "hair_curl",
    "hair_color": [
     0.09,
@@ -2012,8 +2012,8 @@
     0.62
    ],
    "idle": "",
-   "pose": "idle_boss",
-   "intro": "in_ceo",
+   "pose": "idle_bounce",
+   "intro": "intro_hard_landing",
    "hair_style": "hair_army",
    "hair_color": [
     0.09,

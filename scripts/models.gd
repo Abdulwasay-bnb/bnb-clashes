@@ -158,9 +158,15 @@ static func register(p: Dictionary) -> void:
 			if PERSONA.has(String(p.id)):
 				var po := _persona_outfit(String(p.id), hair, female, kind)
 				var ptint: Dictionary = po.tint
-				ptint.merge(skin(skin_c))
-				var pparts: Array = po.acc + extra
-				if style != "" and kind != "hijab":
+				var goat := String(p.id) == "tuaha_aamir"
+				if goat:
+					# fur instead of skin: cream with tan patches and strand shading; no human hair, glasses or beard
+					var fur := {c = Color(0.78, 0.6, 0.42), sat = 0.0, bright = 0.8, sheen = 1.0, pat = {kind = "camo", a = Color(0.62, 0.45, 0.3), b = Color(0.92, 0.86, 0.74), scale = 1.4}}
+					ptint.merge({"Body_00_SKIN": fur, "Face_00_SKIN": fur, "Hair": "hide"}, true)
+				else:
+					ptint.merge(skin(skin_c))
+				var pparts: Array = po.acc + ([] if goat else extra)
+				if style != "" and kind != "hijab" and not goat:
 					if female or style == "hair_back_full": ptint["Hair"] = "hide"
 					else: ptint["Hair"] = {c = hair_col * 3.0, sat = 0.0, bright = 0.55}
 					pparts.append([style, hair_col])
@@ -262,8 +268,10 @@ const PERSONA := {
 		[["bowtie", Color(0.9, 0.15, 0.2)], ["shades", Color(0.9, 0.15, 0.2)]]],
 	"syeda_ghazia": ["Hello World", [Color(0.42, 0.6, 0.85), "bands", Color(0.95, 0.97, 1.0), Color(0.3, 0.9, 0.5), 1.0], Color(0.2, 0.25, 0.4), Color(0.95, 0.95, 0.95),
 		[["hijab", Color(0.72, 0.6, 0.95)], ["kameez", Color(0.42, 0.6, 0.85)], ["shalwar", Color(0.2, 0.25, 0.4)], ["sleeves", Color(0.42, 0.6, 0.85)], ["lanyard", Color(0.55, 0.32, 0.92)]]],
-	"tuaha_aamir": ["G.O.A.T.", [Color(0.95, 0.95, 0.95), "bands", GOLD, Color(0.1, 0.1, 0.1), 1.2], Color(0.12, 0.12, 0.14), GOLD,
-		[["headband", GOLD], ["armbands", GOLD], ["chain", GOLD]]],
+	# the G.O.A.T. himself: an anime goat-man in his gold-striped jersey (fur, horns, beard, goat eyes; hooves for shoes)
+	"tuaha_aamir": ["G.O.A.T. Form", [Color(0.95, 0.95, 0.95), "bands", GOLD, Color(0.1, 0.1, 0.1), 1.2], Color(0.14, 0.12, 0.12), Color(0.18, 0.15, 0.13),
+		[["goat_head", Color(0.84, 0.7, 0.52)], ["goat_horns", Color(0.62, 0.52, 0.38)], ["goat_nose", Color(0.22, 0.17, 0.17)],
+			["goat_eyes", Color(1.0, 0.72, 0.18)], ["goat_pupils", Color(0.05, 0.04, 0.04)], ["fur_arms", Color(0.8, 0.64, 0.46)], ["armbands", GOLD], ["chain", GOLD]]],
 	"umar_farooq": ["Overtime", [Color(0.92, 0.92, 0.88), "flames", Color(1.0, 0.48, 0.24), Color(1.0, 0.85, 0.3), 1.0], Color(0.2, 0.2, 0.25), Color(0.25, 0.18, 0.12),
 		[["watch", Color(1.0, 0.48, 0.24)], ["headband", Color(1.0, 0.48, 0.24)]]],
 	"usman_najeeb": ["Smoke Break", [Color(0.1, 0.1, 0.11), "", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.08, 0.08, 0.1), Color(0.06, 0.06, 0.06),

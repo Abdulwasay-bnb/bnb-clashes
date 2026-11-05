@@ -293,6 +293,7 @@ func _restyle(tint: Dictionary) -> void:
 						m.set_shader_parameter("saturation", t.get("sat", 1.0))
 						m.set_shader_parameter("brightness", t.get("bright", 1.0))
 						if t.has("pat"): _set_pattern(m, t.pat)
+						if t.has("sheen"): m.set_shader_parameter("hair_sheen", float(t.sheen))   # fur
 					else:
 						col *= t
 			m.set_shader_parameter("albedo", col)
@@ -702,9 +703,14 @@ func _acc_parts(kind: String) -> Array:
 		"scarf":
 			return [["upperChest", tor.call(0.1, 0.03), Vector3(0, 0.135, 0.005), Vector3(0.15, 0, 0), Vector3(1.05, 1.0, 0.92)],
 				["upperChest", ToonRig.box(0.06, 0.24, 0.016), Vector3(0.06, -0.03, 0.125), Vector3(0.05, 0, 0.05), Vector3.ONE]]
-		"cape":         # hangs from the shoulders down the back
-			return [["upperChest", ToonRig.box(0.42, 0.04, 0.12), Vector3(0, 0.13, -0.04), Vector3.ZERO, Vector3.ONE],
-				["upperChest", ToonRig.box(0.44, 0.82, 0.018), Vector3(0, -0.27, -0.16), Vector3(0.14, 0, 0), Vector3.ONE]]
+		"cape":         # drapes from the shoulders: a collar and upper panel on the back, the rest hangs from the hips
+			return [["upperChest", tor.call(0.11, 0.022), Vector3(0, 0.13, -0.02), Vector3(0.35, 0, 0), Vector3(1.15, 1.0, 0.85)],
+				["upperChest", ToonRig.sph(0.022), Vector3(0.075, 0.12, 0.085), Vector3.ZERO, Vector3.ONE],
+				["upperChest", ToonRig.sph(0.022), Vector3(-0.075, 0.12, 0.085), Vector3.ZERO, Vector3.ONE],
+				["upperChest", ToonRig.box(0.36, 0.36, 0.016), Vector3(0, -0.07, -0.135), Vector3(0.05, 0, 0), Vector3.ONE],
+				["hips", ToonRig.box(0.4, 0.62, 0.016), Vector3(0, -0.16, -0.17), Vector3(0.06, 0, 0), Vector3.ONE],
+				["hips", ToonRig.box(0.12, 0.6, 0.016), Vector3(0.2, -0.15, -0.13), Vector3(0.06, -0.5, 0), Vector3.ONE],
+				["hips", ToonRig.box(0.12, 0.6, 0.016), Vector3(-0.2, -0.15, -0.13), Vector3(0.06, 0.5, 0), Vector3.ONE]]
 		"coat":         # long coat tails below the jacket
 			return [["hips", ToonRig.box(0.36, 0.5, 0.03), Vector3(0, -0.2, -0.12), Vector3(0.08, 0, 0), Vector3.ONE],
 				["hips", ToonRig.box(0.15, 0.48, 0.03), Vector3(0.1, -0.19, 0.12), Vector3(-0.08, 0, 0.04), Vector3.ONE],
@@ -727,6 +733,16 @@ func _acc_parts(kind: String) -> Array:
 		"watch":
 			return [["leftLowerArm", ToonRig.cyl(0.033, 0.033, 0.03), Vector3(0.21, 0, 0), Z90, Vector3.ONE],
 				["leftLowerArm", ToonRig.box(0.024, 0.008, 0.024), Vector3(0.21, 0.034, 0), Vector3.ZERO, Vector3.ONE]]
+		# ---- G.O.A.T. form: an anime goat head built round the measured skull (it encloses the human head)
+		"goat_head", "goat_horns", "goat_nose", "goat_eyes", "goat_pupils":
+			return _goat_parts(kind)
+		"fur_arms":     # shaggy fur over the forearms and the backs of the hands
+			return [["leftLowerArm", ToonRig.cyl(0.05, 0.042, 0.25), Vector3(0.12, 0, 0), Z90, Vector3.ONE],
+				["rightLowerArm", ToonRig.cyl(0.05, 0.042, 0.25), Vector3(-0.12, 0, 0), Z90, Vector3.ONE],
+				["leftUpperArm", ToonRig.cyl(0.054, 0.05, 0.14), Vector3(0.2, 0, 0), Z90, Vector3.ONE],
+				["rightUpperArm", ToonRig.cyl(0.054, 0.05, 0.14), Vector3(-0.2, 0, 0), Z90, Vector3.ONE],
+				["leftHand", ToonRig.sph(0.05), Vector3(0.045, 0.012, 0), Vector3.ZERO, Vector3(1.2, 0.6, 1.0)],
+				["rightHand", ToonRig.sph(0.05), Vector3(-0.045, 0.012, 0), Vector3.ZERO, Vector3(1.2, 0.6, 1.0)]]
 		"kneepads":
 			return [["leftLowerLeg", ToonRig.sph(0.06), Vector3(0, 0.0, 0.05), Vector3.ZERO, Vector3(1, 1, 0.6)],
 				["rightLowerLeg", ToonRig.sph(0.06), Vector3(0, 0.0, 0.05), Vector3.ZERO, Vector3(1, 1, 0.6)]]
@@ -816,6 +832,60 @@ func _hair_parts(kind: String) -> Array:
 	return out
 
 
+func _goat_parts(kind: String) -> Array:
+	var H := "head"
+	var c: Vector3 = skull.position + skull.size / 2.0
+	var r: float = skull.size.x / 2.0
+	var front: float = skull.position.z + skull.size.z
+	var top: float = skull.position.y + skull.size.y
+	var blob := func(pos: Vector3, sx: float, sy: float, sz: float, rot := Vector3.ZERO) -> Array:
+		return [H, ToonRig.sph(1.0), pos, rot, Vector3(sx, sy, sz)]
+	# the goat skull (encloses the human head) and a long muzzle pointing forward, tipped slightly down
+	var cc := c + Vector3(0, 0.018, -0.012)
+	var cr := Vector3(r * 1.12, skull.size.y * 0.56, r * 1.22)
+	var mrot := Vector3(0.28, 0, 0)
+	var mc := Vector3(0, c.y - 0.03, front + 0.02)
+	var mr := Vector3(r * 0.5, r * 0.46, r * 1.0)
+	var tip := mc + Basis.from_euler(mrot) * Vector3(0, 0, mr.z * 0.96)
+	# eyes on the sides of the head, on the skull's surface
+	var ex := cr.x * 0.78
+	var ez := cc.z + cr.z * sqrt(1.0 - 0.78 * 0.78) - 0.004
+	var ey := c.y + 0.03
+	match kind:
+		"goat_head":
+			var out := [blob.call(cc, cr.x, cr.y, cr.z),
+				blob.call(mc, mr.x, mr.y, mr.z, mrot),
+				blob.call(Vector3(0, c.y + 0.035, front - 0.005), r * 0.55, r * 0.35, r * 0.6, Vector3(0.6, 0, 0)),       # bridge of the nose
+				[H, ToonRig.cyl(0.0, 0.024, 0.09), tip + Vector3(0, -0.055, -0.045), Vector3(PI + 0.3, 0, 0), Vector3.ONE]]   # beard under the chin
+			for sx in [-1.0, 1.0]:   # long ears drooping out to the sides
+				out.append(blob.call(Vector3(sx * (cr.x + 0.035), c.y + 0.02, cc.z - 0.015), 0.075, 0.019, 0.033, Vector3(0, -sx * 0.25, -sx * 0.5)))
+			out.append(blob.call(Vector3(0, skull.position.y - 0.012, cc.z - 0.01), r * 1.02, 0.045, r * 1.02))   # ruff at the neck
+			return out
+		"goat_horns":   # curved, ridged horns sweeping back over the head
+			var out := []
+			for sx in [-1.0, 1.0]:
+				var p := Vector3(sx * 0.045, top - 0.01, cc.z + 0.04)
+				var pitch := -0.3
+				for k in 5:
+					var seg := 0.04 - k * 0.003
+					var rad := 0.021 - k * 0.0033
+					var rot := Vector3(pitch, 0, sx * -0.16)
+					out.append([H, ToonRig.cyl(rad * 0.85, rad, seg), p + Basis.from_euler(rot) * Vector3(0, seg * 0.5, 0), rot, Vector3.ONE])
+					p += Basis.from_euler(rot) * Vector3(0, seg, 0)
+					pitch -= 0.42
+			return out
+		"goat_nose":
+			return [blob.call(tip + Vector3(0, 0.008, 0.004), 0.03, 0.02, 0.014, mrot),
+				blob.call(tip + Vector3(0, -0.032, -0.012), 0.024, 0.005, 0.01, mrot)]   # mouth line
+		"goat_eyes":
+			return [blob.call(Vector3(ex, ey, ez), 0.021, 0.019, 0.011, Vector3(0, 0.75, 0)),
+				blob.call(Vector3(-ex, ey, ez), 0.021, 0.019, 0.011, Vector3(0, -0.75, 0))]
+		"goat_pupils":   # goats have horizontal, bar-shaped pupils
+			return [[H, ToonRig.box(0.02, 0.006, 0.004), Vector3(ex + 0.007, ey, ez + 0.009), Vector3(0, 0.75, 0), Vector3.ONE],
+				[H, ToonRig.box(0.02, 0.006, 0.004), Vector3(-ex - 0.007, ey, ez + 0.009), Vector3(0, -0.75, 0), Vector3.ONE]]
+	return []
+
+
 func _make_accessories(list: Array) -> void:
 	var outline := ShaderMaterial.new()
 	outline.shader = OUTLINE
@@ -823,7 +893,7 @@ func _make_accessories(list: Array) -> void:
 	for a in list:
 		var kind: String = a[0]
 		var col: Color = a[1]
-		var flat := kind in ["visor", "glasses", "mustache", "beard", "kameez", "shalwar", "sleeves", "hijab", "dupatta", "lanyard"]
+		var flat := kind in ["visor", "glasses", "mustache", "beard", "kameez", "shalwar", "sleeves", "hijab", "dupatta", "lanyard", "goat_eyes", "goat_pupils", "goat_nose"]
 		if kind != "visor":
 			col = col * 0.72   # keep within the texture range of the models so accessories don't bloom
 			col.a = 1.0
@@ -833,7 +903,7 @@ func _make_accessories(list: Array) -> void:
 		m.set_shader_parameter("tex", _white())
 		m.set_shader_parameter("albedo", col)
 		m.set_shader_parameter("shade", col.darkened(0.3).lerp(Color(0.55, 0.5, 0.75), 0.4))
-		if kind.begins_with("hair_") or kind in ["beard", "mustache"]:
+		if kind.begins_with("hair_") or kind in ["beard", "mustache", "goat_head", "fur_arms"]:
 			m.set_shader_parameter("hair_sheen", 1.0 if kind.begins_with("hair_") else 0.6)
 			m.set_shader_parameter("sheen_color", col.lightened(0.6).lerp(Color(0.8, 0.86, 1.0), 0.6))
 			m.set_shader_parameter("shade", col.lightened(0.15).lerp(Color(0.5, 0.48, 0.7), 0.45))

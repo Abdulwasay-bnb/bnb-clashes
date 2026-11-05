@@ -1703,6 +1703,40 @@ func _run_autotest() -> void:
 			ui.show_pause(); ui.show_moves(0)
 			await get_tree().create_timer(0.5).timeout
 			await shot.call("moves")
+		"stances":
+			# one person in several idle clips side by side, plus back / side views (--id=, --clips=a,b,c)
+			ui.hide_screen(); set_process(false)
+			var id := "hamza_khan"
+			var clips := ["idle_boss", "idle_fight", "idle_fight_b", "idle_fight_c", "idle_martial", "idle_bounce"]
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--id="): id = a.substr(5)
+				if a.begins_with("--clips="): clips = a.substr(8).split(",")
+			var C := Data.by_id(id)
+			var rigs := []
+			for i in clips.size():
+				var rig := make_rig(C, 0)
+				add_child(rig)
+				rig.position = Vector3((i - (clips.size() - 1) / 2.0) * 0.95, 0, 0)
+				rig.rotation.y = 0.3
+				for k in 6:
+					rig.set_clip(clips[i], 0.4 * ClipLib.get_clip(clips[i]).length if ClipLib.has(clips[i]) else 0.0)
+					rig.apply_pose(C.pose.guard)
+				rigs.append(rig)
+			camera.position = Vector3(0, 1.0, 4.8); camera.look_at(Vector3(0, 0.95, 0))
+			for k in 3: await get_tree().process_frame
+			await shot.call("stances_" + id)
+			# close-up of the middle one's head
+			var mid: Node3D = rigs[rigs.size() / 2]
+			var hp: Vector3 = mid.head.global_position
+			camera.position = hp + Vector3(0.15, 0.03, 0.75); camera.look_at(hp)
+			for k in 3: await get_tree().process_frame
+			await shot.call("stances_%s_face" % id)
+			camera.position = Vector3(0, 1.0, 4.8); camera.look_at(Vector3(0, 0.95, 0))
+			for view in [["side", PI * 0.5], ["back", PI]]:
+				for r in rigs: r.rotation.y = view[1]
+				for k in 3: await get_tree().process_frame
+				await shot.call("stances_%s_%s" % [id, view[0]])
+			print("AUTOTEST stances %s" % [clips])
 		"persona":
 			# everyone in their signature (default) look, full body, three-quarter view
 			ui.hide_screen(); set_process(false)

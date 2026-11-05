@@ -33,7 +33,7 @@
    0.2,
    0.12
   ],
-  "intro": "in_battlecry",
+  "intro": "intro_magic_area",
   "intro_prop": "",
   "power_anim": "pw_twohand",
   "fx": [
@@ -1503,8 +1503,8 @@
    0.72,
    0.62
   ],
-  "pose": "idle_boss",
-  "intro": "in_ceo",
+  "pose": "idle_bounce",
+  "intro": "intro_hard_landing",
   "hair_style": "hair_army",
   "hair_color": [
    0.09,
