@@ -172,7 +172,7 @@ On-screen sticks, buttons and a pause button in every mode, with layouts tuned s
 
 ## 🛠️ For developers
 
-Built with **Godot 4.3** (GL Compatibility renderer). The games share the same 3D characters and animation system.
+Built with **Godot 4.7** (GL Compatibility renderer). The games share the same 3D characters and animation system.
 
 ```bash
 ./run.sh                        # play from source

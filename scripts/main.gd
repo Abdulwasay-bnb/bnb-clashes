@@ -330,6 +330,8 @@ func _make_portraits() -> Dictionary:
 			if cimg != null and not cimg.is_empty():
 				out[C.id] = ImageTexture.create_from_image(cimg)
 				continue
+		if DisplayServer.get_name() == "headless":   # tests without a screen: nothing gets drawn
+			out[C.id] = PlaceholderTexture2D.new(); continue
 		var rig := make_rig(C)
 		vp.add_child(rig)
 		rig.apply_pose(C.pose.guard)
@@ -1001,7 +1003,7 @@ func apply_hit(att: Fighter, def: Fighter, res: Dictionary) -> void:
 	var hy: float = def.pos.y + 0.95 if air else (1.5 if m.lvl == "high" else 0.35 if m.lvl == "low" else 1.05) * def.C.scale
 	var d := maxf(0.25, res.fwd - 0.28 * def.C.scale)
 	var cp := Vector3(att.pos.x + f.x * d, hy, att.pos.z + f.z * d)
-	if res.type != "block" and (m.surge or m.launch or m.kd or res.ch or m.dmg >= 16):
+	if res.type != "block" and (m.surge or m.launch or m.kd or res.get("ch", false) or m.dmg >= 16):
 		blood(cp, f, 10 if m.surge else 6)
 		def.blood_on = minf(1.0, def.blood_on + 0.18)
 	if res.type == "armor":
@@ -1018,9 +1020,9 @@ func apply_hit(att: Fighter, def: Fighter, res: Dictionary) -> void:
 		return
 	# Damage scaling: each extra hit in a combo is worth 10% less (min 30%).
 	var sc := maxf(0.3, 1.0 - 0.1 * def.combo_hits) if def.combo_hits > 0 else 1.0
-	var dmg := maxi(1, roundi(m.dmg * att.C.power * sc * (1.2 if res.ch else 1.0)))
+	var dmg := maxi(1, roundi(m.dmg * att.C.power * sc * (1.2 if res.get("ch", false) else 1.0)))
 	hurt(def, dmg, att); def.combo_hits += 1; def.combo_dmg += dmg; def.flash = 1.0
-	var launch: bool = m.launch or (res.ch and m.ch_launch)
+	var launch: bool = m.launch or (res.get("ch", false) and m.ch_launch)
 	if air or launch or m.kd or def.hp <= 0:
 		if air:
 			def.vy = maxf(def.vy, maxf(0.028, 0.072 - 0.006 * def.juggle)); def.air_v = f * 0.008; def.juggle += 1
@@ -1036,21 +1038,21 @@ func apply_hit(att: Fighter, def: Fighter, res: Dictionary) -> void:
 		def.move = null; def.queued = ""; def.stance = ""
 	else:
 		def.set_state("hit")
-		def.stun = maxi(6, rem + int(m.hit if m.hit != null else 0) + (8 if res.ch else 0))
+		def.stun = maxi(6, rem + int(m.hit if m.hit != null else 0) + (8 if res.get("ch", false) else 0))
 		def.hit_lvl = m.lvl; def.hit_crouch = was_low; def.move = null; def.queued = ""; def.stance = ""
 		def.vel = f * (m.push if m.push > 0 else 0.045)
-	def.kick("high" if air else m.lvl, m.dmg / 10.0 * (1.4 if res.ch else 1.0))
+	def.kick("high" if air else m.lvl, m.dmg / 10.0 * (1.4 if res.get("ch", false) else 1.0))
 	att.recoil(m.dmg / 10.0)
-	var big: bool = m.surge or launch or m.kd or res.ch
+	var big: bool = m.surge or launch or m.kd or res.get("ch", false)
 	hitstop = 40 if m.surge else 10 if big else 7
 	shake = 0.35 if m.surge else 0.16 if big else 0.07
-	burst(cp, att.C.accent if m.surge else Color(1, 0.82, 0.4) if res.ch else Color.WHITE, 22 if big else 12, 4.5 if big else 3.0)
+	burst(cp, att.C.accent if m.surge else Color(1, 0.82, 0.4) if res.get("ch", false) else Color.WHITE, 22 if big else 12, 4.5 if big else 3.0)
 	ring(cp, att.C.accent if m.surge else Color.WHITE, 1.0 if big else 0.6)
 	sfx("heavy" if big else "hit")
-	if res.ch: ui.pop_text("COUNTER HIT", att.side)
+	if res.get("ch", false): ui.pop_text("COUNTER HIT", att.side)
 	elif launch and not air: ui.pop_text("LAUNCH", att.side)
 	if m.surge: ui.screen_flash(att.C.accent)
-	fd_log(att, "COUNTER HIT" if res.ch else "HIT")
+	fd_log(att, "COUNTER HIT" if res.get("ch", false) else "HIT")
 	trial_hit(att, def, m)
 	if def.hp <= 0: ko_start(att)
 
@@ -1360,6 +1362,16 @@ func _run_autotest() -> void:
 			await get_tree().create_timer(1.0).timeout
 			await shot.call("mafia_result")
 			print("AUTOTEST mafia phase=%s me_mafia=%s alive=%d stats=%s chat=%d" % [mafia.sim.phase, mafia._me().mafia, mafia.sim.agents.filter(func(a): return a.alive).size(), mafia.stats, mafia.sim.chat.size()])
+		"mafiatour":
+			# walk the reskinned office: one shot per room
+			lobby.C = Data.by_id("hamza_khan"); lobby.mode = "mafia"; lobby.cfg.total = 6; lobby.cfg.mafia = 1
+			await lobby.start_mafia_solo()
+			await get_tree().create_timer(5.0).timeout
+			for spot in [["cafe", Vector2(-22, -11)], ["dev", Vector2(-20, 1)], ["hr", Vector2(-20, 14)], ["board", Vector2(0, 5)], ["reception", Vector2(-2, 16.5)], ["storage", Vector2(21, 1)], ["print", Vector2(23, 15)]]:
+				var m: MafiaSim.Agent = mafia.sim.agents[0]
+				m.pos = spot[1]; m.prev_pos = m.pos
+				for k in 20: await get_tree().physics_frame
+				await shot.call("tour_" + spot[0])
 		"mafiasim":
 			# whole games of bots only, no visuals: kills, reports, meetings, votes, a winner
 			for n in [6, 8, 10]:
@@ -1377,6 +1389,11 @@ func _run_autotest() -> void:
 						if e[0] == "chat" and lines.size() < 6: lines.append("%s: %s" % [sim._nm(sim.agents[e[1]]), e[2]])
 						if e[0] == "result": lines.append("-> fired %s (mafia=%s)" % [sim._nm(sim.agents[e[1]]) if e[1] >= 0 else "nobody", e[2]])
 				print("AUTOTEST mafiasim %dp t=%.0fs winner=%s why=%s tasks=%d/%d events=%s" % [n, t, sim.winner, sim.win_why, sim.tasks_done, sim.tasks_total, counts])
+				if not sim.finished():
+					for a in sim.agents:
+						var todo: Array = a.tasks.filter(func(t): return not t.done).map(func(t): return t.st)
+						if a.alive and not a.mafia: print("AUTOTEST   -> goal=%s step=%s next=%s bodies=%s phase=%s busy=%.1f" % [a.goal, a.step, sim.next_step(a.pos, MafiaSim.st_pos(sim.station(todo[0]))) if not todo.is_empty() else null, sim.bodies, sim.phase, a.busy])
+						print("AUTOTEST mafiasim stuck: %s alive=%s mafia=%s pos=%s todo=%s power_cut=%s" % [sim._nm(a), a.alive, a.mafia, a.pos.snapped(Vector2(0.1, 0.1)), todo, sim.power_cut])
 				print("AUTOTEST mafiasim %dp chat %s" % [n, " | ".join(lines.slice(0, 10))])
 		"ludosim":
 			# whole games with 2, 3 and 4 CPU players, no visuals: rules finish, places handed out

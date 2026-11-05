@@ -5,7 +5,7 @@
 # and attaches it to the release. Needs the Godot 4.3 iOS export template (ios.zip).
 set -euo pipefail
 cd "$(dirname "$0")"
-GD="$HOME/Applications/godot/Godot_v4.3-stable_linux.x86_64"
+GD="$HOME/Applications/godot/Godot_v4.7.2-stable_linux.x86_64"
 rm -rf build/ios && mkdir -p build/ios && touch build/.gdignore
 "$GD" --headless --path . --import >/dev/null 2>&1 || true
 "$GD" --headless --path . --export-release "iOS" build/ios/BNBClashes.ipa

@@ -2,7 +2,7 @@
 # Build the web version and publish it to the gh-pages branch, then turn on GitHub Pages.
 set -euo pipefail
 cd "$(dirname "$0")"
-GD="$HOME/Applications/godot/Godot_v4.3-stable_linux.x86_64"
+GD="$HOME/Applications/godot/Godot_v4.7.2-stable_linux.x86_64"
 REPO="Abdulwasay-bnb/bnb-clashes"
 mkdir -p build && touch build/.gdignore
 "$GD" --headless --path . --export-release "Web" build/web/index.html

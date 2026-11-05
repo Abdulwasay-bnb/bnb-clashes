@@ -45,6 +45,77 @@ const STATIONS := [
 	{id = "mail", kind = "mail", room = "reception", p = [-5, 17], title = "Sort the mail"},
 	{id = "visitors", kind = "sign", room = "reception", p = [5, 17], title = "Sign in the visitors"},
 ]
+## Furniture (Kenney Furniture Kit, CC0): model, centre [x, z], turn (degrees), size [w, d, h] in metres
+## (model-local, before turning), height off the floor, and whether it blocks walking.
+## "rack" is drawn by the game itself (server racks with blinking lights).
+const DECOR := [
+	# cafeteria
+	{m = "kitchenFridgeLarge", p = [-29.0, -19.1], s = [1.2, 0.8, 2.0], block = true},
+	{m = "kitchenBar", p = [-25.0, -19.3], s = [3.6, 0.9, 1.0], block = true},
+	{m = "kitchenMicrowave", p = [-24.0, -19.3], s = [0.6, 0.45, 0.4], y = 1.0},
+	{m = "tableRound", p = [-24.0, -14.0], s = [2.4, 1.6, 0.8], block = true},
+	{m = "tableRound", p = [-20.0, -16.0], s = [2.4, 1.6, 0.8], block = true},
+	{m = "chair", p = [-25.6, -14.0], r = 90, s = [0.5, 0.5, 0.95]}, {m = "chair", p = [-22.4, -14.0], r = 270, s = [0.5, 0.5, 0.95]},
+	{m = "chair", p = [-21.6, -16.0], r = 90, s = [0.5, 0.5, 0.95]}, {m = "chair", p = [-18.4, -16.0], r = 270, s = [0.5, 0.5, 0.95]},
+	{m = "trashcan", p = [-14.8, -19.2], s = [0.6, 0.55, 0.9]},
+	{m = "pottedPlant", p = [-29.2, -9.0], s = [0.7, 0.7, 1.6]},
+	# dev pit: two rows of desks with screens and chairs
+	{m = "desk", p = [-25.0, 3.5], s = [2.0, 1.0, 0.76], block = true}, {m = "desk", p = [-21.5, 3.5], s = [2.0, 1.0, 0.76], block = true},
+	{m = "desk", p = [-25.0, -2.0], s = [2.0, 1.0, 0.76], block = true}, {m = "desk", p = [-21.5, -2.0], s = [2.0, 1.0, 0.76], block = true},
+	{m = "computerScreen", p = [-25.0, 3.6], r = 180, s = [0.8, 0.2, 0.6], y = 0.76}, {m = "computerScreen", p = [-21.5, 3.6], r = 180, s = [0.8, 0.2, 0.6], y = 0.76},
+	{m = "computerScreen", p = [-25.0, -2.1], s = [0.8, 0.2, 0.6], y = 0.76}, {m = "computerScreen", p = [-21.5, -2.1], s = [0.8, 0.2, 0.6], y = 0.76},
+	{m = "chairDesk", p = [-25.0, 2.4], r = 180, s = [0.8, 0.8, 1.0]}, {m = "chairDesk", p = [-21.5, 2.4], r = 180, s = [0.8, 0.8, 1.0]},
+	{m = "chairDesk", p = [-25.0, -0.9], s = [0.8, 0.8, 1.0]}, {m = "chairDesk", p = [-21.5, -0.9], s = [0.8, 0.8, 1.0]},
+	{m = "bookcaseOpen", p = [-29.4, 4.0], r = 90, s = [1.6, 0.6, 1.8], block = true},
+	{m = "plantSmall1", p = [-15.0, 5.3], s = [0.5, 0.5, 0.7]},
+	# HR
+	{m = "desk", p = [-23.0, 16.0], s = [2.2, 1.1, 0.76], block = true},
+	{m = "laptop", p = [-23.0, 16.1], r = 180, s = [0.6, 0.45, 0.35], y = 0.76},
+	{m = "chairDesk", p = [-23.0, 17.3], r = 180, s = [0.8, 0.8, 1.0]},
+	{m = "bookcaseClosedWide", p = [-27.5, 10.6], s = [1.8, 0.6, 1.8], block = true},
+	{m = "kitchenCabinet", p = [-29.4, 13.5], r = 90, s = [1.0, 0.7, 1.1], block = true},
+	{m = "coatRack", p = [-29.3, 19.4], s = [0.6, 0.3, 1.8]},
+	{m = "pottedPlant", p = [-14.8, 19.2], s = [0.7, 0.7, 1.6]},
+	# server room: racks (blinking lights)
+	{m = "rack", p = [20.5, -14.0], s = [1.0, 3.0, 2.2], block = true}, {m = "rack", p = [22.7, -14.0], s = [1.0, 3.0, 2.2], block = true},
+	{m = "rack", p = [24.9, -14.0], s = [1.0, 3.0, 2.2], block = true}, {m = "rack", p = [27.1, -14.0], s = [1.0, 3.0, 2.2], block = true},
+	{m = "cardboardBoxClosed", p = [29.2, -9.0], s = [0.7, 0.7, 0.7]}, {m = "cardboardBoxOpen", p = [15.0, -19.3], s = [0.9, 0.6, 0.6]},
+	# storage: boxes and shelves
+	{m = "cardboardBoxClosed", p = [24.0, 0.5], s = [1.3, 1.3, 1.3], block = true},
+	{m = "cardboardBoxClosed", p = [24.0, 0.5], s = [0.9, 0.9, 0.9], y = 1.3},
+	{m = "cardboardBoxClosed", p = [28.6, -2.6], s = [1.2, 1.2, 1.2], block = true},
+	{m = "cardboardBoxOpen", p = [21.0, 4.8], s = [1.4, 0.9, 0.9], block = true},
+	{m = "bookcaseClosedWide", p = [29.4, 1.0], r = 270, s = [2.0, 0.6, 1.9], block = true},
+	# print room
+	{m = "washer", p = [29.2, 12.0], r = 270, s = [1.1, 0.9, 1.2], block = true},
+	{m = "table", p = [21.0, 18.8], s = [2.4, 1.0, 0.8], block = true},
+	{m = "cardboardBoxOpen", p = [21.0, 18.8], s = [0.6, 0.4, 0.3], y = 0.8},
+	{m = "trashcan", p = [15.0, 19.3], s = [0.6, 0.55, 0.9]},
+	# boardroom: the long table and plants
+	{m = "table", p = [0.0, 0.0], s = [9.0, 4.0, 0.8], block = true},
+	{m = "pottedPlant", p = [-7.3, -6.3], s = [0.7, 0.7, 1.6]}, {m = "pottedPlant", p = [7.3, 6.3], s = [0.7, 0.7, 1.6]},
+	{m = "pottedPlant", p = [7.3, -6.3], s = [0.7, 0.7, 1.6]},
+	# reception: front desk, sofas, rug
+	{m = "kitchenBar", p = [0.0, 15.2], s = [5.0, 1.1, 1.05], block = true},
+	{m = "laptop", p = [1.5, 15.2], s = [0.6, 0.45, 0.35], y = 1.05},
+	{m = "rugRectangle", p = [0.0, 17.6], s = [4.0, 2.0, 0.02]},
+	{m = "loungeSofa", p = [-1.6, 19.4], r = 180, s = [2.4, 0.9, 0.9], block = true},
+	{m = "loungeChair", p = [1.8, 19.4], r = 180, s = [1.1, 0.9, 0.9], block = true},
+	{m = "pottedPlant", p = [-7.4, 12.6], s = [0.7, 0.7, 1.6]}, {m = "pottedPlant", p = [7.4, 12.6], s = [0.7, 0.7, 1.6]},
+	# task stations: what each task looks like
+	{m = "kitchenCabinet", p = [-27.0, -18.0], s = [1.0, 0.8, 0.95]}, {m = "kitchenCoffeeMachine", p = [-27.0, -18.0], s = [0.5, 0.5, 0.55], y = 0.95},
+	{m = "pottedPlant", p = [-16.6, -10.0], s = [0.9, 0.9, 1.8]},
+	{m = "deskCorner", p = [-27.8, 0.0], s = [1.4, 1.4, 0.76]}, {m = "computerScreen", p = [-28.0, 0.0], r = 270, s = [0.8, 0.2, 0.6], y = 0.76},
+	{m = "laptop", p = [-18.0, 3.6], r = 180, s = [0.6, 0.45, 0.35], y = 0.76},
+	{m = "desk", p = [-27.0, 18.2], s = [1.6, 0.8, 0.76]}, {m = "computerKeyboard", p = [-27.0, 18.2], r = 180, s = [0.5, 0.2, 0.05], y = 0.76},
+	{m = "cardboardBoxOpen", p = [-16.5, 12.2], s = [0.9, 0.6, 0.6]},
+	{m = "speaker", p = [16.2, -11.5], s = [0.4, 0.4, 1.3]},
+	{m = "cardboardBoxClosed", p = [28.0, 4.0], s = [0.8, 0.8, 0.8]},
+	{m = "washer", p = [28.0, 18.0], s = [1.1, 0.9, 1.2]},
+	{m = "kitchenCabinet", p = [16.2, 12.2], s = [0.9, 0.7, 1.0]},
+	{m = "bookcaseOpen", p = [-5.0, 18.4], s = [1.4, 0.5, 1.4]},
+	{m = "sideTable", p = [5.0, 18.2], s = [1.0, 0.6, 0.8]},
+]
 const ALERT_POS := Vector2(0, 0)          # the big red button on the boardroom table
 const FUSE_POS := Vector2(18, -1)         # power cut gets fixed here (storage)
 const SEATS := 10
@@ -117,12 +188,14 @@ func build_map() -> void:
 		_wall_side(x0, z1, x1, z1, "s" in d)
 		_wall_side(x0, z0, x0, z1, "w" in d)
 		_wall_side(x1, z0, x1, z1, "e" in d)
-	# furniture that blocks: boardroom table, cafeteria tables, server racks, printers, desks
-	walls.append(Rect2(-4.5, -2.0, 9.0, 4.0))                     # boardroom table
-	for t in [[-24, -14], [-20, -16]]: walls.append(Rect2(t[0] - 1.2, t[1] - 0.8, 2.4, 1.6))
-	for k in 4: walls.append(Rect2(20.0 + k * 2.2, -15.5, 1.0, 3.0))   # racks
-	for k in 3: walls.append(Rect2(-26.0 + k * 3.5, 3.0, 2.0, 1.0))    # dev desks
-	walls.append(Rect2(-3.0, 13.5, 6.0, 1.2))                       # reception desk
+	# furniture that blocks (the view draws the matching models from the same list)
+	for d in DECOR:
+		if d.get("block", false):
+			var sz: Array = d.s
+			var r: float = d.get("r", 0.0)
+			var w: float = sz[0] if int(r) % 180 == 0 else sz[1]
+			var dd: float = sz[1] if int(r) % 180 == 0 else sz[0]
+			walls.append(Rect2(float(d.p[0]) - w / 2.0, float(d.p[1]) - dd / 2.0, w, dd))
 	for x in range(-29, 30, 2):
 		for z in range(-19, 20, 2):
 			var p := Vector2(x, z)
@@ -214,7 +287,7 @@ func next_step(a: Vector2, b: Vector2) -> Vector2:
 		if c == goal_i: break
 		for nb in links[c]:
 			if not prev.has(nb): prev[nb] = c; q.append(nb)
-	if not prev.has(goal_i): return b
+	if not prev.has(goal_i): return waypoints[links[start][rng.randi() % links[start].size()]] if not links[start].is_empty() else b
 	var stp := goal_i
 	while prev[stp] != start and prev[stp] != -1: stp = prev[stp]
 	# skip ahead while the way is clear
@@ -527,12 +600,21 @@ func _bot(a: Agent) -> Dictionary:
 					return {}
 				else:
 					return _toward(a, b.pos)
-	if power_cut and not a.mafia and a.pos.distance_to(FUSE_POS) < 14.0:
+	if power_cut and not a.mafia and _fixer(a):
 		if a.pos.distance_to(FUSE_POS) < USE_RANGE: act(a.id, "fix"); return {}
 		return _toward(a, FUSE_POS)
 	if a.mafia:
 		return _mafia_bot(a)
 	return _task_bot(a)
+
+
+## During a power cut: is this one of the two living staff nearest the fuse box?
+func _fixer(a: Agent) -> bool:
+	var d := a.pos.distance_to(FUSE_POS)
+	var closer := 0
+	for o in agents:
+		if o != a and o.alive and not o.mafia and o.pos.distance_to(FUSE_POS) < d: closer += 1
+	return closer < 2
 
 
 func _task_bot(a: Agent) -> Dictionary:

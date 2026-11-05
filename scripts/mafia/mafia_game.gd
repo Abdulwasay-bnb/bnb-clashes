@@ -187,6 +187,83 @@ func _box(size: Vector3, m: Material, pos: Vector3, parent: Node3D = null) -> Me
 	return mi
 
 
+const ROOM_TEX := {"cafe": "floor_tiles_06", "print": "floor_tiles_06", "reception": "floor_tiles_06", "server": "concrete_tiles_02",
+	"storage": "concrete_tiles_02", "dev": "laminate_floor_02", "board": "laminate_floor_02", "hr": "dirty_carpet"}
+const FLOOR_TINT := {"cafe": Color(1.0, 0.93, 0.85), "print": Color(0.85, 0.88, 0.95), "reception": Color(0.95, 0.92, 1.0), "server": Color(0.55, 0.62, 0.7),
+	"storage": Color(0.85, 0.8, 0.7), "dev": Color(0.95, 0.9, 0.85), "board": Color(0.8, 0.65, 0.6), "hr": Color(0.75, 0.6, 0.85)}
+const ROOM_SCALE := {"cafe": 0.35, "print": 0.35, "reception": 0.3, "server": 0.3, "storage": 0.3, "dev": 0.25, "board": 0.25, "hr": 0.4}
+var _tex_cache := {}
+var _model_cache := {}
+
+
+## Photo-textured material, laid in world space so big floors tile without stretching.
+func _tex_mat(name: String, tint: Color, scale: float) -> StandardMaterial3D:
+	var key := "%s_%s_%s" % [name, tint, scale]
+	if _tex_cache.has(key): return _tex_cache[key]
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = load("res://assets/textures/%s_diff_1k.jpg" % name)
+	m.normal_enabled = true
+	m.normal_texture = load("res://assets/textures/%s_nor_gl_1k.jpg" % name)
+	m.albedo_color = tint; m.roughness = 0.85
+	m.uv1_triplanar = true; m.uv1_world_triplanar = true; m.uv1_scale = Vector3.ONE * scale
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	_tex_cache[key] = m
+	return m
+
+
+## A piece of furniture, scaled to fit its footprint [w, d, h], turned, standing on the floor (or on top of something).
+func _decor(d: Dictionary) -> void:
+	var sz: Array = d.s
+	var pos := Vector2(float(d.p[0]), float(d.p[1]))
+	var holder := Node3D.new()
+	holder.position = V(pos, float(d.get("y", 0.0)))
+	holder.rotation.y = deg_to_rad(float(d.get("r", 0.0)))
+	world.add_child(holder)
+	if d.m == "rack":
+		_box(Vector3(sz[0], sz[2], sz[1]), _mat(Color(0.08, 0.08, 0.1), 0.4), Vector3(0, sz[2] / 2.0, 0), holder)
+		for k in 6:
+			_box(Vector3(sz[0] + 0.03, 0.05, sz[1] * 0.8), _mat([Color(0.2, 1, 0.4), Color(0.2, 0.7, 1)][k % 2], 0.3, 3.0), Vector3(0, 0.3 + k * 0.32, 0), holder)
+		return
+	var ps: PackedScene = _model_cache.get(d.m, null)
+	if ps == null:
+		ps = load("res://assets/kenney/furniture/%s.glb" % d.m)
+		if ps == null: return
+		_model_cache[d.m] = ps
+	var model: Node3D = ps.instantiate()
+	holder.add_child(model)
+	_tone(model)
+	# measure the model, then stretch it to the footprint and sit it on the floor, centred
+	var box := AABB()
+	var first := true
+	for mi in model.find_children("*", "MeshInstance3D", true, false):
+		var t: Transform3D = model.global_transform.affine_inverse() * (mi as MeshInstance3D).global_transform if model.is_inside_tree() else (mi as MeshInstance3D).transform
+		var bb: AABB = t * (mi as MeshInstance3D).get_aabb()
+		box = bb if first else box.merge(bb)
+		first = false
+	if first or box.size.x <= 0.0: return
+	var k := Vector3(float(sz[0]) / box.size.x, float(sz[2]) / maxf(box.size.y, 0.01), float(sz[1]) / maxf(box.size.z, 0.01))
+	model.scale = k
+	model.position = -Vector3(box.get_center().x * k.x, box.position.y * k.y, box.get_center().z * k.z)
+
+
+## Kenney's colours are pale pastels: darken and saturate them a touch so they read under office lights.
+var _tone_cache := {}
+func _tone(model: Node) -> void:
+	for mi in model.find_children("*", "MeshInstance3D", true, false):
+		var mesh: Mesh = (mi as MeshInstance3D).mesh
+		if mesh == null: continue
+		for i in mesh.get_surface_count():
+			var src := mesh.surface_get_material(i)
+			if not (src is BaseMaterial3D): continue
+			if not _tone_cache.has(src):
+				var m: BaseMaterial3D = src.duplicate()
+				var c: Color = m.albedo_color
+				c = Color.from_hsv(c.h, minf(1.0, c.s * 1.25), c.v * 0.62, c.a)
+				m.albedo_color = c; m.roughness = 0.7; m.metallic = minf(m.metallic, 0.2)
+				_tone_cache[src] = m
+			(mi as MeshInstance3D).set_surface_override_material(i, _tone_cache[src])
+
+
 static func V(p: Vector2, y := 0.0) -> Vector3:
 	return Vector3(p.x, y, p.y)
 
@@ -206,62 +283,61 @@ func _build_world() -> void:
 	sun.directional_shadow_max_distance = 40
 	world.add_child(sun)
 	lights.append(sun)
-	_box(Vector3(62, 0.1, 42), _mat(Color(0.22, 0.22, 0.26), 0.95), Vector3(0, -0.05, 0))   # hallway carpet
+	# floors: photo textures (Poly Haven, CC0) laid in world space, tinted per room
+	_box(Vector3(62, 0.1, 42), _tex_mat("concrete_tiles_02", Color(0.62, 0.6, 0.68), 0.35), Vector3(0, -0.05, 0))   # hallways
 	for rm in MafiaSim.ROOMS:
 		var r: Array = rm.r
 		var c := Vector2((r[0] + r[2]) / 2.0, (r[1] + r[3]) / 2.0)
-		_box(Vector3(r[2] - r[0], 0.02, r[3] - r[1]), _mat(FLOOR.get(rm.id, Color(0.3, 0.3, 0.3)), 0.9), V(c, 0.01))
+		_box(Vector3(r[2] - r[0], 0.02, r[3] - r[1]), _tex_mat(ROOM_TEX.get(rm.id, "laminate_floor_02"), FLOOR_TINT.get(rm.id, Color.WHITE), ROOM_SCALE.get(rm.id, 0.3)), V(c, 0.01))
 		var l := Label3D.new()
 		l.text = rm.name; l.font = font; l.font_size = 160; l.outline_size = 0
-		l.modulate = Color(1, 1, 1, 0.16); l.rotation.x = -PI / 2; l.pixel_size = 0.01
+		l.modulate = Color(1, 1, 1, 0.13); l.rotation.x = -PI / 2; l.pixel_size = 0.01
 		l.position = V(c, 0.03)
 		world.add_child(l)
 		var om := OmniLight3D.new(); om.position = V(c, 3.2); om.omni_range = 13.0; om.light_energy = 0.9
 		om.light_color = Color(1.0, 0.95, 0.88)
 		world.add_child(om)
 		lights.append(om)
-	var wall_m := _mat(Color(0.82, 0.8, 0.86), 0.85)
+	var wall_m := _tex_mat("grey_plaster", Color(0.92, 0.9, 0.96), 0.5)
 	var top_m := _mat(Color(0.55, 0.32, 0.9), 0.5, 0.6)
-	var furn := _mat(Color(0.45, 0.32, 0.22), 0.6)
 	for w in sim.walls:
-		var thin: bool = w.size.x < 0.5 or w.size.y < 0.5
-		var h := 1.35 if thin else 0.85   # low walls: the camera looks over them
+		if not (w.size.x < 0.5 or w.size.y < 0.5): continue   # furniture: drawn from the decor list
 		var c: Vector2 = w.get_center()
-		_box(Vector3(w.size.x, h, w.size.y), wall_m if thin else furn, V(c, h / 2.0))
-		if thin: _box(Vector3(w.size.x + 0.02, 0.06, w.size.y + 0.02), top_m, V(c, h))
-	# task stations: glowing consoles with a sign
+		_box(Vector3(w.size.x, 1.35, w.size.y), wall_m, V(c, 0.675))   # low walls: the camera looks over them
+		_box(Vector3(w.size.x + 0.02, 0.06, w.size.y + 0.02), top_m, V(c, 1.35))
+	# furniture (Kenney Furniture Kit, CC0)
+	for d in MafiaSim.DECOR: _decor(d)
+	# task stations: a glowing ring on the floor and a sign
 	for s in MafiaSim.STATIONS:
 		var p := MafiaSim.st_pos(s)
-		_box(Vector3(0.9, 1.0, 0.6), _mat(Color(0.2, 0.2, 0.26), 0.5), V(p, 0.5))
-		_box(Vector3(0.7, 0.4, 0.05), _mat(Color(0.3, 0.8, 1.0), 0.4, 1.6), V(p, 1.15) + Vector3(0, 0, 0.3))
+		var ring := MeshInstance3D.new()
+		var tor := TorusMesh.new(); tor.inner_radius = 0.75; tor.outer_radius = 0.9; tor.rings = 32
+		ring.mesh = tor; ring.material_override = _mat(Color(0.3, 0.8, 1.0), 0.4, 2.0); ring.position = V(p, 0.04)
+		world.add_child(ring)
 		var sign := Label3D.new()
 		sign.text = String(s.title).to_upper(); sign.font = small; sign.font_size = 56; sign.outline_size = 8
 		sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED; sign.position = V(p, 2.0); sign.modulate = Color(0.75, 0.9, 1.0)
 		world.add_child(sign)
-	# the ALERT button on the boardroom table, chairs round it
+	# the ALERT button on the boardroom table, office chairs round it
 	var btn := MeshInstance3D.new()
 	var cy := CylinderMesh.new(); cy.top_radius = 0.45; cy.bottom_radius = 0.55; cy.height = 0.3
-	btn.mesh = cy; btn.material_override = _mat(RED, 0.3, 1.4); btn.position = V(MafiaSim.ALERT_POS, 1.0)
+	btn.mesh = cy; btn.material_override = _mat(RED, 0.3, 1.4); btn.position = V(MafiaSim.ALERT_POS, 0.95)
 	world.add_child(btn)
 	var al := Label3D.new(); al.text = "ALERT"; al.font = font; al.font_size = 70; al.outline_size = 10
 	al.billboard = BaseMaterial3D.BILLBOARD_ENABLED; al.position = V(MafiaSim.ALERT_POS, 1.8); al.modulate = RED
 	world.add_child(al)
 	for k in MafiaSim.SEATS:
 		var a := TAU * k / MafiaSim.SEATS
-		_box(Vector3(0.6, 0.5, 0.6), _mat(Color(0.12, 0.1, 0.14), 0.5), Vector3(cos(a) * 5.6, 0.25, sin(a) * 3.0))
+		var cp := Vector2(cos(a) * 5.6, sin(a) * 3.0)
+		_decor({m = "chairDesk", p = [cp.x, cp.y], r = rad_to_deg(atan2(-cp.x, -cp.y)), s = [0.8, 0.8, 1.0]})
 	# fuse box in storage
 	_box(Vector3(0.8, 1.2, 0.3), _mat(Color(0.75, 0.6, 0.15), 0.4), V(MafiaSim.FUSE_POS, 1.2))
 	var fl := Label3D.new(); fl.text = "FUSE BOX"; fl.font = small; fl.font_size = 56; fl.outline_size = 8
 	fl.billboard = BaseMaterial3D.BILLBOARD_ENABLED; fl.position = V(MafiaSim.FUSE_POS, 2.2); fl.modulate = GOLD
 	world.add_child(fl)
-	# a few desks, plants and racks for life
-	var rng := RandomNumberGenerator.new(); rng.seed = 3
-	for k in 4: _box(Vector3(1.0, 2.2, 3.0), _mat(Color(0.08, 0.08, 0.1), 0.4), Vector3(20.5 + k * 2.2, 1.1, -14.0))
-	for p in [[-29, -19], [29, 19], [-29, 19], [29, -19], [-9, 19], [9, 19], [-13, -13], [13, 13]]:
-		_box(Vector3(0.5, 0.5, 0.5), _mat(Color(0.5, 0.3, 0.2)), Vector3(p[0], 0.25, p[1]))
-		var leaf := MeshInstance3D.new(); var sp := SphereMesh.new(); sp.radius = 0.55; sp.height = 1.1
-		leaf.mesh = sp; leaf.material_override = _mat(Color(0.25, 0.6, 0.3)); leaf.position = Vector3(p[0], 1.0, p[1])
-		world.add_child(leaf)
+	# hallway plants
+	for p in [[-13, -19], [13, -19], [-13, 19], [13, 19], [-13, -6.5], [13, 8.5]]:
+		_decor({m = "pottedPlant", p = p, s = [0.7, 0.7, 1.6]})
 	for a in sim.agents: rigs.append(_agent_visual(a))
 	cam = Camera3D.new(); cam.fov = 50; cam.far = 200
 	world.add_child(cam); cam.current = true
