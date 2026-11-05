@@ -172,8 +172,11 @@ func decide(me: Fighter, op: Fighter) -> void:
 			if not lng.is_empty(): push(key_seq(lng.pick_random().key, me.C))
 		else: wait = randi_range(6, 20)
 		return
-	if me.meter >= 100.0 and r < 0.3:
-		push(key_seq("34", me.C)); return
+	# powers: FINAL when it's unlocked and they're close, BLUE now and then
+	if me.final_ready() and d < 1.3 * sc and r < 0.35 + lv * 0.1:
+		push(key_seq("24", me.C)); return
+	if me.blue_ready() and d < 1.5 * sc and r < 0.06 + lv * 0.03:
+		push(key_seq("13", me.C)); return
 	if r < aggr:
 		var cats := [[A.pokes, 4.0], [A.mids, 2.0], [A.lows, 2.0 if lv else 1.0], [A.launch, 1.0], [A.heavy, 1.2],
 			[A.throws, 1.0 if lv else 0.3], [A.stance, 0.6], [A.sig, 0.6]].filter(func(c): return not c[0].is_empty())

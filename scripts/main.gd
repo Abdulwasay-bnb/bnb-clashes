@@ -1004,6 +1004,8 @@ func apply_hit(att: Fighter, def: Fighter, res: Dictionary) -> void:
 	if res.type == "throw":
 		if att.state != "attack": return   # the grab was interrupted in the same frame
 		start_throw(att, def, m); return
+	if m.final and res.type == "hit":
+		start_final(att, def); return
 	var air := def.state == "air"
 	var was_low := def.is_low()
 	var hy: float = def.pos.y + 0.95 if air else (1.5 if m.lvl == "high" else 0.35 if m.lvl == "low" else 1.05) * def.C.scale
@@ -1074,6 +1076,17 @@ func start_throw(att: Fighter, def: Fighter, m: Data.Move) -> void:
 	def.pend = 0; def.buffer = null; def.throw_t = 0.0; def.move = null; def.stance = ""
 	hitstop = 4; sfx("grab")
 	ui.pop_text(m.name.to_upper(), att.side)
+
+
+## The FINAL POWER connected: lock both fighters into the cinematic.
+func start_final(att: Fighter, def: Fighter) -> void:
+	att.set_state("final"); att.victim = def; att.throw_dir = att.fwd(); att.move = null
+	def.set_state("final" + "ed"); def.thrower = att; def.move = null; def.stance = ""; def.pend = 0; def.buffer = null
+	def.final_hit = 0; def.combo_hits = 0; def.combo_dmg = 0
+	hitstop = 12; shake = 0.3
+	surge_cam = {f = att, t = Fighter.FINAL_LEN, orbit = true}
+	ui.screen_flash(att.C.accent); sfx("surge")
+	ui.pop_text("FINAL POWER: " + String(att.C.surge_name).to_upper(), att.side)
 
 
 func separate(A: Fighter, B: Fighter) -> void:
@@ -1185,6 +1198,10 @@ func _update_camera() -> void:
 	if surge_cam != null:
 		var S: Fighter = surge_cam.f
 		cx = S.pos.x; cz = S.pos.z; dist = 2.4; h = 1.15; ly = 1.3; ang += -0.5 if S.side else 0.5
+		if surge_cam.get("orbit", false):
+			# cinematic: swing around the pair, pull back for the slam
+			var k := 1.0 - float(surge_cam.t) / Fighter.FINAL_LEN
+			ang += sin(k * PI) * 0.55; dist = 2.8 + k * 1.6; h = 1.1 + k * 1.1; ly = 1.1 + k * 0.4
 	if phase == "intro" and phase_t > 50:
 		var k := minf(phase_t - 50, 60)
 		dist += k * 0.03; ang += k * 0.006
@@ -1411,6 +1428,35 @@ func _run_autotest() -> void:
 				trace.append("end_y=%.2f" % F[0].pos.y)
 				test_p1 = Callable()
 				print("AUTOTEST moves2 %s maxy=%.2f p2=%s hp2=%d trace=%s" % [sc[0], maxy, F[1].state, F[1].hp, " ".join(trace)])
+				leave_game()
+		"powers2":
+			for who in ["abdul_wasay", "kashaf_ud_duja"]:
+				await start_match({mode = "training"}, [Data.by_id(who), Data.by_id("hamza_khan")])
+				dummy = 0
+				for k in 60: await get_tree().physics_frame
+				F[0].reset(-0.55); F[1].reset(0.55)
+				# BLUE: 1+3
+				test_t = 0; test_p1 = func(t: int) -> Array: return [0, 0, 5 if t in [3, 4] else 0]
+				var hp0: float = F[1].hp
+				for k in 120:
+					await get_tree().physics_frame
+					if k == 30: await shot.call("pw2_%s_blue" % who)
+				test_p1 = Callable()
+				print("AUTOTEST powers2 %s blue: used=%s dmg=%d (blue again allowed=%s)" % [who, F[0].blue_used, hp0 - F[1].hp, F[0].power_ok("13")])
+				for k in 120: await get_tree().physics_frame
+				F[0].reset(-0.55); F[1].reset(0.55)
+				# FINAL: 2+4 refused at full health, works at low health
+				print("AUTOTEST powers2 %s final at full hp allowed=%s" % [who, F[0].power_ok("24")])
+				F[0].hp = F[0].max_hp * 0.25
+				hp0 = F[1].hp
+				test_t = 0; test_p1 = func(t: int) -> Array: return [0, 0, 10 if t in [3, 4] else 0]
+				var seen := []
+				for k in 340:
+					await get_tree().physics_frame
+					if F[0].state != (seen[-1] if not seen.is_empty() else ""): seen.append(F[0].state)
+					if F[0].state == "final" and F[0].sf in [20, 80, 150, 200, 243]: await shot.call("pw2_%s_final_%d" % [who, F[0].sf])
+				test_p1 = Callable()
+				print("AUTOTEST powers2 %s final: used=%s dmg=%d (%.0f%%) p1 states=%s p2=%s" % [who, F[0].final_used, hp0 - F[1].hp, (hp0 - F[1].hp) / F[1].max_hp * 100.0, seen, F[1].state])
 				leave_game()
 		"falls":
 			for kind in ["launch", "sweep", "kd", "ko"]:

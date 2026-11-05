@@ -442,9 +442,11 @@ func _build_hud() -> void:
 		surge.b = Color(0.18, 0.9, 1.0) if i == 0 else Color(1.0, 0.3, 0.42)
 		var dia := Diamonds.new()
 		dia.mirror = i == 1
-		for c in [nm, sty, bar, surge, dia]:
+		# power pips under the gauge: BLUE (once per round) and FINAL (unlocks at low health)
+		var pw := lbl("", 15, F_TITLE, INK, 5)
+		for c in [nm, sty, bar, surge, dia, pw]:
 			p.add_child(c)
-		plates.append({root = p, por = por, img = img, nm = nm, sty = sty, bar = bar, surge = surge, dia = dia})
+		plates.append({root = p, por = por, img = img, nm = nm, sty = sty, bar = bar, surge = surge, dia = dia, pw = pw})
 		p.resized.connect(_layout_plate.bind(i))
 		_layout_plate.call_deferred(i)
 	var clock := Control.new()
@@ -515,6 +517,8 @@ func _layout_plate(i: int) -> void:
 	p.bar.position = Vector2(bx + 10, 30); p.bar.size = Vector2(bw - 20, 24)
 	p.surge.position = Vector2(bx + (bw * 0.45 if r else 50.0), 62); p.surge.size = Vector2(bw * 0.5, 9)
 	p.dia.position = Vector2(bx if not r else bw - 40, 59); p.dia.size = Vector2(40, 16)
+	p.pw.position = Vector2(bx + (bw * 0.45 if r else 50.0), 72); p.pw.size = Vector2(bw * 0.5, 20)
+	p.pw.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if r else HORIZONTAL_ALIGNMENT_LEFT
 
 
 func show_hud(g) -> void:
@@ -554,9 +558,13 @@ func update_hud(g) -> void:
 		p.bar.value = v / 100.0
 		p.bar.chip = chip[i] / 100.0
 		p.bar.low = v < 25.0
-		p.surge.value = f.meter / 100.0
+		# the gauge now shows the BLUE POWER: full while it's still available this round
+		p.surge.value = 1.0 if f.blue_ready() else 0.0
 		p.surge.chip = 0.0
-		p.surge.low = f.meter >= 100.0
+		p.surge.low = f.blue_ready()
+		var fin := "FINAL READY [2+4]" if f.final_ready() else ("FINAL USED" if f.final_used else "FINAL  ≤30% HP")
+		p.pw.text = ("BLUE [1+3]   " if f.blue_ready() else "BLUE USED   ") + fin if i == 0 else fin + ("   [1+3] BLUE" if f.blue_ready() else "   BLUE USED")
+		p.pw.modulate = Color(1.0, 0.45, 0.35) if f.final_ready() and int(Time.get_ticks_msec() / 250) % 2 == 0 else Color(0.75, 0.82, 1.0)
 		p.dia.n = 0 if g.mode == "training" else g.wins[i]
 		p.dia.queue_redraw()
 		var o: Fighter = g.F[1 - i]
@@ -1551,6 +1559,9 @@ Double-tap forward to dash — [b]keep holding forward to RUN[/b]. Double-tap ba
 Standing still or holding back blocks highs and mids; hold down to block lows.
 Release down and press a button for [b]WS[/b] (while-standing) attacks.
 
+[color=#2ee6ff][b]POWERS[/b][/color]
+[b]1+3[/b] BLUE POWER (once per round) · [b]2+4[/b] FINAL POWER (once per round, at 30% health or less).
+
 [color=#2ee6ff][b]RUNNING & JUMPING ATTACKS[/b][/color]
 While running: [b]1[/b] running elbow · [b]2[/b] spear tackle (throw) · [b]3[/b] dropkick · [b]4[/b] flying knee.
 In the air: [b]1 / 2[/b] diving elbow · [b]3 / 4[/b] jump kick. Jumping hops over low attacks and throws.""")
@@ -1581,7 +1592,9 @@ Launchers pop the opponent airborne; every attack hits them in the air. Damage s
 Hitting during the opponent's startup is a [b]counter hit[/b] (+20% damage, more stun). Armored moves absorb one hit. Throws beat blocking but whiff on crouchers; break with 1 or 2 (command throws need 1+2).
 
 [color=#2ee6ff][b]8 · SURGE[/b][/color]
-The Surge meter fills as you deal and take damage. When full, press 3+4 for your fighter's armored Surge Art.""")
+Two powers per round, each usable once:
+[b]BLUE POWER (1+3)[/b] — your fighter's armored Surge Art, any time.
+[b]FINAL POWER (2+4)[/b] — unlocks when your health drops to 30%. Land the opener and it becomes a cinematic beat-down that ends in a slam.""")
 
 
 # ---------------------------------------------------------------- keyboard routing

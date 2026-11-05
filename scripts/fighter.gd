@@ -3,7 +3,8 @@ extends RefCounted
 ## Frame-driven fighter state machine. One step() per 60 Hz physics tick.
 
 const FREE_FACE := ["idle", "walkf", "walkb", "crouch", "side", "dash", "bdash", "block", "hit", "getup", "stance", "run", "skid", "jump"]
-const INVULN := ["down", "getup", "ko", "thrown", "throwing", "win"]
+const INVULN := ["down", "getup", "ko", "thrown", "throwing", "win", "final", "finaled"]
+const FINAL_HP := 0.3    # the FINAL POWER unlocks at or below 30% health
 static var move_seq := 0
 
 var G   # main game node
@@ -68,6 +69,9 @@ var bruise := 0.0        # bruising + one eye swelling shut
 var dirt := 0.0          # dust on the clothes from knockdowns
 var blood_on := 0.0      # blood stains on the clothes
 var last_rt := -1.0
+var blue_used := false   # BLUE POWER: once per round, any time
+var final_used := false  # FINAL POWER: once per round, low health only
+var final_hit := 0       # cinematic: which beat landed last (victim's reaction clip)
 var slammed := 0         # frames left showing the end of a throw (the landing)
 var fall_kind := "back"  # how a knockdown looks: fly (launched / power), back, sweep (low), forward (KO variety)
 var air_est := 40        # frames this flight is expected to last (to time the fall clip to the landing)
@@ -92,6 +96,7 @@ func reset(x: float) -> void:
 	stun = 0; juggle = 0; combo_hits = 0; combo_dmg = 0; flash = 0.0; walk_ph = 0.0
 	crouch_held = false; crouch_block = false; hit_crouch = false; has_hit = false
 	break_throw = false; cmd_thrown = false; victim = null; tm = null; down_len = 38; throw_t = 0.0
+	blue_used = false; final_used = false; final_hit = 0
 	armor_used = false; no_guard = false; refill = 0
 	disp = C.pose.guard.duplicate(); from = disp
 	pose_vel = Pose.zero(); prev_disp = disp.duplicate(); prev_pos = pos; prev_face = face; bounced = false
@@ -257,9 +262,19 @@ func try_start(bits: int, d: int, ff: bool) -> void:
 		cands.append(p + b1)
 	cands.append(b1)
 	for k in cands:
-		if M.has(k) and not (k == "34" and meter < 100.0):
+		if M.has(k) and power_ok(k):
 			start_move(k)
 			return
+
+
+func blue_ready() -> bool: return not blue_used
+func final_ready() -> bool: return not final_used and hp <= max_hp * FINAL_HP and hp > 0
+
+
+func power_ok(k: String) -> bool:
+	if k == "34" or k == "13": return blue_ready()
+	if k == "24": return final_ready()
+	return true
 
 
 func start_move(key: String) -> void:
@@ -279,7 +294,11 @@ func start_move(key: String) -> void:
 		if nk != "":
 			queued = nk
 			buffer = null
+	if m.final:
+		final_used = true
+		G.ui.pop_text("FINAL POWER", side); G.ui.screen_flash(Color(1.0, 0.3, 0.2)); G.sfx("surge"); G.voice(self, "power")
 	if m.surge:
+		blue_used = true
 		meter = 0.0
 		G.surge_cam = {f = self, t = m.s + 8}
 		G.sfx("surge")
@@ -414,6 +433,11 @@ func step(opp: Fighter) -> void:
 				squash(0.6)
 		"throwing":
 			throw_step()
+		"final":
+			final_step()
+		"finaled":
+			if sf > 3 and (thrower == null or thrower.state != "final"):
+				pos.y = 0.0; down_len = 40; set_state("down")
 		"thrown":
 			# Safety net: never stay grabbed by someone who is no longer throwing.
 			if sf > 3 and (thrower == null or thrower.state != "throwing" or thrower.victim != self):
@@ -489,6 +513,55 @@ func throw_step() -> void:
 				G.fd_log(self, "THROW")
 				if d.hp <= 0: G.ko_start(self)
 	if sf >= dur:
+		to_neutral()
+
+
+## FINAL POWER cinematic (attacker side). Frame timeline at 60 fps, clips at real speed:
+## punch combo (4 hits) -> elbow/uppercut combo (3) -> spinning kick -> grab, lift and SLAM.
+const FINAL_BEATS := [[14, 0.025, "hit"], [28, 0.025, "hit"], [42, 0.025, "hit"], [58, 0.03, "heavy"],
+	[79, 0.03, "hit"], [101, 0.03, "hit"], [125, 0.035, "heavy"], [151, 0.04, "heavy"], [242, 0.1, "slam"]]
+const FINAL_LEN := 270
+
+
+func final_step() -> void:
+	var d := victim
+	var f := throw_dir
+	if d == null or d.state != "finaled":
+		to_neutral(); return
+	d.face = face + PI
+	var lift := 0.0
+	if sf >= 176 and sf < 242:
+		lift = sin(clampf((sf - 176) / 50.0, 0.0, 1.0) * PI * 0.5) * 1.5   # up over the head...
+	d.pos = d.pos.lerp(Vector3(pos.x + f.x * (0.85 if sf < 176 else 0.45), lift, pos.z + f.z * (0.85 if sf < 176 else 0.45)), 0.35)
+	if sf == 168: G.sfx("grab")
+	for b in FINAL_BEATS:
+		if sf != b[0]: continue
+		var dmg := maxi(1, roundi(d.max_hp * float(b[1]) * C.power))
+		G.hurt(d, dmg, self); d.combo_hits += 1; d.combo_dmg += dmg; d.flash = 1.0
+		d.final_hit += 1
+		var at := Vector3(d.pos.x, 1.1 + d.pos.y * 0.5, d.pos.z)
+		if b[2] == "slam":
+			# ...and SLAM: shockwave, their power props, slow motion
+			d.pos.y = 0.0
+			G.hitstop = 14; G.shake = 0.6; G.slow = 40
+			G.sfx("heavy"); G.sfx("ko")
+			G.burst(Vector3(d.pos.x, 0.2, d.pos.z), C.accent, 40, 6.0); G.ring(Vector3(d.pos.x, 0.2, d.pos.z), Color.WHITE, 2.2)
+			G.ring(Vector3(d.pos.x, 0.25, d.pos.z), C.accent, 3.2)
+			if C.has("person"):
+				var fx: Array = C.person.get("fx", [])
+				if fx.is_empty(): PowerProps.launch(G, self, d, String(C.person.get("prop", "")), 0.4)
+				else: PowerProps.play(G, self, d, fx, 0.4)
+			d.fall_kind = "fly"; d.down_len = 70
+			d.set_state("ko" if d.hp <= 0 else "down")
+			d.slammed = 0
+			G.ui.pop_text(String(C.surge_name).to_upper() + "!", side)
+			if d.hp <= 0: G.ko_start(self)
+		else:
+			G.hitstop = 7 if b[2] == "heavy" else 4; G.shake = 0.18 if b[2] == "heavy" else 0.08
+			G.sfx(b[2]); G.burst(at, Color(1, 0.82, 0.4) if b[2] == "heavy" else Color.WHITE, 16, 3.5)
+			d.kick("high" if d.final_hit % 2 else "mid", 1.4 if b[2] == "heavy" else 0.9)
+			if d.final_hit % 3 == 0: G.voice(d, "hurt")
+	if sf >= FINAL_LEN:
 		to_neutral()
 
 

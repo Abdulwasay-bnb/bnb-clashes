@@ -32,6 +32,7 @@ class Move:
 	var surge := false
 	var ch_launch := false
 	var hidden := false
+	var final := false      # FINAL POWER opener (connects -> cinematic)
 	var track: Array = []   # [[frame, PackedFloat32Array], ...]
 	var limb := ""          # striking limb from the strike pose: lh rh lf rf lk rk
 	var clip_info = null    # cached Mixamo mapping (MoveClips)
@@ -183,6 +184,11 @@ static func _add_move_set_extras(moves: Dictionary) -> void:
 		for k in ref.track: m.track.append([int(k[0] * float(m.s) / maxf(1.0, ref.s)), k[1], k[2] if k.size() > 2 else 0])
 		m.end = m.s + m.a + m.r
 		moves[key] = m
+	# powers: BLUE = 1+3 (the Surge Art, also 3+4), FINAL = 2+4 (only at low health)
+	if moves.has("34") and not moves.has("13"): moves["13"] = moves["34"]
+	add.call("24", punch, {n = "FINAL POWER", s = 10, a = 4, r = 44, d = 0, rg = 1.35, mv = 0.05, blk = -24, limb = "rh"})
+	if moves.has("24"):
+		(moves["24"] as Move).final = true; (moves["24"] as Move).armor = true
 	# running
 	add.call("run1", punch, {n = "Running Elbow", s = 12, a = 3, r = 20, d = 15, kd = true, rg = 1.15, mv = 0.05, blk = -10, limb = "rh"})
 	add.call("run2", punch, {n = "Spear Tackle", s = 13, a = 3, r = 28, d = 24, rg = 1.05, mv = 0.06, throw = true, tt = "takedown"})
