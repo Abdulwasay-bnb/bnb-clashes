@@ -68,6 +68,7 @@ var bruise := 0.0        # bruising + one eye swelling shut
 var dirt := 0.0          # dust on the clothes from knockdowns
 var blood_on := 0.0      # blood stains on the clothes
 var last_rt := -1.0
+var slammed := 0         # frames left showing the end of a throw (the landing)
 var last_dir := 5        # stick direction this frame (numpad, relative to the opponent)
 var up_hold := 0         # frames up has been held: tap = sidestep, hold = jump
 
@@ -335,6 +336,7 @@ func jump(dirx: float) -> void:
 
 func step(opp: Fighter) -> void:
 	sf += 1
+	if slammed > 0: slammed -= 1
 	if ws_t > 0:
 		ws_t -= 1
 	var f := fwd()
@@ -422,6 +424,27 @@ func step(opp: Fighter) -> void:
 				land()
 
 
+## Grapples: both fighters play a slice of a Mixamo throw / thrown pair at real speed; the victim hits the
+## floor (damage, shake) on the frame the thrown clip lands. Positions are ours (the clips aren't co-located).
+const THROW_SETS := {
+	"over": {a = "throw", b = "thrown", a0 = 0.6, a1 = 4.0, b0 = 1.2, b1 = 4.0, hit = 0.79, dur = 110, gap = 0.75, travel = 0.0},
+	"slam": {a = "throw_hell_a", b = "thrown_hell_b", a0 = 3.6, a1 = 6.8, b0 = 3.8, b1 = 7.0, hit = 0.69, dur = 120, gap = 0.7, travel = 0.0},
+	"takedown": {a = "throw_takedown_a", b = "thrown_takedown_b", a0 = 0.3, a1 = 2.6, b0 = 0.8, b1 = 2.6, hit = 0.5, dur = 92, gap = 0.7, travel = 1.3},
+}
+
+
+static func throw_set(m: Data.Move) -> Dictionary:
+	if m == null: return THROW_SETS.over
+	var ts: Dictionary = THROW_SETS.get(m.throw_type, THROW_SETS.over)
+	if not (ClipLib.has(ts.a) and ClipLib.has(ts.b)): return {}
+	return ts
+
+
+func throw_dur() -> int:
+	var ts := throw_set(tm)
+	return int(ts.dur) if not ts.is_empty() and tm.throw_type != "knees" else 60
+
+
 func throw_step() -> void:
 	var d := victim
 	var f := throw_dir
@@ -432,6 +455,7 @@ func throw_step() -> void:
 		d.vel = f * 0.12; vel = -f * 0.08
 		G.ui.pop_text("THROW BREAK", d.side); G.sfx("block")
 		return
+	var dur := throw_dur()
 	if d.state == "thrown":
 		d.face = face + PI
 		var dmg := roundi(m.dmg * C.power)
@@ -447,22 +471,22 @@ func throw_step() -> void:
 				G.fd_log(self, "THROW")
 				if d.hp <= 0: G.ko_start(self)
 		else:
-			var t := clampf((sf - 14) / 24.0, 0.0, 1.0)
-			d.throw_t = t
-			if m.throw_type == "slam":
-				var up := sin(t / 0.6 * PI / 2) * 1.4 if t < 0.6 else 1.4 * (1.0 - (t - 0.6) / 0.4)
-				d.pos = d.pos.lerp(Vector3(pos.x + f.x * 0.7, maxf(0.0, up), pos.z + f.z * 0.7), grab_k)
-			else:
-				var a := PI * t
-				d.pos = d.pos.lerp(Vector3(pos.x + f.x * cos(a) * 0.75, sin(a) * 1.15, pos.z + f.z * cos(a) * 0.75), grab_k)
-			if sf == 38:
+			var ts := throw_set(m)
+			var hit_f := int(float(ts.get("hit", 0.6)) * dur)
+			d.throw_t = clampf(float(sf) / dur, 0.0, 1.0)
+			# a tackle carries both fighters forward until the slam
+			if float(ts.get("travel", 0.0)) > 0.0 and sf < hit_f:
+				pos += f * (float(ts.travel) / hit_f)
+			d.pos = d.pos.lerp(Vector3(pos.x + f.x * float(ts.get("gap", 0.75)), 0.0, pos.z + f.z * float(ts.get("gap", 0.75))), grab_k)
+			if sf == hit_f:
 				G.hurt(d, dmg, self); d.combo_dmg = dmg; d.pos.y = 0; d.down_len = 46
 				d.set_state("ko" if d.hp <= 0 else "down")
-				G.hitstop = 8; G.shake = 0.25; G.sfx("heavy")
+				d.slammed = 30   # keep the thrown clip's landing pose for a moment
+				G.hitstop = 8; G.shake = 0.3; G.sfx("heavy")
 				G.burst(Vector3(d.pos.x, 0.3, d.pos.z), C.accent, 20, 3.5); G.ring(Vector3(d.pos.x, 0.3, d.pos.z), Color.WHITE, 1.0)
 				G.fd_log(self, "THROW")
 				if d.hp <= 0: G.ko_start(self)
-	if sf >= 60:
+	if sf >= dur:
 		to_neutral()
 
 
@@ -749,8 +773,8 @@ func render(t: float) -> void:
 	var cr := clip_request()
 	# paired throws (e.g. a takedown) were authored with both fighters in one space: keep the hip motion,
 	# and draw the victim at the thrower's spot and facing so the two halves line up
-	var pair: bool = state in ["throwing", "thrown"] and throw_pair(self if state == "throwing" else thrower)[0] != "throw"
-	rig.set_clip(cr[0], cr[1], state != "thrown" or pair, cr[2] if cr.size() > 2 else false, pair)
+	var pair := false
+	rig.set_clip(cr[0], cr[1], true, cr[2] if cr.size() > 2 else false, pair)
 	var a := Engine.get_physics_interpolation_fraction()
 	var p := Pose.lerp_p(prev_disp, disp, a)
 	rig.position = prev_pos.lerp(pos, a)

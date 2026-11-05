@@ -185,7 +185,7 @@ static func _add_move_set_extras(moves: Dictionary) -> void:
 		moves[key] = m
 	# running
 	add.call("run1", punch, {n = "Running Elbow", s = 12, a = 3, r = 20, d = 15, kd = true, rg = 1.15, mv = 0.05, blk = -10, limb = "rh"})
-	add.call("run2", punch, {n = "Spear Tackle", s = 13, a = 3, r = 28, d = 24, rg = 1.05, mv = 0.06, throw = true, tt = "slam"})
+	add.call("run2", punch, {n = "Spear Tackle", s = 13, a = 3, r = 28, d = 24, rg = 1.05, mv = 0.06, throw = true, tt = "takedown"})
 	add.call("run3", kick, {n = "Running Dropkick", s = 15, a = 4, r = 30, d = 22, kd = true, jump = true, rg = 1.45, mv = 0.05, blk = -16, limb = "rf"})
 	add.call("run4", kick, {n = "Running Flying Knee", s = 13, a = 4, r = 22, d = 17, launch = true, rg = 1.15, mv = 0.06, blk = -14, limb = "rk"})
 	# in the air

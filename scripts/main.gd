@@ -1407,6 +1407,26 @@ func _run_autotest() -> void:
 				test_p1 = Callable()
 				print("AUTOTEST moves2 %s maxy=%.2f p2=%s hp2=%d trace=%s" % [sc[0], maxy, F[1].state, F[1].hp, " ".join(trace)])
 				leave_game()
+		"grapples":
+			for setup in [["over", "abdul_wasay", "12"], ["slam", "abdul_wasay", "12"], ["takedown", "ali", "run2"]]:
+				await start_match({mode = "training"}, [Data.by_id(setup[1]), Data.by_id("hamza_khan")])
+				dummy = 0
+				for k in 60: await get_tree().physics_frame
+				F[0].reset(-0.45); F[1].reset(0.45)
+				var mv: Data.Move = F[0].C.moves[setup[2]]
+				var keep := mv.throw_type
+				mv.throw_type = setup[0]
+				for k in 3: await get_tree().physics_frame
+				F[0].start_move(setup[2])
+				var trace := []
+				for k in 200:
+					await get_tree().physics_frame
+					if F[0].state == "throwing" and F[0].sf in [10, int(F[0].throw_dur() * 0.45), int(F[0].throw_dur() * 0.8)]:
+						await shot.call("grab_%s_%d" % [setup[0], F[0].sf])
+						trace.append("%d:%s/%s y=%.2f" % [F[0].sf, F[0].state, F[1].state, F[1].pos.y])
+				print("AUTOTEST grapple %s p2=%s hp2=%d %s" % [setup[0], F[1].state, F[1].hp, " ".join(trace)])
+				mv.throw_type = keep
+				leave_game()
 		"mafiatour":
 			# walk the reskinned office: one shot per room
 			lobby.C = Data.by_id("hamza_khan"); lobby.mode = "mafia"; lobby.cfg.total = 6; lobby.cfg.mafia = 1
