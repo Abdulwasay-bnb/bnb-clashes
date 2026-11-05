@@ -9,3 +9,4 @@
 - Character animations from **Mixamo** (Adobe), used under Mixamo's terms. They ship inside game builds only; the raw files are not in this repository.
 - **Furniture Kit** by Kenney (www.kenney.nl), CC0 (public domain) — office furniture in Mafia. `assets/kenney/furniture/`
 - Floor and wall textures from **Poly Haven** (polyhaven.com), CC0: laminate_floor_02, floor_tiles_06, concrete_tiles_02, dirty_carpet, grey_plaster. `assets/textures/`
+- Sound effects and announcer from Kenney's **Impact Sounds**, **Interface Sounds**, **RPG Audio**, **Sci-fi Sounds** and **Voiceover Pack: Fighter** (www.kenney.nl), CC0. `assets/audio/`

@@ -615,10 +615,9 @@ func _event(e: Array) -> void:
 	stats[kind] = stats.get(kind, 0) + 1
 	match kind:
 		"kill":
-			if int(e[2]) == me: G.sfx("heavy"); _toast("YOU WERE TAKEN OUT")
-			elif int(e[1]) == me: G.sfx("hit")
-			if int(e[2]) == me or int(e[1]) == me: pass
-			elif _me().pos.distance_to((sim.agents[int(e[2])] as MafiaSim.Agent).pos) < sim.vision(_me()): G.sfx("thud")
+			if int(e[2]) == me: G.sfx("knife"); G.sfx("thud"); _toast("YOU WERE TAKEN OUT")
+			elif int(e[1]) == me: G.sfx("knife")
+			elif _me().pos.distance_to((sim.agents[int(e[2])] as MafiaSim.Agent).pos) < sim.vision(_me()): G.sfx("knife"); G.sfx("thud")
 		"meeting":
 			_close_task()
 			if guest: sim.chat.clear()

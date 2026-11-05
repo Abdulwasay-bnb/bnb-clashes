@@ -882,6 +882,7 @@ func _signature(C: Dictionary) -> Data.Move:
 
 
 func show_select(c: Dictionary) -> void:
+	if view != "select": G.announce_voice("choose_your_character")
 	clear_screen(); screen.visible = true; view = "select"
 	sel = {cfg = c, cur = [0, 1], locked = [false, false], cos = [0, 0]}
 	card_list.clear(); side_ui.clear()
@@ -1450,6 +1451,9 @@ func show_end() -> void:
 	if G.F.is_empty(): return
 	clear_screen(); screen.visible = true; view = "end"
 	var w := -1 if (G.wins[0] >= 2 and G.wins[1] >= 2) else (0 if G.wins[0] >= 2 else 1)
+	if w < 0: G.announce_voice("its_a_tie")
+	elif G.mode in ["2p", "online"]: G.announce_voice("winner")
+	else: G.announce_voice("you_win" if w == 0 else "you_lose")
 	var bg := full(vgrad(Color(0.02, 0.03, 0.06, 0.0), Color(0.02, 0.03, 0.06, 0.95)))
 	bg.anchor_top = 0.4
 	screen.add_child(bg)

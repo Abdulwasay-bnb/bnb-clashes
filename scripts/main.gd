@@ -202,8 +202,16 @@ func _update_fx(dt: float) -> void:
 
 # ------------------------------------------------------------------ audio (synthesized)
 func _build_audio() -> void:
-	for k in ["hit", "heavy", "block", "whoosh", "thud", "grab", "ko", "surge", "ui", "ok", "vs"]:
-		sounds[k] = _synth(k)
+	# recorded sounds (Kenney audio packs, CC0) with a few variations each; synthesized fallbacks otherwise
+	for k in ["hit", "heavy", "block", "whoosh", "thud", "grab", "ko", "surge", "ui", "ok", "vs", "knife"]:
+		var set := []
+		for i in 6:
+			var path := "res://assets/audio/sfx/%s_%d.ogg" % [k, i]
+			if ResourceLoader.exists(path): set.append(load(path))
+		sounds[k] = set if not set.is_empty() else [_synth(k)] if k != "knife" else [_synth("hit")]
+	announcer = AudioStreamPlayer.new()
+	announcer.volume_db = 0
+	add_child(announcer)
 	for i in 10:
 		var p := AudioStreamPlayer.new()
 		p.volume_db = -6
@@ -298,8 +306,22 @@ func sfx(k: String) -> void:
 	if not sounds.has(k): return
 	var p: AudioStreamPlayer = players[player_i % players.size()]
 	player_i += 1
-	p.stream = sounds[k]
+	var set: Array = sounds[k]
+	p.stream = set[randi() % set.size()]
+	p.pitch_scale = randf_range(0.93, 1.07) if k in ["hit", "heavy", "block", "thud", "grab"] else 1.0
 	p.play()
+
+
+var announcer: AudioStreamPlayer
+
+
+## The announcer ("Round 1", "Fight!", "You win"...): Kenney's Voiceover Pack: Fighter (CC0).
+func announce_voice(line: String) -> void:
+	if resim or announcer == null: return
+	var path := "res://assets/audio/announcer/%s.ogg" % line
+	if not ResourceLoader.exists(path): return
+	announcer.stream = load(path)
+	announcer.play()
 
 
 # ------------------------------------------------------------------ portraits
@@ -489,12 +511,14 @@ func start_round() -> void:
 		return
 	phase = "intro"; phase_t = INTRO_FRAMES
 	ui.announce("FINAL ROUND" if wins[0] == 1 and wins[1] == 1 else "ROUND %d" % round_n, "")
+	announce_voice("final_round" if wins[0] == 1 and wins[1] == 1 else "round_%d" % clampi(round_n, 1, 5))
 
 
 func ko_start(w: Fighter) -> void:
 	if phase != "fight": return
 	phase = "ko"; phase_t = 210; winner = w.side; slow = 60
 	ui.announce("PERFECT K.O." if w.hp >= w.max_hp else "K.O.", "ko")
+	if w.hp >= w.max_hp: announce_voice("flawless_victory")
 	sfx("ko")
 	voice(F[1 - w.side], "ko")
 
@@ -505,6 +529,7 @@ func time_up() -> void:
 	phase = "ko"; phase_t = 170
 	winner = 0 if a > b else 1 if b > a else -1
 	ui.announce("TIME", "ko")
+	announce_voice("time")
 
 
 func end_round() -> void:
@@ -939,7 +964,7 @@ func tick() -> void:
 	match phase:
 		"intro":
 			phase_t -= 1
-			if phase_t == 45: ui.announce("FIGHT!", "fight")
+			if phase_t == 45: ui.announce("FIGHT!", "fight"); announce_voice("fight")
 			if phase_t <= 0: phase = "fight"
 		"fight":
 			if mode == "training": training_tick()

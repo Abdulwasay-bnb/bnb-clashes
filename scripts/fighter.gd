@@ -479,7 +479,7 @@ func throw_step() -> void:
 		set_state("block"); stun = 20; crouch_block = false
 		d.set_state("block"); d.stun = 20; d.crouch_block = false; d.pos.y = 0
 		d.vel = f * 0.12; vel = -f * 0.08
-		G.ui.pop_text("THROW BREAK", d.side); G.sfx("block")
+		G.ui.pop_text("THROW BREAK", d.side); G.sfx("block"); G.announce_voice("combo_breaker")
 		return
 	var dur := throw_dur()
 	if d.state == "thrown":
