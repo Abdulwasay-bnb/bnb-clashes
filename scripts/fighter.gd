@@ -72,6 +72,7 @@ var last_rt := -1.0
 var blue_used := false   # BLUE POWER: once per round, any time
 var final_used := false  # FINAL POWER: once per round, low health only
 var final_hit := 0       # cinematic: which beat landed last (victim's reaction clip)
+var final_t := 0         # cinematic: attacker frame of that beat
 var slammed := 0         # frames left showing the end of a throw (the landing)
 var fall_kind := "back"  # how a knockdown looks: fly (launched / power), back, sweep (low), forward (KO variety)
 var air_est := 40        # frames this flight is expected to last (to time the fall clip to the landing)
@@ -273,7 +274,9 @@ func final_ready() -> bool: return not final_used and hp <= max_hp * FINAL_HP an
 
 func power_ok(k: String) -> bool:
 	if k == "34" or k == "13": return blue_ready()
-	if k == "24": return final_ready()
+	if k == "24":
+		if not final_ready() and not G.resim: G.ui.pop_text("FINAL USED" if final_used else "FINAL: HEALTH ≤ 30%", side)
+		return final_ready()
 	return true
 
 
@@ -537,53 +540,121 @@ func throw_step() -> void:
 		to_neutral()
 
 
-## FINAL POWER cinematic (attacker side). Frame timeline at 60 fps, clips at real speed:
-## punch combo (4 hits) -> elbow/uppercut combo (3) -> spinning kick -> grab, lift and SLAM.
-const FINAL_BEATS := [[14, 0.025, "hit"], [28, 0.025, "hit"], [42, 0.025, "hit"], [58, 0.03, "heavy"],
-	[79, 0.03, "hit"], [101, 0.03, "hit"], [125, 0.035, "heavy"], [151, 0.04, "heavy"], [242, 0.1, "slam"]]
-const FINAL_LEN := 270
+## FINAL POWER (red, low health): a cinematic built per person —
+##   1) SUMMON: their own power move, their signature props fly in with their catchphrase
+##   2) BEAT-DOWN: a combo in their fighting style; damage lands on the clip's real strike frames
+##   3) FINISHER: style-specific (launching uppercut / flip kick / fireball blast / choke lift / grab-and-slam)
+##   4) TAUNT over the fallen opponent
+## The plan comes from clip data only, so both online players build the same one.
+const FINAL_STYLES := {
+	"vex": {segs = [["f_quad_punch", 0.3, 1.35], ["f_body_blow", 0.1, 1.1]], fin = ["f_knee_jabs_upper", 3.5, 4.75, 4.2, "launch"], taunt = ["f_chest_thump", 0.2, 2.2]},
+	"bastion": {segs = [["f_body_blow", 0.1, 1.2], ["fin_combo_punch", 0.4, 1.5]], fin = ["g_choke_lift", 0.8, 4.45, 4.3, "lift"], taunt = ["f_flex", 1.8, 3.4]},
+	"sora": {segs = [["fin_mma_kick", 0.2, 1.1], ["atk_hurricane", 0.2, 1.6]], fin = ["f_spin_flip_kick", 0.9, 2.45, 1.93, "launch"], taunt = ["f_battlecry", 0.0, 2.0]},
+	"lio": {segs = [["f_flyknee_punch", 0.1, 2.15]], fin = ["f_flip_kick", 0.1, 1.55, 1.0, "launch"], taunt = ["f_battlecry", 0.0, 2.0]},
+	"tao": {segs = [["atk_palm_combo", 0.6, 2.7], ["fin_combo_elbow", 0.45, 1.2]], fin = ["f_fireball", 1.3, 3.0, 2.3, "blast"], taunt = ["intro_bow", 0.2, 2.0]},
+	"kael": {segs = [["f_knee_jabs_upper", 1.0, 2.9], ["fin_combo_elbow", 0.45, 1.2]], fin = ["fin_fly_kick", 0.05, 1.3, 0.43, "launch"], taunt = ["f_chest_thump", 0.2, 2.2]},
+	"ember": {segs = [["f_punch_elbow", 1.7, 3.2]], fin = ["g_grab_slam", 1.4, 4.0, 3.5, "lift"], taunt = ["f_flex", 1.8, 3.4]},
+	"mara": {segs = [["fin_combo_punch", 0.4, 1.5], ["fin_mma_kick", 0.2, 1.1]], fin = ["f_backflip_upper", 1.1, 2.45, 2.17, "launch"], taunt = ["f_battlecry", 0.0, 2.0]},
+}
+const FINAL_SPEED := 1.15
+const FINAL_SUMMON := 70
+static var _final_plans := {}
+
+
+static func final_plan(C: Dictionary) -> Dictionary:
+	var key := String(C.id)
+	if _final_plans.has(key): return _final_plans[key]
+	var style: Dictionary = FINAL_STYLES.get(C.arch, FINAL_STYLES.mara)
+	var segs := []
+	var f := FINAL_SUMMON
+	var pa := own_clip(C, "power_anim", "pw_twohand")
+	segs.append({clip = pa, t0 = 0.0, t1 = minf(_len(pa), FINAL_SUMMON / 60.0 * FINAL_SPEED), f0 = 0, f1 = FINAL_SUMMON, beats = [int(FINAL_SUMMON * 0.62)], kind = "summon"})
+	for sg in style.segs:
+		if not ClipLib.has(sg[0]): continue
+		var n := int((float(sg[2]) - float(sg[1])) * 60.0 / FINAL_SPEED)
+		var beats := []
+		var c: ClipLib.Clip = ClipLib.get_clip(sg[0])
+		for h in c.hits:
+			if h.reach > 0.4 and h.t >= float(sg[1]) and h.t <= float(sg[2]):
+				var bf := f + int((h.t - float(sg[1])) * 60.0 / FINAL_SPEED)
+				if beats.is_empty() or bf - int(beats[-1]) >= 8: beats.append(bf)
+		segs.append({clip = sg[0], t0 = float(sg[1]), t1 = float(sg[2]), f0 = f, f1 = f + n, beats = beats, kind = "combo"})
+		f += n
+	var fin: Array = style.fin
+	var fn := int((float(fin[2]) - float(fin[1])) * 60.0 / FINAL_SPEED)
+	var hit_f := f + int((float(fin[3]) - float(fin[1])) * 60.0 / FINAL_SPEED)
+	segs.append({clip = fin[0], t0 = float(fin[1]), t1 = float(fin[2]), f0 = f, f1 = f + fn, beats = [hit_f], kind = fin[4]})
+	var fin_f0 := f
+	f += fn
+	var tt: Array = style.taunt
+	var tn := int((float(tt[2]) - float(tt[1])) * 60.0)
+	segs.append({clip = tt[0], t0 = float(tt[1]), t1 = float(tt[2]), f0 = f, f1 = f + tn, beats = [], kind = "taunt"})
+	var plan := {segs = segs, hit_f = hit_f, fin_kind = fin[4], fin_f0 = fin_f0, total = f + tn}
+	_final_plans[key] = plan
+	return plan
+
+
+func _final_seg(at: int) -> Dictionary:
+	var plan := final_plan(C)
+	for sg in plan.segs:
+		if at < int(sg.f1): return sg
+	return plan.segs[-1]
 
 
 func final_step() -> void:
 	var d := victim
 	var f := throw_dir
-	if d == null or d.state != "finaled":
+	var plan := final_plan(C)
+	if sf >= int(plan.total):
 		to_neutral(); return
+	if d == null or d.state != "finaled" or d.thrower != self:
+		return   # the victim has been launched / slammed: finish the taunt
 	d.face = face + PI
 	var lift := 0.0
-	if sf >= 176 and sf < 242:
-		lift = sin(clampf((sf - 176) / 50.0, 0.0, 1.0) * PI * 0.5) * 1.5   # up over the head...
-	d.pos = d.pos.lerp(Vector3(pos.x + f.x * (0.85 if sf < 176 else 0.45), lift, pos.z + f.z * (0.85 if sf < 176 else 0.45)), 0.35)
-	if sf == 168: G.sfx("grab")
-	for b in FINAL_BEATS:
-		if sf != b[0]: continue
-		var dmg := maxi(1, roundi(d.max_hp * float(b[1]) * C.power))
-		G.hurt(d, dmg, self); d.combo_hits += 1; d.combo_dmg += dmg; d.flash = 1.0
-		d.final_hit += 1
-		var at := Vector3(d.pos.x, 1.1 + d.pos.y * 0.5, d.pos.z)
-		if b[2] == "slam":
-			# ...and SLAM: shockwave, their power props, slow motion
-			d.pos.y = 0.0
-			G.hitstop = 14; G.shake = 0.6; G.slow = 40
-			G.sfx("heavy"); G.sfx("ko")
-			G.burst(Vector3(d.pos.x, 0.2, d.pos.z), C.accent, 40, 6.0); G.ring(Vector3(d.pos.x, 0.2, d.pos.z), Color.WHITE, 2.2)
-			G.ring(Vector3(d.pos.x, 0.25, d.pos.z), C.accent, 3.2)
-			if C.has("person"):
-				var fx: Array = C.person.get("fx", [])
-				if fx.is_empty(): PowerProps.launch(G, self, d, String(C.person.get("prop", "")), 0.4)
-				else: PowerProps.play(G, self, d, fx, 0.4)
-			d.fall_kind = "fly"; d.down_len = 70
-			d.set_state("ko" if d.hp <= 0 else "down")
-			d.slammed = 0
-			G.ui.pop_text(String(C.surge_name).to_upper() + "!", side)
-			if d.hp <= 0: G.ko_start(self)
-		else:
-			G.hitstop = 7 if b[2] == "heavy" else 4; G.shake = 0.18 if b[2] == "heavy" else 0.08
-			G.sfx(b[2]); G.burst(at, Color(1, 0.82, 0.4) if b[2] == "heavy" else Color.WHITE, 16, 3.5)
-			d.kick("high" if d.final_hit % 2 else "mid", 1.4 if b[2] == "heavy" else 0.9)
-			if d.final_hit % 3 == 0: G.voice(d, "hurt")
-	if sf >= FINAL_LEN:
-		to_neutral()
+	if plan.fin_kind == "lift" and sf >= int(plan.fin_f0):
+		var span := float(int(plan.hit_f) - int(plan.fin_f0))
+		lift = 1.4 * smoothstep(float(plan.fin_f0) + span * 0.2, float(plan.fin_f0) + span * 0.55, float(sf))
+	d.pos = d.pos.lerp(Vector3(pos.x + f.x * (0.85 if lift == 0.0 else 0.5), lift, pos.z + f.z * (0.85 if lift == 0.0 else 0.5)), 0.35)
+	# the summon: their props fly in with their catchphrase
+	if sf == int(FINAL_SUMMON * 0.35) and C.has("person"):
+		var fx: Array = C.person.get("fx", [])
+		if fx.is_empty(): PowerProps.launch(G, self, d, String(C.person.get("prop", "")), 0.5)
+		else: PowerProps.play(G, self, d, fx, 0.5)
+		G.sfx("surge")
+	var is_beat := false
+	for sgm in plan.segs:
+		if sf in sgm.beats: is_beat = true
+	if not is_beat: return
+	var finisher: bool = sf == int(plan.hit_f)
+	var dmg := maxi(1, roundi(d.max_hp * (0.11 if finisher else 0.022) * C.power))
+	G.hurt(d, dmg, self); d.combo_hits += 1; d.combo_dmg += dmg; d.flash = 1.0
+	d.final_hit += 1; d.final_t = sf
+	var at := Vector3(d.pos.x, 1.1 + d.pos.y * 0.5, d.pos.z)
+	if not finisher:
+		G.hitstop = 5; G.shake = 0.1
+		G.sfx("hit" if d.final_hit % 3 else "heavy"); G.burst(at, Color.WHITE if d.final_hit % 2 else Color(1, 0.82, 0.4), 14, 3.0)
+		d.kick("high" if d.final_hit % 2 else "mid", 1.0)
+		if d.final_hit % 2 == 0: G.voice(d, "hurt")
+		return
+	# FINISHER
+	G.hitstop = 14; G.shake = 0.6; G.slow = 45
+	G.sfx("heavy"); G.sfx("ko")
+	G.burst(at, C.accent, 44, 6.5); G.ring(Vector3(d.pos.x, 0.25, d.pos.z), Color.WHITE, 2.2); G.ring(Vector3(d.pos.x, 0.3, d.pos.z), C.accent, 3.4)
+	if C.has("person"):
+		PowerProps.play(G, self, d, [["burst", String(C.person.get("prop", "")), 0.0, 10]], 0.3)
+	G.ui.pop_text(String(C.surge_name).to_upper() + "!", side)
+	G.voice(d, "ko" if d.hp <= 0 else "hurt")
+	d.thrower = null
+	if plan.fin_kind == "lift":   # ...and SLAM
+		d.pos.y = 0.0; d.fall_kind = "fly"; d.down_len = 70
+		d.set_state("ko" if d.hp <= 0 else "down")
+	else:                          # launched / blasted across the room
+		var blast: bool = plan.fin_kind == "blast"
+		d.fall_kind = "fly"; d.juggle = 9
+		d.vy = 0.1 if blast else 0.15; d.air_v = f * (0.11 if blast else 0.05); d.pos.y = 0.05
+		d.air_est = int(2.0 * d.vy / Main.GRAV) + 4
+		d.set_state("air")
+	if d.hp <= 0: G.ko_start(self)
 
 
 func physics() -> void:
@@ -821,6 +892,9 @@ func clip_request() -> Array:
 			return ["step_back", fposmod(absf(walk_ph) / (0.45 * 9.17) * _len("step_back"), _len("step_back"))]
 		"dash":
 			return ["step_long", minf(sf / 14.0, 1.0) * _len("step_long")]
+		"run":
+			# the run clip follows the distance covered: one loop ~ 2.2 m
+			return ["m_run", fposmod(absf(walk_ph) / 11.0 * _len("m_run"), _len("m_run"))] if ClipLib.has("m_run") else ["", 0.0]
 		"bdash":
 			return ["step_back_b", minf(sf / 18.0, 1.0) * _len("step_back_b")]
 		"side":
@@ -833,18 +907,46 @@ func clip_request() -> Array:
 			if hit_crouch: return ["", 0.0]
 			var n := "hit_heavy" if stun > 26 else ("hit_body" if hit_lvl != "high" else ("hit_head" if combo_hits % 2 == 1 else "hit_head_side"))
 			return [n, minf(float(sf) / maxf(1.0, stun), 1.0) * _len(n) * 0.65]
-		"down":
+		"air":
+			var fc := _fall_clip()
+			if fc == "": return ["", 0.0]
+			var land: float = FALL_LAND.get(fc, 1.0)
+			return [fc, minf(float(sf) / maxf(8.0, air_est), 0.92) * land]
+		"down", "ko":
+			if slammed > 0 and thrower != null and thrower.tm != null and not throw_set(thrower.tm).is_empty():
+				var ts := throw_set(thrower.tm)
+				if ts.has("lift"): return ["fall_fly", FALL_LAND.fall_fly + minf(sf / 30.0, 1.0) * 0.5]
+				return [ts.b, lerpf(ts.b0, ts.b1, clampf(float(thrower.sf) / thrower.throw_dur(), 0.0, 1.0))]
+			var fd := _fall_clip()
+			if fd != "": return [fd, lerpf(float(FALL_LAND.get(fd, 1.0)) * 0.92, minf(_len(fd), float(FALL_LAND.get(fd, 1.0)) + 0.8), minf(sf / 14.0, 1.0))]
+			if state == "ko": return ["ko", lerpf(0.78, 1.0, minf(sf / 20.0, 1.0)) * _len("ko")]
 			return ["knockdown", lerpf(0.72, 1.0, minf(sf / 12.0, 1.0)) * _len("knockdown")]
-		"ko":
-			return ["ko", lerpf(0.78, 1.0, minf(sf / 20.0, 1.0)) * _len("ko")]
 		"getup":
+			# the agile styles kip up now and then
+			if C.arch in ["sora", "lio", "mara", "tao"] and ClipLib.has("getup_kip") and (int(max_hp) + side + combo_dmg) % 2 == 0:
+				return ["getup_kip", lerpf(0.3, 1.9, minf(sf / 22.0, 1.0))]
 			return ["getup_quick", minf(sf / 22.0, 1.0) * _len("getup_quick")]
 		"throwing":
-			var n: String = throw_pair(self)[0]
-			return [n, minf(sf / 60.0, 1.0) * _len(n)]
+			var ts := throw_set(tm)
+			if ts.is_empty() or tm.throw_type == "knees": return ["", 0.0]
+			return [ts.a, lerpf(ts.a0, ts.a1, clampf(float(sf) / throw_dur(), 0.0, 1.0))]
 		"thrown":
-			var n: String = throw_pair(thrower)[1]
-			return [n, minf(sf / 60.0, 1.0) * _len(n)]
+			if thrower == null or thrower.tm == null: return ["", 0.0]
+			var ts := throw_set(thrower.tm)
+			if ts.is_empty() or thrower.tm.throw_type == "knees": return ["", 0.0]
+			return [ts.b, lerpf(ts.b0, ts.b1, clampf(float(thrower.sf) / thrower.throw_dur(), 0.0, 1.0))]
+		"final":
+			var sg := _final_seg(sf)
+			var u := clampf(float(sf - int(sg.f0)) / maxf(1.0, float(int(sg.f1) - int(sg.f0))), 0.0, 1.0)
+			return [sg.clip, lerpf(float(sg.t0), float(sg.t1), u)]
+		"finaled":
+			if thrower == null: return ["", 0.0]
+			var plan := final_plan(thrower.C)
+			if plan.fin_kind == "lift" and thrower.sf >= int(plan.fin_f0) + 20: return ["fall_fly", 0.35]   # held overhead
+			if thrower.sf < FINAL_SUMMON and final_hit == 0: return ["v_big_stomach" if ClipLib.has("v_big_stomach") else "hit_heavy", minf(thrower.sf / 60.0, 1.2)]
+			var rc: String = ["hit_head", "v_big_stomach", "hit_kidney", "v_stomach_upper"][final_hit % 4]
+			if not ClipLib.has(rc): rc = "hit_heavy"
+			return [rc, minf(float(thrower.sf - final_t) / 60.0 + 0.2, _len(rc) * 0.8)]
 		"win":
 			var n: String = WIN.get(C.arch, "")
 			return [n, minf(sf / 60.0, _len(n))]

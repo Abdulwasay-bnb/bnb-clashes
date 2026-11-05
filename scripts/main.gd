@@ -1109,7 +1109,9 @@ func start_final(att: Fighter, def: Fighter) -> void:
 	def.set_state("final" + "ed"); def.thrower = att; def.move = null; def.stance = ""; def.pend = 0; def.buffer = null
 	def.final_hit = 0; def.combo_hits = 0; def.combo_dmg = 0
 	hitstop = 12; shake = 0.3
-	surge_cam = {f = att, t = Fighter.FINAL_LEN, orbit = true}
+	var plan := Fighter.final_plan(att.C)
+	surge_cam = {f = att, t = int(plan.total), total = int(plan.total), orbit = true, v = def, cut = true}
+	ui.announce(String(att.C.surge_name).to_upper(), "fight")
 	ui.screen_flash(att.C.accent); sfx("surge")
 	ui.pop_text("FINAL POWER: " + String(att.C.surge_name).to_upper(), att.side)
 
@@ -1224,9 +1226,12 @@ func _update_camera() -> void:
 		var S: Fighter = surge_cam.f
 		cx = S.pos.x; cz = S.pos.z; dist = 2.4; h = 1.15; ly = 1.3; ang += -0.5 if S.side else 0.5
 		if surge_cam.get("orbit", false):
-			# cinematic: swing around the pair, pull back for the slam
-			var k := 1.0 - float(surge_cam.t) / Fighter.FINAL_LEN
-			ang += sin(k * PI) * 0.55; dist = 2.8 + k * 1.6; h = 1.1 + k * 1.1; ly = 1.1 + k * 0.4
+			# cinematic: side-on to both fighters, slowly panning, pulling back for the finisher
+			var V: Fighter = surge_cam.v
+			var k := 1.0 - float(surge_cam.t) / maxf(1.0, float(surge_cam.total))
+			cx = (S.pos.x + V.pos.x) * 0.5; cz = (S.pos.z + V.pos.z) * 0.5
+			ang = S.face + PI * 0.5 * (1.0 if S.side == 0 else -1.0) + sin(k * PI) * 0.45
+			dist = 3.6 + k * 1.3; h = 1.25 + k * 0.8; ly = 1.0 + maxf(V.pos.y * 0.5, 0.0)
 	if phase == "intro" and phase_t > 50:
 		var k := minf(phase_t - 50, 60)
 		dist += k * 0.03; ang += k * 0.006
@@ -1234,7 +1239,12 @@ func _update_camera() -> void:
 		var W: Fighter = F[maxi(0, winner)]
 		cx = W.pos.x; cz = W.pos.z; dist = 3.0; ly = 1.2; h = 1.3
 		ang = W.face + (-0.5 if W.side else 0.5)
-	cam_pos = cam_pos.lerp(Vector3(cx + sin(ang) * dist, h, cz + cos(ang) * dist), 0.1)
+	var cam_want := Vector3(cx + sin(ang) * dist, h, cz + cos(ang) * dist)
+	if surge_cam != null and surge_cam.get("cut", false):
+		# a cinematic cut: jump straight to the new angle instead of gliding through the fighters
+		surge_cam.cut = false
+		cam_pos = cam_want; cam_look = Vector3(cx, ly, cz)
+	cam_pos = cam_pos.lerp(cam_want, 0.1)
 	cam_look = cam_look.lerp(Vector3(cx, ly, cz), 0.14)
 	camera.position = cam_pos
 	if shake > 0.002:
@@ -1454,6 +1464,44 @@ func _run_autotest() -> void:
 				test_p1 = Callable()
 				print("AUTOTEST moves2 %s maxy=%.2f p2=%s hp2=%d trace=%s" % [sc[0], maxy, F[1].state, F[1].hp, " ".join(trace)])
 				leave_game()
+		"finals":
+			# one FINAL per fighting style: summon, combo, finisher, taunt — plus a blocked opener
+			var who := ["abdul_wasay_waqas", "hamza_khan", "aqsa_altaf", "daniyal_zubair", "abdul_wasay", "ali", "kashaf_ud_duja", "amina_mughal"]
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--ids="): who = a.substr(6).split(",")
+			for id in who:
+				await start_match({mode = "training"}, [Data.by_id(id), Data.by_id("umar_farooq")])
+				dummy = 0
+				for k in 60: await get_tree().physics_frame
+				F[0].reset(-0.6); F[1].reset(0.6)
+				F[0].hp = F[0].max_hp * 0.25
+				var plan := Fighter.final_plan(F[0].C)
+				var marks := {30: "summon", int(plan.segs[1].f0) + 25: "combo", int(plan.hit_f) - 6: "finisher", int(plan.hit_f) + 20: "impact", int(plan.total) - 25: "taunt"}
+				test_t = 0; test_p1 = func(t: int) -> Array: return [0, 0, 10 if t in [3, 4] else 0]
+				var hp0: float = F[1].hp
+				var hp_min: float = hp0
+				var states := []
+				for k in int(plan.total) + 120:
+					await get_tree().physics_frame
+					hp_min = minf(hp_min, F[1].hp)
+					if states.is_empty() or states[-1] != F[0].state: states.append(F[0].state)
+					if F[0].state == "final" and marks.has(F[0].sf): await shot.call("fin_%s_%s" % [id, marks[F[0].sf]])
+				test_p1 = Callable()
+				print("AUTOTEST finals %s style=%s len=%.1fs dmg=%.0f%% p1=%s p2=%s" % [id, F[0].C.arch, plan.total / 60.0, (hp0 - hp_min) / F[1].max_hp * 100.0, states, F[1].state])
+				leave_game()
+			# blocked: the opponent guards (dummy 1 = block)
+			await start_match({mode = "training"}, [Data.by_id("hamza_khan"), Data.by_id("umar_farooq")])
+			dummy = 1
+			for k in 60: await get_tree().physics_frame
+			F[0].reset(-0.6); F[1].reset(0.6); F[0].hp = F[0].max_hp * 0.25
+			test_t = 0; test_p1 = func(t: int) -> Array: return [0, 0, 10 if t in [3, 4] else 0]
+			var bs := []
+			for k in 120:
+				await get_tree().physics_frame
+				if bs.is_empty() or bs[-1] != F[1].state: bs.append(F[1].state)
+			test_p1 = Callable()
+			print("AUTOTEST finals blocked: p2 states=%s final_used=%s p1=%s" % [bs, F[0].final_used, F[0].state])
+			leave_game()
 		"racepower":
 			await start_race("city", Data.by_id("abdul_wasay"))
 			race.autopilot = true
