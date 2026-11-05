@@ -26,6 +26,7 @@ var mm_scale := 1.0
 var mm_min := Vector2.ZERO
 var autopilot := false     # autotest: the CPU drives the player's car too
 var stats := {}            # autotest: event counts
+var cutin := {}            # power cut-in banner: {C, t, mine}
 var paused := false
 
 
@@ -114,6 +115,9 @@ func _process(dt: float) -> void:
 	if sim == null or world == null: return
 	world.draw(Engine.get_physics_interpolation_fraction(), dt)
 	toast_t = maxf(0.0, toast_t - dt)
+	if not cutin.is_empty():
+		cutin.t -= dt
+		if cutin.t <= 0.0: cutin = {}
 	hud.queue_redraw()
 
 
@@ -217,7 +221,12 @@ func _event(e: Array) -> void:
 			if not fx.is_empty() and tgt != null:
 				PowerProps.play(world, _proxy(pr), _proxy(tgt), fx, 0.6)
 			var r: RaceSim.Racer = sim.racers[who]
-			_toast(String(r.C.get("surge_name", "POWER")) if mine else "%s: %s" % [r.C.person.get("short", r.C.name) if r.C.has("person") else r.C.name, r.C.get("surge_name", "")])
+			# Tekken-style cut-in: their portrait and power name sweep across the screen
+			var near: bool = mine or (sim.racers[me] as RaceSim.Racer).pos.distance_to(r.pos) < 60.0
+			if near:
+				cutin = {C = r.C, t = 1.6, mine = mine}
+				world.punch = 1.0
+			if not near: _toast(String(r.C.get("surge_name", "POWER")) if mine else "%s: %s" % [r.C.person.get("short", r.C.name) if r.C.has("person") else r.C.name, r.C.get("surge_name", "")])
 		"use": if mine: G.sfx("whoosh")
 		"lap": if mine: G.sfx("vs"); _toast("LAP %d / %d" % [mini((sim.racers[me] as RaceSim.Racer).lap + 1, RaceSim.LAPS), RaceSim.LAPS])
 		"finish":
@@ -308,6 +317,7 @@ func _draw_hud() -> void:
 	for o in sim.racers:
 		var d := mo + (Vector2(o.pos.x, o.pos.z) - mm_min) * mm_scale
 		hud.draw_circle(d, 6.0 if o.id == me else 4.0, (o.C.accent as Color) if o.id != me else Color(1, 0.8, 0.3))
+	_draw_cutin(s)
 	# countdown / toasts
 	if toast_t > 0.0:
 		var a := clampf(toast_t / 0.4, 0.0, 1.0)
@@ -315,6 +325,33 @@ func _draw_hud() -> void:
 	if not _touch():
 		hud.draw_string(small, Vector2(0, s.y - 14), "W / S  gas / brake   ·   A / D  steer   ·   SHIFT  nitro   ·   SPACE  drift   ·   J  item   ·   K  power", HORIZONTAL_ALIGNMENT_CENTER, s.x, 18, Color(0.8, 0.82, 0.9, 0.75))
 	_draw_touch()
+
+
+func _draw_cutin(s: Vector2) -> void:
+	if cutin.is_empty(): return
+	var C: Dictionary = cutin.C
+	var t: float = 1.6 - cutin.t
+	var slide := clampf(t / 0.18, 0.0, 1.0) * (1.0 - clampf((t - 1.3) / 0.3, 0.0, 1.0))   # in, hold, out
+	var acc: Color = C.get("accent", Color(0.6, 0.3, 0.9))
+	var y := s.y * 0.42
+	var h := 150.0
+	var off := (1.0 - slide) * s.x * (-1.0 if cutin.mine else 1.0)
+	# slanted band with speed lines
+	var band := PackedVector2Array([Vector2(off, y + 40), Vector2(s.x + off, y - 30), Vector2(s.x + off, y - 30 + h), Vector2(off, y + 40 + h)])
+	hud.draw_colored_polygon(band, Color(0.04, 0.02, 0.08, 0.86 * slide))
+	for k in 9:
+		var ly := y + 30 + k * 16.0 - fmod(t * 600.0 + k * 37.0, 30.0) * 0.2
+		hud.draw_line(Vector2(off, ly + 30), Vector2(s.x + off, ly - 40), Color(acc, 0.25 * slide), 2.0)
+	hud.draw_polyline(PackedVector2Array([band[0], band[1]]), Color(acc, slide), 5.0)
+	hud.draw_polyline(PackedVector2Array([band[3], band[2]]), Color(acc, slide), 5.0)
+	var tex: Texture2D = G.portraits.get(C.id)
+	var px := s.x * (0.12 if cutin.mine else 0.66) + off
+	if tex != null: hud.draw_texture_rect(tex, Rect2(Vector2(px, y - 20), Vector2(h + 20, h + 20)), false, Color(1, 1, 1, slide))
+	var name: String = String(C.person.get("short", C.name)).to_upper() if C.has("person") else String(C.name).to_upper()
+	var tx := s.x * (0.12 if cutin.mine else 0.2) + (h + 40 if cutin.mine else 0.0) + off
+	hud.draw_string(font, Vector2(tx, y + 70), name, HORIZONTAL_ALIGNMENT_LEFT, -1, 30, Color(1, 1, 1, slide))
+	hud.draw_string(font, Vector2(tx, y + 120), String(C.get("surge_name", "POWER")).to_upper() + "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 46, Color(acc.lightened(0.35), slide))
+	if t < 0.12: hud.draw_rect(Rect2(Vector2.ZERO, s), Color(1, 1, 1, 0.35 * (1.0 - t / 0.12)))   # flash
 
 
 # ---------------------------------------------------------------- touch controls

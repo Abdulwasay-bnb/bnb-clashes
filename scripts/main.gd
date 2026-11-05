@@ -1429,6 +1429,18 @@ func _run_autotest() -> void:
 				test_p1 = Callable()
 				print("AUTOTEST moves2 %s maxy=%.2f p2=%s hp2=%d trace=%s" % [sc[0], maxy, F[1].state, F[1].hp, " ".join(trace)])
 				leave_game()
+		"racepower":
+			await start_race("city", Data.by_id("abdul_wasay"))
+			race.autopilot = true
+			await get_tree().create_timer(5.5).timeout
+			for k in 600:
+				(race.sim.racers[0] as RaceSim.Racer).power = 100.0
+				await get_tree().physics_frame
+				if not race.cutin.is_empty() and race.cutin.mine: break
+			await get_tree().create_timer(0.35).timeout
+			await shot.call("racepower")
+			print("AUTOTEST racepower cutin=%s" % [not race.cutin.is_empty()])
+			end_race()
 		"powers2":
 			for who in ["abdul_wasay", "kashaf_ud_duja"]:
 				await start_match({mode = "training"}, [Data.by_id(who), Data.by_id("hamza_khan")])

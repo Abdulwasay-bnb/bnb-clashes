@@ -16,6 +16,7 @@ var traffic_nodes: Array = []
 var box_nodes: Array = []
 var cone_nodes: Array = []
 var cam_pos := Vector3.ZERO
+var punch := 0.0                    # power used: the camera kicks back and widens
 var cam_look := Vector3.ZERO
 var env: Environment
 
@@ -436,4 +437,5 @@ func _camera(a: float, dt: float) -> void:
 	cam_look = cam_look.lerp(p + fwd * 7.0 + Vector3(0, 1.2, 0), clampf(dt * 8.0, 0.0, 1.0))
 	cam.position = cam_pos
 	cam.look_at(cam_look, Vector3.UP)
-	cam.fov = lerpf(cam.fov, 70.0 + (14.0 if (r.boost > 0 or r.nitro_on) else 0.0), dt * 3.0)
+	cam.fov = lerpf(cam.fov, 70.0 + (14.0 if (r.boost > 0 or r.nitro_on) else 0.0) + punch * 18.0, dt * 3.0 + punch * 0.2)
+	punch = maxf(0.0, punch - dt * 1.2)
