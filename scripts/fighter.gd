@@ -456,7 +456,22 @@ const THROW_SETS := {
 	"over": {a = "throw", b = "thrown", a0 = 0.6, a1 = 4.0, b0 = 1.2, b1 = 4.0, hit = 0.79, dur = 110, gap = 0.75, travel = 0.0},
 	"slam": {a = "throw_hell_a", b = "thrown_hell_b", a0 = 3.6, a1 = 6.8, b0 = 3.8, b1 = 7.0, hit = 0.69, dur = 120, gap = 0.7, travel = 0.0},
 	"takedown": {a = "throw_takedown_a", b = "thrown_takedown_b", a0 = 0.3, a1 = 2.6, b0 = 0.8, b1 = 2.6, hit = 0.5, dur = 92, gap = 0.7, travel = 1.3},
+	# a real Mixamo pair: judo shoulder throw (the victim lands at 3.4 s)
+	"shoulder": {a = "g_shoulder_a", b = "g_shoulder_b", a0 = 1.0, a1 = 4.3, b0 = 1.0, b1 = 4.3, hit = 0.72, dur = 150, gap = 0.75, travel = 0.0},
+	# a leaping shoulder throw: thrower flies through, victim cartwheels away
+	"flying": {a = "g_flying_shoulder", b = "g_thrown", a0 = 0.0, a1 = 2.9, b0 = 0.6, b1 = 3.1, hit = 0.76, dur = 128, gap = 0.7, travel = 0.9},
+	# picked up overhead and slammed down
+	"grabslam": {a = "g_grab_slam", b = "fall_fly", a0 = 1.4, a1 = 4.2, b0 = 0.3, b1 = 0.36, hit = 0.75, dur = 125, gap = 0.6, travel = 0.0, lift = 1.3},
+	# lifted by the throat, held up... and slammed
+	"choke": {a = "g_choke_lift", b = "fall_fly", a0 = 0.8, a1 = 4.6, b0 = 0.3, b1 = 0.36, hit = 0.86, dur = 168, gap = 0.55, travel = 0.0, lift = 1.45},
 }
+## Everyone's own grapple (by person), falling back to their fighting style's.
+const PERSON_THROW := {"hamza_khan": "choke", "tuaha_aamir": "choke", "muhammad_sufyan": "grabslam", "nabeel_ahmad": "grabslam",
+	"muhammad_nauman_nawaz": "slam", "usman_najeeb": "grabslam", "kashaf_ud_duja": "slam", "abdul_wasay": "shoulder", "faisal_ahmed": "shoulder",
+	"zia_khan": "shoulder", "muhammad_mubarak": "shoulder", "amina_mughal": "flying", "muzdalfa_naeem": "flying", "umar_farooq": "over",
+	"aqsa_altaf": "flying", "mahveen_khan": "flying", "muhammad_saad": "over", "samreen_fatima": "flying", "syeda_ghazia": "over",
+	"daniyal_zubair": "takedown", "faizan_ali": "takedown", "sarfraz_yousaf": "takedown", "kiran_fazal": "knees", "sabir_ud_din": "knees",
+	"ali": "knees", "abdul_wasay_waqas": "over"}
 
 
 static func throw_set(m: Data.Move) -> Dictionary:
@@ -503,8 +518,14 @@ func throw_step() -> void:
 			# a tackle carries both fighters forward until the slam
 			if float(ts.get("travel", 0.0)) > 0.0 and sf < hit_f:
 				pos += f * (float(ts.travel) / hit_f)
-			d.pos = d.pos.lerp(Vector3(pos.x + f.x * float(ts.get("gap", 0.75)), 0.0, pos.z + f.z * float(ts.get("gap", 0.75))), grab_k)
+			var lift_y := 0.0
+			if ts.has("lift") and sf < hit_f:
+				lift_y = float(ts.lift) * smoothstep(float(hit_f) * 0.25, float(hit_f) * 0.6, float(sf))
+			d.pos = d.pos.lerp(Vector3(pos.x + f.x * float(ts.get("gap", 0.75)), lift_y, pos.z + f.z * float(ts.get("gap", 0.75))), grab_k if lift_y == 0.0 else 0.5)
 			if sf == hit_f:
+				# their own flourish: the person's signature prop bursts out on the landing
+				if C.has("person") and String(C.person.get("prop", "")) != "":
+					PowerProps.play(G, self, d, [["burst", String(C.person.prop), 0.0, 6]], 0.3)
 				G.hurt(d, dmg, self); d.combo_dmg = dmg; d.pos.y = 0; d.down_len = 46
 				d.set_state("ko" if d.hp <= 0 else "down")
 				d.slammed = 30   # keep the thrown clip's landing pose for a moment

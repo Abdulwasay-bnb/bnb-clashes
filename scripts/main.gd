@@ -1522,7 +1522,13 @@ func _run_autotest() -> void:
 				mode = "training"
 				leave_game()
 		"grapples":
-			for setup in [["over", "abdul_wasay", "12"], ["slam", "abdul_wasay", "12"], ["takedown", "ali", "run2"]]:
+			var only := ""
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--only="): only = a.substr(7)
+			var setups := [["shoulder", "abdul_wasay", "12"], ["flying", "amina_mughal", "12"], ["grabslam", "nabeel_ahmad", "12"], ["choke", "hamza_khan", "12"],
+				["slam", "kashaf_ud_duja", "12"], ["over", "umar_farooq", "12"], ["takedown", "ali", "run2"]]
+			for setup in setups:
+				if only != "" and setup[0] != only: continue
 				await start_match({mode = "training"}, [Data.by_id(setup[1]), Data.by_id("hamza_khan")])
 				dummy = 0
 				for k in 60: await get_tree().physics_frame
@@ -1535,7 +1541,7 @@ func _run_autotest() -> void:
 				var trace := []
 				for k in 200:
 					await get_tree().physics_frame
-					if F[0].state == "throwing" and F[0].sf in [10, int(F[0].throw_dur() * 0.45), int(F[0].throw_dur() * 0.8)]:
+					if F[0].state == "throwing" and F[0].sf in [int(F[0].throw_dur() * 0.15), int(F[0].throw_dur() * 0.5), int(float(Fighter.throw_set(F[0].tm).get("hit", 0.6)) * F[0].throw_dur()) + 2]:
 						await shot.call("grab_%s_%d" % [setup[0], F[0].sf])
 						trace.append("%d:%s/%s y=%.2f" % [F[0].sf, F[0].state, F[1].state, F[1].pos.y])
 				print("AUTOTEST grapple %s p2=%s hp2=%d %s" % [setup[0], F[1].state, F[1].hp, " ".join(trace)])

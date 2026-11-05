@@ -70,6 +70,9 @@ static func load_all() -> void:
 		if String(p.surge) != "": raw.surge.n = p.surge
 		var C := compile(raw)
 		C.arch = p.base
+		# their own grapple
+		if (C.moves as Dictionary).has("12") and Fighter.PERSON_THROW.has(String(p.id)):
+			(C.moves["12"] as Move).throw_type = Fighter.PERSON_THROW[String(p.id)]
 		C.boss = p.boss
 		C.person = p
 		Models.register(p)
