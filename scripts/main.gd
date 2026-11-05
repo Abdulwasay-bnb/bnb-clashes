@@ -1703,6 +1703,19 @@ func _run_autotest() -> void:
 			ui.show_pause(); ui.show_moves(0)
 			await get_tree().create_timer(0.5).timeout
 			await shot.call("moves")
+		"persona":
+			# everyone in their signature (default) look, full body, three-quarter view
+			ui.hide_screen(); set_process(false)
+			for C in Data.ROSTER:
+				var rig := make_rig(C, 0)
+				add_child(rig)
+				rig.rotation.y = 0.45
+				rig.apply_pose(C.pose.guard)
+				camera.position = Vector3(0.55, 1.05, 2.9); camera.look_at(Vector3(0, 0.92, 0))
+				for k in 3: await get_tree().process_frame
+				await shot.call("persona_" + C.id)
+				rig.queue_free()
+			print("AUTOTEST persona %d" % Data.ROSTER.size())
 		"outfits":
 			# every costume for a few people, full body
 			ui.hide_screen(); set_process(false)

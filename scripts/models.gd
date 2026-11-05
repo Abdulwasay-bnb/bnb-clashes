@@ -154,6 +154,19 @@ static func register(p: Dictionary) -> void:
 				if ey.size() == 3:
 					tint["EyeIris"] = {c = Color(ey[0], ey[1], ey[2]) * 2.2, sat = 1.0, bright = 1.0}
 				costumes.append({name = names[k], tint = tint, acc = parts})
+			# their own one-of-a-kind look goes first (the default costume)
+			if PERSONA.has(String(p.id)):
+				var po := _persona_outfit(String(p.id), hair, female, kind)
+				var ptint: Dictionary = po.tint
+				ptint.merge(skin(skin_c))
+				var pparts: Array = po.acc + extra
+				if style != "" and kind != "hijab":
+					if female or style == "hair_back_full": ptint["Hair"] = "hide"
+					else: ptint["Hair"] = {c = hair_col * 3.0, sat = 0.0, bright = 0.55}
+					pparts.append([style, hair_col])
+				if ey.size() == 3:
+					ptint["EyeIris"] = {c = Color(ey[0], ey[1], ey[2]) * 2.2, sat = 1.0, bright = 1.0}
+				costumes.push_front({name = po.name, tint = ptint, acc = pparts})
 	LIST[p.id] = {file = {"android": SEED, "female": GIRL}.get(String(p.model), MALE), costumes = costumes}
 
 
@@ -208,6 +221,82 @@ static func _outfit(kind: String, pal: Array, hair: Dictionary, female: bool, va
 
 
 ## The extra costumes everyone gets: 3 Fight Night, 4 Hacker Hoodie, 5 Eid Special.
+
+## Everyone's own signature look (their default costume): [name, top, bottoms, shoes, parts].
+## top: [color, pattern, pattern a, pattern b, scale] (pattern "" = plain); parts: [gear, color].
+const GOLD := Color(1.0, 0.8, 0.3)
+const PERSONA := {
+	"abdul_wasay": ["Agent Ops", [Color(0.08, 0.08, 0.1), "grid", Color(0.13, 0.78, 0.92), Color(0.6, 0.95, 1.0), 1.2], Color(0.06, 0.06, 0.08), Color(0.08, 0.08, 0.1),
+		[["backpack", Color(0.12, 0.12, 0.15)], ["armbands", Color(0.13, 0.78, 0.92)], ["visor", Color(0.13, 0.78, 0.92)]]],
+	"abdul_wasay_waqas": ["Pythonista", [Color(0.2, 0.38, 0.68), "diagonal", Color(0.24, 0.45, 0.78), Color(1.0, 0.84, 0.25), 0.8], Color(0.16, 0.2, 0.3), Color(0.95, 0.95, 0.95),
+		[["beanie", Color(1.0, 0.84, 0.25)], ["hood", Color(0.2, 0.38, 0.68)]]],
+	"amina_mughal": ["Stand-up Queen", [Color(1.0, 0.86, 0.4), "dots", Color(1.0, 0.45, 0.65), Color(0, 0, 0, 0), 1.0], Color(0.95, 0.92, 0.88), Color(0.85, 0.4, 0.55),
+		[["kameez", Color(1.0, 0.72, 0.8)], ["shalwar", Color(0.95, 0.92, 0.88)], ["sleeves", Color(1.0, 0.72, 0.8)], ["dupatta", Color(1.0, 0.86, 0.4)], ["lanyard", Color(0.55, 0.32, 0.92)]]],
+	"aqsa_altaf": ["Ruby Red", [Color(0.7, 0.06, 0.16), "scales", Color(0.9, 0.18, 0.3), Color(0.5, 0.02, 0.1), 1.0], Color(0.35, 0.04, 0.08), Color(0.2, 0.05, 0.07),
+		[["hijab", Color(0.75, 0.08, 0.2)], ["kameez", Color(0.7, 0.08, 0.18)], ["shalwar", Color(0.3, 0.05, 0.08)], ["sleeves", Color(0.7, 0.08, 0.18)], ["chain", GOLD]]],
+	"daniyal_zubair": ["Paint Splash", [Color(0.95, 0.95, 0.95), "camo", Color(1.0, 0.45, 0.15), Color(0.2, 0.75, 0.95), 1.4], Color(0.25, 0.3, 0.45), Color(0.95, 0.4, 0.2),
+		[["apron", Color(0.85, 0.8, 0.7)], ["cap_back", Color(0.95, 0.4, 0.2)]]],
+	"faizan_ali": ["Chill Mode", [Color(0.78, 0.8, 0.84), "gradient", Color(0.5, 0.75, 0.95), Color(0, 0, 0, 0), 1.0], Color(0.4, 0.42, 0.46), Color(0.95, 0.95, 0.95),
+		[["shades", Color(0.08, 0.08, 0.1)], ["hood", Color(0.7, 0.72, 0.76)], ["scarf", Color(0.5, 0.75, 0.95)]]],
+	"faisal_ahmed": ["Root Admin", [Color(0.06, 0.08, 0.06), "grid", Color(0.15, 0.85, 0.35), Color(0.6, 1.0, 0.7), 1.4], Color(0.06, 0.07, 0.06), Color(0.05, 0.05, 0.05),
+		[["coat", Color(0.08, 0.1, 0.08)], ["shades", Color(0.05, 0.05, 0.05)]]],
+	"kiran_fazal": ["Deal Closer", [Color(0.12, 0.08, 0.16), "pinstripes", Color(0.75, 0.25, 0.82), Color(0, 0, 0, 0), 0.6], Color(0.12, 0.08, 0.16), Color(0.08, 0.06, 0.08),
+		[["kameez", Color(0.14, 0.09, 0.18)], ["shalwar", Color(0.12, 0.08, 0.16)], ["sleeves", Color(0.14, 0.09, 0.18)], ["chain", GOLD], ["shades", Color(0.08, 0.06, 0.08)]]],
+	"mahveen_khan": ["Call Centre", [Color(1.0, 0.62, 0.2), "dots", Color(1.0, 0.85, 0.5), Color(0, 0, 0, 0), 1.0], Color(0.95, 0.9, 0.82), Color(0.5, 0.3, 0.15),
+		[["kameez", Color(1.0, 0.62, 0.22)], ["shalwar", Color(0.95, 0.9, 0.82)], ["sleeves", Color(1.0, 0.62, 0.22)], ["dupatta", Color(1.0, 0.85, 0.5)], ["headphones", Color(0.1, 0.1, 0.12)]]],
+	"muhammad_saad": ["Push Notify", [Color(0.14, 0.15, 0.2), "dots", Color(0.95, 0.25, 0.3), Color(0, 0, 0, 0), 0.7], Color(0.2, 0.22, 0.3), Color(0.95, 0.3, 0.35),
+		[["cap_back", Color(0.95, 0.25, 0.3)], ["backpack", Color(0.18, 0.2, 0.28)]]],
+	"muhammad_sufyan": ["Premium Plan", [Color(0.08, 0.1, 0.22), "pinstripes", GOLD, Color(0, 0, 0, 0), 0.5], Color(0.08, 0.1, 0.2), Color(0.3, 0.18, 0.08),
+		[["bowtie", GOLD], ["chain", GOLD], ["watch", GOLD], ["shades", Color(0.06, 0.06, 0.08)]]],
+	"muzdalfa_naeem": ["Inbox Zero", [Color(0.62, 0.42, 1.0), "diagonal", Color(0.75, 0.6, 1.0), Color(1.0, 1.0, 1.0), 0.9], Color(0.25, 0.18, 0.4), Color(0.2, 0.15, 0.3),
+		[["kameez", Color(0.62, 0.45, 1.0)], ["shalwar", Color(0.25, 0.18, 0.4)], ["sleeves", Color(0.62, 0.45, 1.0)], ["scarf", Color(1.0, 1.0, 1.0)], ["lanyard", Color(0.55, 0.32, 0.92)]]],
+	"nabeel_ahmad": ["Snack Commander", [Color(0.95, 0.75, 0.25), "dots", Color(0.6, 0.35, 0.15), Color(0, 0, 0, 0), 0.8], Color(0.3, 0.25, 0.2), Color(0.5, 0.3, 0.15),
+		[["apron", Color(0.9, 0.3, 0.25)], ["cap_back", Color(0.9, 0.3, 0.25)], ["armbands", Color(0.95, 0.75, 0.25)]]],
+	"muhammad_nauman_nawaz": ["Banana Republic", [Color(1.0, 0.88, 0.2), "dots", Color(0.45, 0.3, 0.1), Color(0, 0, 0, 0), 1.3], Color(0.35, 0.5, 0.25), Color(0.95, 0.85, 0.3),
+		[["bandana", Color(1.0, 0.88, 0.2)], ["shades", Color(0.08, 0.08, 0.08)]]],
+	"sabir_ud_din": ["Howzat XI", [Color(0.97, 0.97, 0.95), "bands", Color(0.1, 0.55, 0.3), Color(1.0, 0.8, 0.3), 1.0], Color(0.97, 0.97, 0.95), Color(0.95, 0.95, 0.95),
+		[["pads", Color(0.97, 0.97, 0.95)], ["cap_back", Color(0.1, 0.5, 0.28)], ["watch", Color(0.1, 0.1, 0.12)]]],
+	"samreen_fatima": ["Pixel Art", [Color(0.0, 0.6, 0.55), "grid", Color(1.0, 0.3, 0.75), Color(1.0, 0.95, 0.4), 1.6], Color(0.12, 0.2, 0.3), Color(0.95, 0.95, 0.95),
+		[["hijab", Color(0.0, 0.7, 0.62)], ["kameez", Color(0.05, 0.55, 0.5)], ["shalwar", Color(0.12, 0.2, 0.3)], ["sleeves", Color(0.05, 0.55, 0.5)], ["backpack", Color(1.0, 0.3, 0.75)]]],
+	"sarfraz_yousaf": ["Stand-up Comic", [Color(0.95, 0.75, 0.2), "plaid", Color(0.85, 0.2, 0.2), Color(0.1, 0.1, 0.1), 1.2], Color(0.15, 0.15, 0.2), Color(0.85, 0.2, 0.2),
+		[["bowtie", Color(0.9, 0.15, 0.2)], ["shades", Color(0.9, 0.15, 0.2)]]],
+	"syeda_ghazia": ["Hello World", [Color(0.42, 0.6, 0.85), "bands", Color(0.95, 0.97, 1.0), Color(0.3, 0.9, 0.5), 1.0], Color(0.2, 0.25, 0.4), Color(0.95, 0.95, 0.95),
+		[["hijab", Color(0.72, 0.6, 0.95)], ["kameez", Color(0.42, 0.6, 0.85)], ["shalwar", Color(0.2, 0.25, 0.4)], ["sleeves", Color(0.42, 0.6, 0.85)], ["lanyard", Color(0.55, 0.32, 0.92)]]],
+	"tuaha_aamir": ["G.O.A.T.", [Color(0.95, 0.95, 0.95), "bands", GOLD, Color(0.1, 0.1, 0.1), 1.2], Color(0.12, 0.12, 0.14), GOLD,
+		[["headband", GOLD], ["armbands", GOLD], ["chain", GOLD]]],
+	"umar_farooq": ["Overtime", [Color(0.92, 0.92, 0.88), "flames", Color(1.0, 0.48, 0.24), Color(1.0, 0.85, 0.3), 1.0], Color(0.2, 0.2, 0.25), Color(0.25, 0.18, 0.12),
+		[["watch", Color(1.0, 0.48, 0.24)], ["headband", Color(1.0, 0.48, 0.24)]]],
+	"usman_najeeb": ["Smoke Break", [Color(0.1, 0.1, 0.11), "", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.08, 0.08, 0.1), Color(0.06, 0.06, 0.06),
+		[["shades", Color(0.05, 0.05, 0.05)], ["chain", Color(0.75, 0.75, 0.8)], ["bandana", Color(0.45, 0.45, 0.5)], ["shoulders", Color(0.12, 0.12, 0.13)]]],
+	"zia_khan": ["Legacy Wizard", [Color(0.12, 0.1, 0.2), "scales", GOLD, Color(0.2, 0.15, 0.3), 1.4], Color(0.1, 0.08, 0.16), Color(0.15, 0.1, 0.08),
+		[["coat", Color(0.14, 0.11, 0.24)], ["scarf", GOLD]]],
+	"ali": ["Chai Wala", [Color(0.95, 0.9, 0.8), "", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.95, 0.9, 0.8), Color(0.45, 0.28, 0.14),
+		[["kameez", Color(0.95, 0.9, 0.8)], ["shalwar", Color(0.95, 0.9, 0.8)], ["apron", Color(0.55, 0.33, 0.16)], ["bandana", Color(0.78, 0.45, 0.23)]]],
+	"muhammad_mubarak": ["Viper", [Color(0.15, 0.45, 0.2), "scales", Color(0.3, 0.75, 0.35), Color(0.05, 0.2, 0.08), 1.6], Color(0.08, 0.12, 0.08), Color(0.06, 0.08, 0.06),
+		[["shades", Color(0.05, 0.08, 0.05)], ["chain", GOLD]]],
+	"kashaf_ud_duja": ["Red Alert", [Color(0.75, 0.1, 0.16), "pinstripes", Color(0.95, 0.4, 0.45), Color(0, 0, 0, 0), 0.6], Color(0.18, 0.08, 0.1), Color(0.1, 0.05, 0.06),
+		[["kameez", Color(0.72, 0.1, 0.16)], ["shalwar", Color(0.18, 0.08, 0.1)], ["sleeves", Color(0.72, 0.1, 0.16)], ["scarf", Color(0.95, 0.3, 0.35)], ["lanyard", Color(0.95, 0.2, 0.3)]]],
+	"hamza_khan": ["Boardroom Boss", [Color(0.06, 0.05, 0.08), "pinstripes", GOLD, Color(0, 0, 0, 0), 0.5], Color(0.06, 0.05, 0.08), Color(0.05, 0.04, 0.04),
+		[["cape", Color(0.45, 0.2, 0.75)], ["shades", Color(0.05, 0.05, 0.05)], ["chain", GOLD], ["watch", GOLD]]],
+}
+
+
+static func _persona_outfit(id: String, hair: Dictionary, female: bool, kind: String) -> Dictionary:
+	var d: Array = PERSONA[id]
+	var top: Array = d[1]
+	var tint := {"Hair": "hide" if kind == "hijab" else hair, "Tie": "hide"}
+	var t := {c = top[0], sat = 0.0, bright = 0.62}
+	if String(top[1]) != "":
+		t.pat = {kind = top[1], a = top[2], b = top[3], scale = top[4]}
+	else:
+		t.c = Color.WHITE; t.pat = {kind = "solid", a = top[0]}
+	tint.merge({"Tops": t, "Bottoms": {c = d[2], sat = 0.0, bright = 0.6}, "Shoes": {c = d[3], sat = 0.0, bright = 0.6}}, true)
+	var parts: Array = (d[4] as Array).duplicate(true)
+	# the women's base wears shorts: cover the legs when the look doesn't already
+	if female and not parts.any(func(x): return x[0] == "shalwar"): parts.append(["shalwar", d[2]])
+	return {name = d[0], tint = tint, acc = parts}
+
+
 static func _extra_outfit(k: int, kind: String, acc: Color, hair: Dictionary, female: bool) -> Dictionary:
 	var T := func(c: Color, bright := 0.75) -> Dictionary: return {c = c, sat = 0.0, bright = bright}
 	var S := func(c: Color, bright := 0.75, pat := {}) -> Dictionary:

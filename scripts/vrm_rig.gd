@@ -682,6 +682,51 @@ func _acc_parts(kind: String) -> Array:
 				["upperChest", ToonRig.box(0.045, 0.065, 0.006), Vector3(0, -0.035, 0.125), Vector3(-0.15, 0, 0), Vector3.ONE]]
 		"hood":         # a hoodie's hood bunched behind the neck
 			return [["upperChest", tor.call(0.1, 0.035), Vector3(0, 0.16, -0.05), Vector3(0.5, 0, 0), Vector3(1.1, 1.0, 0.95)]]
+		# ---- signature-outfit gear
+		"cap_back":     # baseball cap worn backwards
+			return [["head", ToonRig.sph(0.12), Vector3(0, 0.112, -0.012), Vector3(-0.15, 0, 0), Vector3(1.0, 0.56, 1.06)],
+				["head", ToonRig.box(0.11, 0.008, 0.075), Vector3(0, 0.1, -0.14), Vector3(-0.25, 0, 0), Vector3.ONE]]
+		"beanie":
+			return [["head", ToonRig.sph(0.124), Vector3(0, 0.118, -0.012), Vector3(-0.1, 0, 0), Vector3(1.0, 0.72, 1.06)],
+				["head", tor.call(0.118, 0.014), Vector3(0, 0.078, -0.01), Vector3(-0.12, 0, 0), Vector3(1.0, 1.0, 1.08)]]
+		"bandana":      # headband with knot tails at the back
+			return [["head", tor.call(0.118, 0.012), Vector3(0, 0.1, -0.008), Vector3(-0.2, 0, 0), Vector3(1, 1, 1.08)],
+				["head", ToonRig.box(0.025, 0.09, 0.006), Vector3(0.02, 0.04, -0.13), Vector3(0.4, 0, 0.25), Vector3.ONE],
+				["head", ToonRig.box(0.025, 0.08, 0.006), Vector3(-0.02, 0.045, -0.13), Vector3(0.35, 0, -0.3), Vector3.ONE]]
+		"shades":       # sunglasses
+			return [["head", ToonRig.box(0.046, 0.022, 0.006), Vector3(0.034, 0.072, 0.111), Vector3.ZERO, Vector3.ONE],
+				["head", ToonRig.box(0.046, 0.022, 0.006), Vector3(-0.034, 0.072, 0.111), Vector3.ZERO, Vector3.ONE],
+				["head", ToonRig.box(0.024, 0.005, 0.005), Vector3(0, 0.077, 0.112), Vector3.ZERO, Vector3.ONE],
+				["head", ToonRig.box(0.005, 0.005, 0.1), Vector3(0.066, 0.074, 0.062), Vector3.ZERO, Vector3.ONE],
+				["head", ToonRig.box(0.005, 0.005, 0.1), Vector3(-0.066, 0.074, 0.062), Vector3.ZERO, Vector3.ONE]]
+		"scarf":
+			return [["upperChest", tor.call(0.1, 0.03), Vector3(0, 0.135, 0.005), Vector3(0.15, 0, 0), Vector3(1.05, 1.0, 0.92)],
+				["upperChest", ToonRig.box(0.06, 0.24, 0.016), Vector3(0.06, -0.03, 0.125), Vector3(0.05, 0, 0.05), Vector3.ONE]]
+		"cape":         # hangs from the shoulders down the back
+			return [["upperChest", ToonRig.box(0.42, 0.04, 0.12), Vector3(0, 0.13, -0.04), Vector3.ZERO, Vector3.ONE],
+				["upperChest", ToonRig.box(0.44, 0.82, 0.018), Vector3(0, -0.27, -0.16), Vector3(0.14, 0, 0), Vector3.ONE]]
+		"coat":         # long coat tails below the jacket
+			return [["hips", ToonRig.box(0.36, 0.5, 0.03), Vector3(0, -0.2, -0.12), Vector3(0.08, 0, 0), Vector3.ONE],
+				["hips", ToonRig.box(0.15, 0.48, 0.03), Vector3(0.1, -0.19, 0.12), Vector3(-0.08, 0, 0.04), Vector3.ONE],
+				["hips", ToonRig.box(0.15, 0.48, 0.03), Vector3(-0.1, -0.19, 0.12), Vector3(-0.08, 0, -0.04), Vector3.ONE]]
+		"apron":
+			return [["hips", ToonRig.box(0.3, 0.44, 0.012), Vector3(0, -0.13, 0.135), Vector3(-0.05, 0, 0), Vector3.ONE],
+				["upperChest", ToonRig.box(0.22, 0.2, 0.012), Vector3(0, -0.03, 0.125), Vector3.ZERO, Vector3.ONE]]
+		"chain":        # gold chain round the neck
+			return [["upperChest", tor.call(0.09, 0.006), Vector3(0, 0.07, 0.04), Vector3(1.15, 0, 0), Vector3(1.0, 1.0, 1.25)]]
+		"bowtie":
+			return [["upperChest", ToonRig.sph(0.02), Vector3(0.02, 0.125, 0.105), Vector3(0, 0, 0.3), Vector3(1.2, 0.8, 0.5)],
+				["upperChest", ToonRig.sph(0.02), Vector3(-0.02, 0.125, 0.105), Vector3(0, 0, -0.3), Vector3(1.2, 0.8, 0.5)],
+				["upperChest", ToonRig.sph(0.01), Vector3(0, 0.125, 0.11), Vector3.ZERO, Vector3.ONE]]
+		"backpack":
+			return [["upperChest", ToonRig.box(0.26, 0.32, 0.12), Vector3(0, -0.07, -0.17), Vector3(0.08, 0, 0), Vector3.ONE],
+				["upperChest", ToonRig.box(0.2, 0.1, 0.05), Vector3(0, -0.17, -0.245), Vector3(0.08, 0, 0), Vector3.ONE]]
+		"pads":         # cricket leg pads
+			return [["leftLowerLeg", ToonRig.box(0.13, 0.42, 0.06), Vector3(0, -0.17, 0.07), Vector3.ZERO, Vector3.ONE],
+				["rightLowerLeg", ToonRig.box(0.13, 0.42, 0.06), Vector3(0, -0.17, 0.07), Vector3.ZERO, Vector3.ONE]]
+		"watch":
+			return [["leftLowerArm", ToonRig.cyl(0.033, 0.033, 0.03), Vector3(0.21, 0, 0), Z90, Vector3.ONE],
+				["leftLowerArm", ToonRig.box(0.024, 0.008, 0.024), Vector3(0.21, 0.034, 0), Vector3.ZERO, Vector3.ONE]]
 		"kneepads":
 			return [["leftLowerLeg", ToonRig.sph(0.06), Vector3(0, 0.0, 0.05), Vector3.ZERO, Vector3(1, 1, 0.6)],
 				["rightLowerLeg", ToonRig.sph(0.06), Vector3(0, 0.0, 0.05), Vector3.ZERO, Vector3(1, 1, 0.6)]]
