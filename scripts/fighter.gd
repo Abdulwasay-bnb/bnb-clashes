@@ -69,6 +69,8 @@ var dirt := 0.0          # dust on the clothes from knockdowns
 var blood_on := 0.0      # blood stains on the clothes
 var last_rt := -1.0
 var slammed := 0         # frames left showing the end of a throw (the landing)
+var fall_kind := "back"  # how a knockdown looks: fly (launched / power), back, sweep (low), forward (KO variety)
+var air_est := 40        # frames this flight is expected to last (to time the fall clip to the landing)
 var last_dir := 5        # stick direction this frame (numpad, relative to the opponent)
 var up_hold := 0         # frames up has been held: tap = sidestep, hold = jump
 
@@ -666,6 +668,15 @@ const WIN := {"vex": "win_boxing", "bastion": "win_cheer", "sora": "win_celebrat
 const THROWS := {"ember": ["throw_hell_a", "thrown_hell_b"], "bastion": ["throw_takedown_a", "thrown_takedown_b"]}
 
 
+## When each fall clip's body reaches the floor (seconds).
+const FALL_LAND := {"fall_fly": 0.95, "fall_back": 1.0, "fall_sweep": 1.5, "fall_forward": 1.0, "knockdown": 1.2}
+
+
+func _fall_clip() -> String:
+	var n: String = {"fly": "fall_fly", "back": "fall_back", "sweep": "fall_sweep", "forward": "fall_forward"}.get(fall_kind, "fall_back")
+	return n if ClipLib.has(n) else ""
+
+
 static func throw_pair(f: Fighter) -> Array:
 	var p: Array = THROWS.get(f.C.arch, []) if f != null else []
 	if p.size() == 2 and ClipLib.has(p[0]) and ClipLib.has(p[1]): return p
@@ -774,7 +785,7 @@ func render(t: float) -> void:
 	# paired throws (e.g. a takedown) were authored with both fighters in one space: keep the hip motion,
 	# and draw the victim at the thrower's spot and facing so the two halves line up
 	var pair := false
-	rig.set_clip(cr[0], cr[1], true, cr[2] if cr.size() > 2 else false, pair)
+	rig.set_clip(cr[0], cr[1], state != "air", cr[2] if cr.size() > 2 else false, pair)
 	var a := Engine.get_physics_interpolation_fraction()
 	var p := Pose.lerp_p(prev_disp, disp, a)
 	rig.position = prev_pos.lerp(pos, a)

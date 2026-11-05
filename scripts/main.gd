@@ -1040,7 +1040,12 @@ func apply_hit(att: Fighter, def: Fighter, res: Dictionary) -> void:
 			def.vy = 0.12 if m.surge else 0.08; def.air_v = f * (0.075 if m.surge else 0.04); def.juggle = 7; def.pos.y = 0.01
 		if def.hp <= 0:
 			def.vy = maxf(def.vy, 0.1); def.air_v = f * 0.05
-		if def.state != "air": def.set_state("air")
+		if def.state != "air":
+			# what the fall looks like: launched / power -> flying back, sweeps -> legs taken out, KO -> varied
+			def.fall_kind = "fly" if (launch or m.surge) else ("sweep" if m.lvl == "low" else "back")
+			if def.hp <= 0 and not m.surge: def.fall_kind = ["back", "forward", "fly"][(att.move_id + def.combo_hits) % 3]
+			def.air_est = int(2.0 * def.vy / GRAV) + 4
+			def.set_state("air")
 		def.move = null; def.queued = ""; def.stance = ""
 	else:
 		def.set_state("hit")
@@ -1406,6 +1411,32 @@ func _run_autotest() -> void:
 				trace.append("end_y=%.2f" % F[0].pos.y)
 				test_p1 = Callable()
 				print("AUTOTEST moves2 %s maxy=%.2f p2=%s hp2=%d trace=%s" % [sc[0], maxy, F[1].state, F[1].hp, " ".join(trace)])
+				leave_game()
+		"falls":
+			for kind in ["launch", "sweep", "kd", "ko"]:
+				await start_match({mode = "training"}, [Data.by_id("abdul_wasay"), Data.by_id("ali")])
+				dummy = 0
+				for k in 60: await get_tree().physics_frame
+				F[0].reset(-0.5); F[1].reset(0.5)
+				var pick: Data.Move = null
+				for m in F[0].C.moves.values():
+					if m.trans or m.is_throw or m.surge: continue
+					if kind == "launch" and m.launch: pick = m
+					elif kind == "sweep" and m.low and m.kd: pick = m
+					elif (kind == "kd" or kind == "ko") and m.kd and not m.low and not m.jump: pick = m
+					if pick != null: break
+				if pick == null: print("AUTOTEST falls %s: no move" % kind); continue
+				if kind == "ko": F[1].hp = 1.0; mode = "cpu"
+				F[0].start_move(pick.key)
+				var shots := 0
+				var trace := []
+				for k in 150:
+					await get_tree().physics_frame
+					if F[1].state == "air" and shots == 0 and F[1].sf >= 8: await shot.call("fall_%s_air" % kind); shots = 1
+					if F[1].state in ["down", "ko"] and shots == 1 and F[1].sf >= 10: await shot.call("fall_%s_down" % kind); shots = 2
+					if trace.is_empty() or trace[-1] != F[1].state: trace.append(F[1].state)
+				print("AUTOTEST falls %s move=%s fall=%s trace=%s" % [kind, pick.name, F[1].fall_kind, trace])
+				mode = "training"
 				leave_game()
 		"grapples":
 			for setup in [["over", "abdul_wasay", "12"], ["slam", "abdul_wasay", "12"], ["takedown", "ali", "run2"]]:
