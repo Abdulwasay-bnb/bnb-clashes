@@ -301,6 +301,9 @@ func _restyle(tint: Dictionary) -> void:
 			if src.emission_enabled:
 				m.set_shader_parameter("emission_strength", 0.6)
 			var lname := name.to_lower()
+			if "hair" in lname:
+				m.set_shader_parameter("hair_sheen", 1.0)
+				m.set_shader_parameter("sheen_color", col.lightened(0.6).lerp(Color(0.8, 0.86, 1.0), 0.6))
 			if not blend and not ("eye" in lname or "mouth" in lname or "brow" in lname or "face" in lname and not "skin" in lname):
 				m.next_pass = outline
 			if src.albedo_texture == null and not blend:
@@ -705,14 +708,17 @@ func _hair_parts(kind: String) -> Array:
 		"hair_side":   # side part: a sweep over one side
 			out = [blob.call(at.call(0.045, 0.0, -0.06), 0.085, 0.032, 0.07, Vector3(0, 0, -0.3))]
 		"hair_wolf":   # wolf cut: shaggy layers on top, longer flicks at the nape and sides
+			# nape: layered flicks hanging down the back of the neck
 			for k in 5:
 				var a := (k - 2) * 0.32
-				out.append(cone.call(0.032, 0.13, at.call(sin(a) * 0.08, -0.2, -0.2 + absf(sin(a)) * 0.04), Vector3(0.55, a * 0.6, 0)))
-			for k in 6:
-				var a := (k - 2.5) * 0.45
-				out.append(cone.call(0.035, 0.08, at.call(sin(a) * 0.07, 0.012, -0.09 + cos(a) * 0.02), Vector3(-0.9, 0, a * 0.5)))
+				out.append(cone.call(0.032, 0.12, at.call(sin(a) * 0.08, -0.2, -0.2 + absf(sin(a)) * 0.04), Vector3(PI - 0.35, a * 0.6, 0)))
+			# top: shaggy layers lying back over the crown (low, not standing up)
+			for k in 5:
+				var a := (k - 2) * 0.42
+				out.append(blob.call(at.call(sin(a) * 0.06, -0.012, -0.1 + cos(a) * 0.02), 0.032, 0.016, 0.06, Vector3(0.3, a * 0.5, 0)))
+			# sides: flicks hanging down past the ears
 			for sx in [-1.0, 1.0]:
-				out.append(cone.call(0.03, 0.1, at.call(sx * 0.112, -0.12, -0.1), Vector3(0, 0, sx * -0.35)))
+				out.append(cone.call(0.028, 0.09, at.call(sx * 0.108, -0.13, -0.1), Vector3(PI, 0, sx * 0.25)))
 		"hair_curl":   # styled back, with low flat waves along the front hairline (nothing piled on top)
 			for k in 5:
 				var a := (k - 2) * 0.42
@@ -722,9 +728,11 @@ func _hair_parts(kind: String) -> Array:
 				var a := k * 0.9
 				out.append(cone.call(0.032, 0.075, at.call(sin(a) * 0.065, 0.008, -0.09 + cos(a) * 0.05), Vector3(sin(a) * 0.8, 0, cos(a) * 0.8)))
 		"hair_spiky":  # comic spikes
-			for k in 7:
-				var a := (k - 3) * 0.38
-				out.append(cone.call(0.03, 0.13, at.call(sin(a) * 0.065, 0.025, -0.085), Vector3(-0.35, 0, a * 0.8)))
+			# a crown of short spikes swept up and back (not a hat of cones)
+			for k in 11:
+				var a := (k - 5) * 0.24
+				var row := k % 2
+				out.append(cone.call(0.024, 0.06 - absf(a) * 0.015, at.call(sin(a) * 0.065, -0.004 - row * 0.012, -0.11 - row * 0.05 + absf(a) * 0.01), Vector3(-1.05 - row * 0.3, 0, a * 0.5)))
 		"hair_ponytail":   # high ponytail with a band
 			out += [cap, back, [H, ToonRig.cyl(0.03 * f, 0.03 * f, 0.035 * f), at.call(0, -0.04, -0.235), Vector3(-1.0, 0, 0), Vector3.ONE]]
 			for k in 4:
@@ -764,6 +772,10 @@ func _make_accessories(list: Array) -> void:
 		m.set_shader_parameter("tex", _white())
 		m.set_shader_parameter("albedo", col)
 		m.set_shader_parameter("shade", col.darkened(0.3).lerp(Color(0.55, 0.5, 0.75), 0.4))
+		if kind.begins_with("hair_"):
+			m.set_shader_parameter("hair_sheen", 1.0)
+			m.set_shader_parameter("sheen_color", col.lightened(0.6).lerp(Color(0.8, 0.86, 1.0), 0.6))
+			m.set_shader_parameter("shade", col.lightened(0.15).lerp(Color(0.5, 0.48, 0.7), 0.45))
 		if kind == "visor":
 			m.set_shader_parameter("emission_strength", 1.1)
 		elif not flat:

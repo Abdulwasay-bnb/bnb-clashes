@@ -1649,6 +1649,23 @@ func _run_autotest() -> void:
 			ui.show_pause(); ui.show_moves(0)
 			await get_tree().create_timer(0.5).timeout
 			await shot.call("moves")
+		"hairgrid":
+			# every player's head, front-three-quarter and back, for checking hair
+			ui.hide_screen(); set_process(false)
+			if stage != null: stage.visible = true
+			for C in Data.ROSTER:
+				var rig := make_rig(C, 0)
+				add_child(rig)
+				rig.apply_pose(C.pose.guard)
+				for view in [0, 1]:
+					rig.rotation.y = 0.55 if view == 0 else PI + 0.4
+					var hp: Vector3 = rig.head.global_position
+					camera.position = hp + Vector3(0.25, 0.08, 0.9)
+					camera.look_at(hp + Vector3(0, -0.02, 0))
+					for k in 3: await get_tree().process_frame
+					await shot.call("hair_%s_%d" % [C.id, view])
+				rig.queue_free()
+			print("AUTOTEST hairgrid %d" % Data.ROSTER.size())
 		"closeup":
 			var id := "sora"
 			var mv := ""

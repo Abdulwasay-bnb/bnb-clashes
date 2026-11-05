@@ -16,7 +16,15 @@ uniform vec4 pat_b : source_color = vec4(0.0, 0.0, 0.0, 0.0);
 uniform float pat_scale = 1.0;
 uniform float pat_o = 0.5;
 uniform float dirt = 0.0;      // clothes: dust from knockdowns (0..1)
-uniform float blood = 0.0;     // clothes: blood stains (0..1)     // where flames / bands / gradients sit along the texture's height
+uniform float blood = 0.0;     // clothes: blood stains (0..1)
+// Anime hair: strand streaks, a lifted (blue-black) shadow, and a glossy "angel ring" highlight round the crown.
+uniform float hair_sheen = 0.0;
+uniform vec4 sheen_color : source_color = vec4(0.78, 0.84, 1.0, 1.0);
+varying vec3 v_obj;
+
+void vertex() {
+	v_obj = VERTEX;
+}     // where flames / bands / gradients sit along the texture's height
 
 float _h21(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float _vn(vec2 p) {
@@ -107,6 +115,16 @@ void fragment() {
 		float b = smoothstep(1.0 - blood * 0.55, 1.03 - blood * 0.55, n2);
 		c.rgb = mix(c.rgb, vec3(0.42, 0.02, 0.03), b * 0.8);
 	}
+	float ring = 0.0;
+	if (hair_sheen > 0.001) {
+		vec3 q = v_obj * 30.0;
+		float streak = 0.5 + 0.5 * sin(q.x * 3.1 + q.z * 1.7 + _vn(q.xy * 0.9) * 5.0);
+		c.rgb *= 1.0 - 0.22 * hair_sheen * streak;                       // strands
+		c.rgb += vec3(0.055, 0.06, 0.09) * hair_sheen;                  // never a flat black blob
+		vec3 wn = normalize((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
+		ring = smoothstep(0.42, 0.58, wn.y) * (1.0 - smoothstep(0.7, 0.86, wn.y));
+		ring *= smoothstep(0.05, 0.45, dot(NORMAL, VIEW)) * (0.55 + 0.45 * streak) * hair_sheen;
+	}
 	ALBEDO = c.rgb;
 	#ifdef USE_ALPHA
 	ALPHA = c.a;
@@ -116,7 +134,8 @@ void fragment() {
 	ALPHA_SCISSOR_THRESHOLD = 0.5;
 	#endif
 	float fr = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 4.0);
-	EMISSION = c.rgb * emission_strength + rim_color.rgb * fr * rim_amount + vec3(flash);
+	EMISSION = c.rgb * emission_strength + rim_color.rgb * fr * (rim_amount + hair_sheen * 0.16) + vec3(flash)
+		+ sheen_color.rgb * ring * 0.55;
 }
 
 void light() {
