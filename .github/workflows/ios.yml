@@ -16,11 +16,16 @@ permissions:
 
 jobs:
   ipa:
-    runs-on: macos-14
+    runs-on: macos-15   # Godot 4.7's iOS libraries need a recent Xcode
     env:
       GH_TOKEN: ${{ github.token }}
       TAG: ${{ inputs.tag }}
     steps:
+      - name: Use the newest stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
       - name: Download the exported Xcode project
         run: |
           gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p BNBClashes-ios-xcode.zip
@@ -32,7 +37,8 @@ jobs:
           xcodebuild -project BNBClashes.xcodeproj -scheme BNBClashes -configuration Release \
             -sdk iphoneos -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/cc.xcarchive" archive \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
-            DEVELOPMENT_TEAM="" PROVISIONING_PROFILE_SPECIFIER="" | tail -n 40
+            DEVELOPMENT_TEAM="" PROVISIONING_PROFILE_SPECIFIER="" > build.log 2>&1 || { tail -n 60 build.log; exit 1; }
+          tail -n 15 build.log
 
       - name: Package .ipa
         run: |
