@@ -1744,7 +1744,7 @@ func _run_autotest() -> void:
 				if r is VrmRig: print("AUTOTEST skull %s %s" % [id, r.skull])
 				r.queue_free()
 		"certificate":
-			var img: Image = await Certificate.render(self, "Abdul Wasay", Data.by_id("ali"), portraits.get("ali"))
+			var img: Image = await Certificate.render(self, "Abdul Wasay", Data.by_id("muhammad_nauman_nawaz"), portraits.get("muhammad_nauman_nawaz"))
 			img.save_png("user://shot_certificate.png")
 			var pdf := Certificate.to_pdf(img)
 			var f := FileAccess.open("user://test_certificate.pdf", FileAccess.WRITE); f.store_buffer(pdf); f.close()

@@ -68,8 +68,8 @@ static func render(host: Node, player: String, C: Dictionary, portrait: Texture2
 	var nm: Label = text.call(player.strip_edges().to_upper(), title_font, 96, INK, 420)
 	var line := ColorRect.new(); line.color = CYAN; line.size = Vector2(900, 4); line.position = Vector2(W / 2.0 - 450, 545)
 	root.add_child(line)
-	text.call("has fulfilled the lifelong dream of every employee: beating the CEO in BNB Clashes, fighting as %s, and surviving HR and the Project Manager along the way." % String(C.name), body_font, 40, INK, 575, W - 420.0)
-	text.call("Perks:  bragging rights (non-transferable)   ·   promotion pending HR approval   ·   tea still only at 3 PM and 5 PM (Ali has spoken)", med_font, 28, PURPLE, 720, W - 360.0)
+	text.call("has fulfilled the lifelong dream of every employee: beating the CEO in BNB Clashes, fighting as %s, and surviving HR and the Project Manager along the way." % String(C.name), body_font, 36, INK, 570, W - 300.0)
+	text.call("Perks:  bragging rights (non-transferable)   ·   promotion pending HR approval   ·   tea still only at 3 PM and 5 PM (Ali has spoken)", med_font, 26, PURPLE, 770, W - 360.0)
 
 	# fighter portrait
 	if portrait != null:
