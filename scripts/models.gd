@@ -129,15 +129,17 @@ static func register(p: Dictionary) -> void:
 			var palettes := [[acc, acc.darkened(0.55), acc.lightened(0.35)],
 				[Color(0.92, 0.9, 0.86), Color(0.24, 0.32, 0.5), acc],
 				[BV, Color(0.1, 0.08, 0.16), GD]]
-			var names := ["Signature", "Casual Friday", "Team BNB"]
+			var names := ["Signature", "Casual Friday", "Team BNB", "Fight Night", "Hacker Hoodie", "Eid Special"]
 			if kind == "ceo": names[0] = "Chief Executive"
 			# their own haircut replaces the shared base hair (not under a hijab)
 			var style := String(p.get("hair_style", ""))
 			var hc: Array = p.get("hair_color", [])
 			var hair_col := Color(hc[0], hc[1], hc[2]) if hc.size() == 3 else Color(0.09, 0.07, 0.06)
 			var ey: Array = p.get("eyes", [])
-			for k in 3:
-				var o := _outfit(kind, palettes[k], hair, female, k)
+			for k in 6:
+				var o := _outfit(kind, palettes[k], hair, female, k) if k < 3 else _extra_outfit(k, kind, acc, hair, female)
+				if k == 0 and kind in ["formal", "smart", "staff", "ceo", "formal_f", "casual"]:
+					o.acc.append(["lanyard", Color(0.55, 0.32, 0.92)])   # their BNB ID badge
 				var tint: Dictionary = o.tint
 				tint.merge(skin(skin_c))
 				var parts: Array = o.acc + extra
@@ -203,6 +205,38 @@ static func _outfit(kind: String, pal: Array, hair: Dictionary, female: bool, va
 	if female and not kind in ["pakistani", "hijab", "formal_f"]:
 		acc.append(["shalwar", second])
 	return {tint = tint, acc = acc}
+
+
+## The extra costumes everyone gets: 3 Fight Night, 4 Hacker Hoodie, 5 Eid Special.
+static func _extra_outfit(k: int, kind: String, acc: Color, hair: Dictionary, female: bool) -> Dictionary:
+	var T := func(c: Color, bright := 0.75) -> Dictionary: return {c = c, sat = 0.0, bright = bright}
+	var S := func(c: Color, bright := 0.75, pat := {}) -> Dictionary:
+		return {c = Color.WHITE, sat = 0.0, bright = bright, pat = pat if not pat.is_empty() else {kind = "solid", a = c}}
+	var dark := Color(0.12, 0.11, 0.14)
+	var hijab := kind == "hijab"
+	var tint := {"Hair": "hide" if hijab else hair, "Tie": "hide"}
+	var parts: Array = []
+	match k:
+		3:   # Fight Night: dark tee, accent trousers, hand wraps, belt and headband
+			tint.merge({"Tops": S.call(dark, 0.55), "Bottoms": T.call(acc.darkened(0.25), 0.6), "Shoes": T.call(Color(0.1, 0.1, 0.11), 0.35)}, true)
+			parts.append_array([["wraps", Color(0.92, 0.9, 0.86)], ["belt", acc]])
+			if not hijab: parts.append(["headband", acc])
+		4:   # Hacker Hoodie: dark hoodie with a glowing tech grid in their colour, headphones
+			tint.merge({"Tops": {c = Color(0.3, 0.3, 0.36), sat = 0.0, bright = 0.42, pat = {kind = "grid", a = acc.lightened(0.15), b = acc.lightened(0.45), scale = 1.0}},
+				"Bottoms": T.call(Color(0.16, 0.2, 0.32), 0.5), "Shoes": T.call(Color(0.92, 0.92, 0.94), 0.85)}, true)
+			parts.append_array([["hood", Color(0.22, 0.22, 0.26)], ["sleeves", Color(0.22, 0.22, 0.26)]])
+			if not hijab: parts.append(["headphones", Color(0.1, 0.1, 0.12)])
+		5:   # Eid Special: kurta / embroidered kameez with a dupatta
+			var cream := Color(0.95, 0.92, 0.84)
+			tint.merge({"Tops": S.call(cream, 0.8), "Bottoms": T.call(cream, 0.75), "Shoes": T.call(Color(0.5, 0.32, 0.15), 0.55)}, true)
+			if female:
+				parts.append_array([["kameez", acc], ["shalwar", cream], ["sleeves", acc], ["dupatta", Color(1.0, 0.8, 0.35)]])
+			else:
+				parts.append_array([["kameez", cream], ["shalwar", cream], ["sleeves", cream]])
+			if hijab: parts.append(["hijab", acc.lightened(0.2)])
+	if hijab and k != 5: parts.append_array([["hijab", acc], ["sleeves", Color(0.2, 0.2, 0.24)]])
+	if female and k != 5: parts.append(["shalwar", Color(0.18, 0.18, 0.22) if k == 3 else Color(0.16, 0.2, 0.32)])
+	return {tint = tint, acc = parts}
 
 
 static func _hair(desc: String, female: bool) -> Dictionary:

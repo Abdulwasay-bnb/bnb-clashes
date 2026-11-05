@@ -673,6 +673,15 @@ func _acc_parts(kind: String) -> Array:
 				["head", ToonRig.sph(0.009), Vector3(0.027, 0.012, 0.099), Vector3(0, 0.5, -0.45), Vector3(1.5, 0.4, 0.45)],
 				["head", ToonRig.sph(0.012), Vector3(-0.012, 0.017, 0.104), Vector3(0, -0.25, 0.22), Vector3(1.7, 0.42, 0.45)],
 				["head", ToonRig.sph(0.009), Vector3(-0.027, 0.012, 0.099), Vector3(0, -0.5, 0.45), Vector3(1.5, 0.4, 0.45)]]
+		"headphones":   # band over the top of the head, cups over the ears
+			return [["head", tor.call(0.112, 0.008), Vector3(0, 0.075, -0.005), Vector3(PI / 2, 0, 0), Vector3(1.0, 1.0, 1.0)],
+				["head", ToonRig.cyl(0.036, 0.036, 0.028), Vector3(0.1, 0.035, -0.005), Z90, Vector3.ONE],
+				["head", ToonRig.cyl(0.036, 0.036, 0.028), Vector3(-0.1, 0.035, -0.005), Z90, Vector3.ONE]]
+		"lanyard":      # BNB ID badge on a cord round the neck
+			return [["upperChest", tor.call(0.085, 0.004), Vector3(0, 0.1, 0.03), Vector3(1.0, 0, 0), Vector3(1.0, 1.0, 1.3)],
+				["upperChest", ToonRig.box(0.045, 0.065, 0.006), Vector3(0, -0.035, 0.125), Vector3(-0.15, 0, 0), Vector3.ONE]]
+		"hood":         # a hoodie's hood bunched behind the neck
+			return [["upperChest", tor.call(0.1, 0.035), Vector3(0, 0.16, -0.05), Vector3(0.5, 0, 0), Vector3(1.1, 1.0, 0.95)]]
 		"kneepads":
 			return [["leftLowerLeg", ToonRig.sph(0.06), Vector3(0, 0.0, 0.05), Vector3.ZERO, Vector3(1, 1, 0.6)],
 				["rightLowerLeg", ToonRig.sph(0.06), Vector3(0, 0.0, 0.05), Vector3.ZERO, Vector3(1, 1, 0.6)]]
@@ -769,7 +778,7 @@ func _make_accessories(list: Array) -> void:
 	for a in list:
 		var kind: String = a[0]
 		var col: Color = a[1]
-		var flat := kind in ["visor", "glasses", "mustache", "beard", "kameez", "shalwar", "sleeves", "hijab", "dupatta"]
+		var flat := kind in ["visor", "glasses", "mustache", "beard", "kameez", "shalwar", "sleeves", "hijab", "dupatta", "lanyard"]
 		if kind != "visor":
 			col = col * 0.72   # keep within the texture range of the models so accessories don't bloom
 			col.a = 1.0

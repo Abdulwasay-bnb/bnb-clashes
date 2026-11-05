@@ -1703,6 +1703,28 @@ func _run_autotest() -> void:
 			ui.show_pause(); ui.show_moves(0)
 			await get_tree().create_timer(0.5).timeout
 			await shot.call("moves")
+		"outfits":
+			# every costume for a few people, full body
+			ui.hide_screen(); set_process(false)
+			var ids := ["abdul_wasay", "kashaf_ud_duja", "aqsa_altaf", "hamza_khan", "ali"]
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--ids="): ids = a.substr(6).split(",")
+			for id in ids:
+				var C := Data.by_id(id)
+				var n := Models.costume_names(id).size()
+				var rigs := []
+				for c in n:
+					var rig := make_rig(C, c)
+					add_child(rig)
+					rig.position = Vector3((c - (n - 1) / 2.0) * 0.85, 0, 0)
+					rig.rotation.y = 0.25
+					rig.apply_pose(C.pose.guard)
+					rigs.append(rig)
+				camera.position = Vector3(0, 1.0, 4.6); camera.look_at(Vector3(0, 0.95, 0))
+				for k in 3: await get_tree().process_frame
+				await shot.call("outfits_" + id)
+				for r in rigs: r.queue_free()
+			print("AUTOTEST outfits %s" % [Models.costume_names(ids[0])])
 		"hairgrid":
 			# every player's head, front-three-quarter and back, for checking hair (--front: faces only)
 			ui.hide_screen(); set_process(false)
