@@ -149,6 +149,7 @@ static func compile(d: Dictionary) -> Dictionary:
 		m.end = m.s + m.a + m.r
 		m.limb = _strike_limb(s.get("p"))
 		moves[k] = m
+	_add_move_set_extras(moves)
 	var stances := {}
 	if d.has("stances"):
 		for k in d.stances:
@@ -163,6 +164,35 @@ static func compile(d: Dictionary) -> Dictionary:
 	}
 	C.ai = ai_profile(C)
 	return C
+
+
+## Everyone gets running attacks (dash, keep holding forward, then a button) and jump attacks (hold up, then a button).
+## They borrow a keyframed track from the fighter's own moves as a fallback; the Mixamo clip (picked by name) does the rest.
+static func _add_move_set_extras(moves: Dictionary) -> void:
+	var punch: Move = moves.get("2", moves.get("1"))
+	var kick: Move = moves.get("4", moves.get("3", punch))
+	var add := func(key: String, ref: Move, o: Dictionary) -> void:
+		if moves.has(key) or ref == null: return
+		var m := Move.new()
+		m.key = key; m.name = o.n
+		m.s = o.s; m.a = o.a; m.r = o.r; m.dmg = o.d; m.lvl = o.get("l", "mid")
+		m.range = o.get("rg", 1.1); m.move = o.get("mv", 0.0); m.push = o.get("push", 0.0)
+		m.kd = o.get("kd", false); m.launch = o.get("launch", false); m.jump = o.get("jump", false)
+		m.is_throw = o.get("throw", false); m.throw_type = o.get("tt", "over")
+		m.blk = o.get("blk", null); m.limb = o.get("limb", ref.limb)
+		for k in ref.track: m.track.append([int(k[0] * float(m.s) / maxf(1.0, ref.s)), k[1], k[2] if k.size() > 2 else 0])
+		m.end = m.s + m.a + m.r
+		moves[key] = m
+	# running
+	add.call("run1", punch, {n = "Running Elbow", s = 12, a = 3, r = 20, d = 15, kd = true, rg = 1.15, mv = 0.05, blk = -10, limb = "rh"})
+	add.call("run2", punch, {n = "Spear Tackle", s = 13, a = 3, r = 28, d = 24, rg = 1.05, mv = 0.06, throw = true, tt = "slam"})
+	add.call("run3", kick, {n = "Running Dropkick", s = 15, a = 4, r = 30, d = 22, kd = true, jump = true, rg = 1.45, mv = 0.05, blk = -16, limb = "rf"})
+	add.call("run4", kick, {n = "Running Flying Knee", s = 13, a = 4, r = 22, d = 17, launch = true, rg = 1.15, mv = 0.06, blk = -14, limb = "rk"})
+	# in the air
+	add.call("j1", punch, {n = "Diving Elbow", s = 8, a = 5, r = 12, d = 13, l = "mid", rg = 1.1, limb = "rh"})
+	add.call("j2", punch, {n = "Diving Elbow", s = 8, a = 5, r = 12, d = 14, l = "mid", rg = 1.1, limb = "rh"})
+	add.call("j3", kick, {n = "Jump Kick", s = 9, a = 6, r = 14, d = 16, l = "mid", rg = 1.3, limb = "lf"})
+	add.call("j4", kick, {n = "Jump Kick", s = 10, a = 6, r = 16, d = 18, l = "mid", kd = true, rg = 1.35, limb = "lf"})
 
 
 static func _strike_limb(p) -> String:

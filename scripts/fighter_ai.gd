@@ -150,6 +150,15 @@ func decide(me: Fighter, op: Fighter) -> void:
 		push(chain_seq(A.juggle.pick_random(), me.C, 0.8)); return
 	if op.state in ["down", "getup"]:
 		push([item(-1 if d < 1.8 else 0, 0, 0, randi_range(6, 14))]); return
+	# from far away: dash into a run and finish with a running attack
+	if d > 3.0 and r < 0.12 + lv * 0.05:
+		var frames := clampi(int((d - 1.7) / (0.088 * me.C.speed)), 4, 70)
+		push([item(1, 0, 0, 2), item(0, 0, 0, 2), item(1, 0, 0, 10 + frames), item(1, 0, [1, 2, 4, 8].pick_random(), 2)])
+		return
+	# from mid range: jump in with a kick
+	if d > 1.6 and d < 2.8 and r > 0.93 - lv * 0.02:
+		push([item(1, 1, 0, 14), item(1, 1, [4, 8].pick_random(), 2), item(0, 0, 0, 20)])
+		return
 	if d > 2.1:
 		push([item(1, 0, 0, 2), item(0, 0, 0, 2), item(1, 0, 0, 10)] if r < 0.3 else [item(1, 0, 0, randi_range(8, 18))])
 		wait = randi_range(0, 8 - lv * 2)

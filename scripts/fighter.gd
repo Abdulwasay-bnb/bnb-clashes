@@ -2,7 +2,7 @@ class_name Fighter
 extends RefCounted
 ## Frame-driven fighter state machine. One step() per 60 Hz physics tick.
 
-const FREE_FACE := ["idle", "walkf", "walkb", "crouch", "side", "dash", "bdash", "block", "hit", "getup", "stance"]
+const FREE_FACE := ["idle", "walkf", "walkb", "crouch", "side", "dash", "bdash", "block", "hit", "getup", "stance", "run", "skid", "jump"]
 const INVULN := ["down", "getup", "ko", "thrown", "throwing", "win"]
 static var move_seq := 0
 
@@ -68,6 +68,8 @@ var bruise := 0.0        # bruising + one eye swelling shut
 var dirt := 0.0          # dust on the clothes from knockdowns
 var blood_on := 0.0      # blood stains on the clothes
 var last_rt := -1.0
+var last_dir := 5        # stick direction this frame (numpad, relative to the opponent)
+var up_hold := 0         # frames up has been held: tap = sidestep, hold = jump
 
 
 func _init(game, ch: Dictionary, s: int, costume := 0) -> void:
@@ -112,8 +114,13 @@ func to_neutral() -> void:
 
 
 func can_act() -> bool:
-	return state in ["idle", "walkf", "walkb", "crouch", "stance"] or (state == "side" and sf > 5) \
-		or (state == "dash" and sf > 3) or (state == "bdash" and sf > 10)
+	return state in ["idle", "walkf", "walkb", "crouch", "stance", "skid"] or (state == "side" and sf > 5) \
+		or (state == "dash" and sf > 3) or (state == "bdash" and sf > 10) or (state == "run" and sf > 2) or (state == "jump" and sf > 3)
+
+
+## In the air on their own (a jump or a jump attack) rather than launched.
+func airborne() -> bool:
+	return state == "jump" or (state == "attack" and move != null and move.key.begins_with("j"))
 
 
 func is_low() -> bool:
@@ -122,7 +129,7 @@ func is_low() -> bool:
 
 
 func is_jumping() -> bool:
-	return state == "attack" and move.jump and sf >= 4 and sf < move.s + move.a
+	return (state == "attack" and move.jump and sf >= 4 and sf < move.s + move.a) or (airborne() and pos.y > 0.15)
 
 
 # Neutral or holding back = standing guard (highs & mids). Holding down = crouch guard (lows).
@@ -146,6 +153,8 @@ func collect(inp: InputBuf.Frame) -> void:
 
 func control(inp: InputBuf.Frame) -> void:
 	collect(inp)
+	last_dir = inp.dir
+	up_hold = up_hold + 1 if inp.dir >= 7 else 0
 	if state == "block":
 		crouch_block = inp.dn
 	# Buttons wait 2 frames so simultaneous presses (1+2, 3+4) register together.
@@ -222,6 +231,14 @@ func try_start(bits: int, d: int, ff: bool) -> void:
 	var b1 := first_btn(bits)
 	var pre := dir_prefixes(d)
 	var cands: Array = []
+	# running and jumping have their own attacks
+	if state == "run" or (state == "skid" and sf < 9):
+		cands.append("run" + b); cands.append("run" + b1)
+	if state == "jump":
+		cands.append("j" + b); cands.append("j" + b1)
+		for k in cands:
+			if M.has(k): start_move(k); return
+		return
 	if state == "stance":
 		for p in pre + [""]:
 			cands.append(stance + ":" + p + b)
@@ -275,6 +292,14 @@ func start_move(key: String) -> void:
 
 
 func movement(inp: InputBuf.Frame) -> void:
+	if state == "jump": return
+	if state == "run":
+		if inp.dir >= 7 and up_hold >= 3: jump(1.6); return       # running jump: long and fast
+		if inp.dir != 6 and inp.dir != 9: set_state("skid")
+		return
+	if state == "side" and sf >= 5 and up_hold >= 7:
+		# held up: the sidestep becomes a jump (up-back / up / up-forward)
+		jump(-1.0 if last_dir == 7 else (1.0 if last_dir == 9 else 0.0)); return
 	if inp.ff_now and state != "crouch":
 		set_state("dash"); return
 	if inp.bb_now:
@@ -298,6 +323,16 @@ func movement(inp: InputBuf.Frame) -> void:
 		set_state(ns)
 
 
+## Leave the ground: dirx = -1 back, 0 straight up, 1 forward (1.6 from a run).
+func jump(dirx: float) -> void:
+	set_state("jump")
+	vy = 0.118 if absf(dirx) < 1.5 else 0.105
+	air_v = fwd() * 0.045 * dirx * C.speed
+	pos.y = 0.01
+	squash(0.5)
+	G.sfx("whoosh")
+
+
 func step(opp: Fighter) -> void:
 	sf += 1
 	if ws_t > 0:
@@ -311,9 +346,19 @@ func step(opp: Fighter) -> void:
 			pos -= f * 0.024 * sp; walk_ph -= 0.22 * sp
 		"dash":
 			pos += f * 0.11 * sp * maxf(0.0, 1.0 - sf / 14.0); walk_ph += 0.4
-			if sf >= 14:
+			if sf >= 10 and (last_dir == 6 or last_dir == 9) and dist_to(opp) > 1.4:
+				set_state("run")   # still holding forward: break into a run
+			elif sf >= 14:
 				to_neutral()
 				squash(0.4)   # plant the feet at the end of the dash
+		"run":
+			pos += f * 0.088 * sp; walk_ph += 0.45 * sp
+			face_to(opp, 0.08)
+			if dist_to(opp) < 0.95 or sf > 150: set_state("skid")
+		"skid":
+			pos += f * 0.06 * sp * maxf(0.0, 1.0 - sf / 10.0)
+			if sf >= 10:
+				to_neutral(); squash(0.5)
 		"bdash":
 			pos -= f * 0.1 * sp * maxf(0.0, 1.0 - sf / 18.0)
 			if sf >= 18: to_neutral()
@@ -324,6 +369,14 @@ func step(opp: Fighter) -> void:
 			if sf >= C.stances[stance].dur: to_neutral()
 		"attack":
 			var m := move
+			if airborne():
+				# jump attacks: keep flying; touching down ends them
+				if sf <= 2: face_to(opp, 0.35)
+				if pos.y <= 0.0 and sf > 3:
+					pos.y = 0.0; to_neutral(); squash(0.7); G.sfx("thud"); return
+				if sf >= m.end:
+					move = null; state = "jump"   # finished the strike, still falling
+				return
 			if m.jump and sf == m.s + m.a + 2:
 				squash(0.8)
 			# Linear moves only track for 2 frames; homing moves track through startup.
@@ -414,6 +467,21 @@ func throw_step() -> void:
 
 
 func physics() -> void:
+	if airborne():
+		pos.y += vy
+		vy -= Main.GRAV
+		pos += air_v
+		if pos.y <= 0.0 and vy < 0.0:
+			pos.y = 0.0
+			if state == "jump":
+				set_state("idle"); squash(0.8); G.sfx("thud")
+		var ra := Vector2(pos.x, pos.z).length()
+		if ra > Main.ARENA_R:
+			pos.x *= Main.ARENA_R / ra; pos.z *= Main.ARENA_R / ra
+		return
+	if pos.y > 0.0 and state in ["hit", "block"]:
+		# knocked out of a jump: fall the rest of the way as a juggle
+		set_state("air"); air_v = -fwd() * 0.02
 	if state == "air":
 		pos.y += vy
 		vy -= Main.GRAV * (1.0 + juggle * 0.04)
@@ -492,6 +560,14 @@ func target_pose() -> PackedFloat32Array:
 		"down", "ko": return P.down
 		"getup": return Pose.lerp_p(P.down, P.guard, Pose.ease_io(clampf(sf / 20.0, 0.0, 1.0)))
 		"side": return P.side
+		"jump":
+			# knees tucked on the way up, legs reaching for the floor on the way down
+			var j: PackedFloat32Array = P.guard.duplicate()
+			var tuck := clampf(vy * 9.0, 0.0, 1.0)
+			j[Pose.LHX] -= 0.9 * tuck + 0.2; j[Pose.RHX] -= 0.6 * tuck + 0.1
+			j[Pose.LK] += 1.3 * tuck + 0.3; j[Pose.RK] += 1.0 * tuck + 0.3
+			return j
+		"skid": return P.dash
 		"dash": return P.dash
 		"bdash": return P.bdash
 		"throwing":
@@ -696,9 +772,9 @@ func render(t: float) -> void:
 		p[Pose.LSX] -= s * 0.12; p[Pose.RSX] += s * 0.12
 	elif state == "idle":
 		Idle.apply(C.arch, p, t + side * 0.9)
-	rig.apply_pose(p, not (state in ["air", "thrown", "down", "ko", "getup"]))
+	rig.apply_pose(p, not (state in ["air", "thrown", "down", "ko", "getup", "jump"]) and not airborne())
 	rig.set_flash(flash * 0.8)
-	rig.set_face("angry" if state in ["attack", "throwing", "dash"] else "sad" if state in ["hit", "air", "down", "ko", "thrown"] \
+	rig.set_face("angry" if state in ["attack", "throwing", "dash", "run"] else "sad" if state in ["hit", "air", "down", "ko", "thrown"] \
 		else "happy" if state == "win" else "surprised" if state == "block" else "neutral")
 	if C.has("boss_form"):
 		rig.set_glow(1.6 + sin(t * 5.0) * 0.6)   # boss aura

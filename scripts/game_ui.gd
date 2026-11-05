@@ -1546,8 +1546,14 @@ In VS CPU and Training the arrow keys and P2 buttons also work for Player 1.
 Pad 1 → Player 1, Pad 2 → Player 2. D-pad or left stick to move. X = 1, Y = 2, A = 3, B = 4 (Xbox layout). Start = pause.
 
 [color=#2ee6ff][b]MOVEMENT[/b][/color]
-Double-tap forward to dash, double-tap back to backdash. Standing still or holding back blocks highs and mids; hold down to block lows.
-Release down and press a button for [b]WS[/b] (while-standing) attacks.""")
+Double-tap forward to dash — [b]keep holding forward to RUN[/b]. Double-tap back to backdash.
+[b]Hold up[/b] to jump (up-back / up / up-forward); hold up while running for a long running jump.
+Standing still or holding back blocks highs and mids; hold down to block lows.
+Release down and press a button for [b]WS[/b] (while-standing) attacks.
+
+[color=#2ee6ff][b]RUNNING & JUMPING ATTACKS[/b][/color]
+While running: [b]1[/b] running elbow · [b]2[/b] spear tackle (throw) · [b]3[/b] dropkick · [b]4[/b] flying knee.
+In the air: [b]1 / 2[/b] diving elbow · [b]3 / 4[/b] jump kick. Jumping hops over low attacks and throws.""")
 
 
 func show_how() -> void:

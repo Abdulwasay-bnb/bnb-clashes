@@ -398,6 +398,10 @@ func read_player(i: int) -> InputBuf.Frame:
 	if mode == "online":
 		var n: Array = net_in[i].get(nf, [0, 0, 0])
 		return inp.frame(n[0] if i == 0 else -n[0], n[1], n[2])
+	if i == 0 and test_p1.is_valid():
+		test_t += 1
+		var q: Array = test_p1.call(test_t)
+		return inp.frame(q[0], q[1], q[2])
 	if ai[i] != null:
 		var o: Array = ai[i].think(F[i], F[1 - i])
 		return inp.frame(o[0], o[1], o[2])
@@ -433,6 +437,8 @@ func _device_raw() -> Array:
 
 
 var test_net_input: Callable   # autotest: scripted controls for online tests
+var test_p1: Callable          # autotest: scripted controls for player 1 (frame -> [x, y, held])
+var test_t := 0
 
 
 func _dummy_think() -> Array:
@@ -1362,6 +1368,45 @@ func _run_autotest() -> void:
 			await get_tree().create_timer(1.0).timeout
 			await shot.call("mafia_result")
 			print("AUTOTEST mafia phase=%s me_mafia=%s alive=%d stats=%s chat=%d" % [mafia.sim.phase, mafia._me().mafia, mafia.sim.agents.filter(func(a): return a.alive).size(), mafia.stats, mafia.sim.chat.size()])
+		"moves2":
+			# running and jumping through the real controls: each script is [name, frames, fn(t) -> [x, y, held]]
+			var run_then := func(btn: int, at: int) -> Callable:
+				return func(t: int) -> Array:
+					if t <= 3: return [1, 0, 0]
+					if t <= 6: return [0, 0, 0]
+					return [1, 0, btn if (t == at or t == at + 1) else 0]
+			var scripts := [
+				["run_elbow", 90, run_then.call(1, 46)], ["run_spear", 110, run_then.call(2, 46)],
+				["run_dropkick", 100, run_then.call(4, 46)], ["run_knee", 90, run_then.call(8, 46)],
+				["jump_kick", 90, func(t: int) -> Array: return [1, 1, 8 if t in [16, 17] else 0] if t < 40 else [0, 0, 0]],
+				["jump_back", 70, func(t: int) -> Array: return [-1, 1, 0] if t < 20 else [0, 0, 0]],
+				["running_jump", 110, func(t: int) -> Array:
+					if t <= 3: return [1, 0, 0]
+					if t <= 6: return [0, 0, 0]
+					if t < 40: return [1, 0, 0]
+					return [1, 1, 4 if t in [54, 55] else 0] if t < 70 else [0, 0, 0]],
+			]
+			for sc in scripts:
+				await start_match({mode = "training"}, [Data.by_id("abdul_wasay"), Data.by_id("ali")])
+				dummy = 0
+				for k in 60: await get_tree().physics_frame
+				var gap := 1.0 if String(sc[0]).begins_with("jump") else 2.2
+				F[0].reset(-gap); F[1].reset(gap)
+				test_t = 0
+				test_p1 = sc[2]
+				var trace := []
+				var last := ""
+				var maxy := 0.0
+				for k in sc[1]:
+					await get_tree().physics_frame
+					var st: String = F[0].state + ("(" + F[0].move.key + ")" if F[0].state == "attack" else "")
+					if st != last: trace.append("%d:%s" % [test_t, st]); last = st
+					maxy = maxf(maxy, F[0].pos.y)
+					if k == int(sc[1] * 0.55): await shot.call("mv2_" + sc[0])
+				trace.append("end_y=%.2f" % F[0].pos.y)
+				test_p1 = Callable()
+				print("AUTOTEST moves2 %s maxy=%.2f p2=%s hp2=%d trace=%s" % [sc[0], maxy, F[1].state, F[1].hp, " ".join(trace)])
+				leave_game()
 		"mafiatour":
 			# walk the reskinned office: one shot per room
 			lobby.C = Data.by_id("hamza_khan"); lobby.mode = "mafia"; lobby.cfg.total = 6; lobby.cfg.mafia = 1
