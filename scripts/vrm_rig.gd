@@ -654,18 +654,25 @@ func _acc_parts(kind: String) -> Array:
 				["upperChest", ToonRig.box(0.11, 0.42, 0.02), Vector3(0.1, -0.1, -0.11), Vector3(0.1, 0, 0.15), Vector3.ONE],
 				["upperChest", ToonRig.box(0.11, 0.38, 0.02), Vector3(-0.12, -0.08, 0.1), Vector3(-0.08, 0, -0.2), Vector3.ONE]]
 		"beard":
+			# hugs the jawline: two rows of small tufts rising toward the cheeks, plus a fuller chin
 			var tufts: Array = []
-			var jaw_y := skull.position.y + 0.012            # just above the chin
+			var jaw_y := skull.position.y + 0.014            # just above the chin
 			var front := skull.position.z + skull.size.z
 			var hw := skull.size.x / 2.0
-			for k in 13:
-				var a := (k - 6) / 6.0 * 1.25                # ear to ear around the jaw, overlapping tufts
-				var pos := Vector3(sin(a) * hw * 0.86, lerpf(jaw_y + 0.045, jaw_y, cos(a)), front - 0.03 - (1.0 - cos(a)) * 0.095)
-				tufts.append(["head", ToonRig.sph(0.016), pos, Vector3(0, a, 0), Vector3(1.6, 1.3, 0.5)])
+			for row in 2:
+				var n := 11 if row == 0 else 9
+				for k in n:
+					var a := (k - (n - 1) / 2.0) / ((n - 1) / 2.0) * 1.05
+					var pos := Vector3(sin(a) * hw * (0.8 - row * 0.06), lerpf(jaw_y + 0.075, jaw_y + row * 0.014, cos(a)) , front - 0.018 - (1.0 - cos(a)) * 0.08 - row * 0.008)
+					tufts.append(["head", ToonRig.sph(0.0125 - row * 0.002), pos, Vector3(0, a, 0), Vector3(1.5, 1.25, 0.42)])
+			tufts.append(["head", ToonRig.sph(0.018), Vector3(0, jaw_y - 0.006, front - 0.012), Vector3(0.2, 0, 0), Vector3(1.35, 1.1, 0.55)])
 			return tufts + _acc_parts("mustache")
 		"mustache":
-			return [["head", ToonRig.sph(0.016), Vector3(0.016, 0.016, 0.103), Vector3(0, 0, -0.25), Vector3(1.7, 0.55, 0.6)],
-				["head", ToonRig.sph(0.016), Vector3(-0.016, 0.016, 0.103), Vector3(0, 0, 0.25), Vector3(1.7, 0.55, 0.6)]]
+			# two tapering strokes from the middle out over the lip corners
+			return [["head", ToonRig.sph(0.012), Vector3(0.012, 0.017, 0.104), Vector3(0, 0.25, -0.22), Vector3(1.7, 0.42, 0.45)],
+				["head", ToonRig.sph(0.009), Vector3(0.027, 0.012, 0.099), Vector3(0, 0.5, -0.45), Vector3(1.5, 0.4, 0.45)],
+				["head", ToonRig.sph(0.012), Vector3(-0.012, 0.017, 0.104), Vector3(0, -0.25, 0.22), Vector3(1.7, 0.42, 0.45)],
+				["head", ToonRig.sph(0.009), Vector3(-0.027, 0.012, 0.099), Vector3(0, -0.5, 0.45), Vector3(1.5, 0.4, 0.45)]]
 		"kneepads":
 			return [["leftLowerLeg", ToonRig.sph(0.06), Vector3(0, 0.0, 0.05), Vector3.ZERO, Vector3(1, 1, 0.6)],
 				["rightLowerLeg", ToonRig.sph(0.06), Vector3(0, 0.0, 0.05), Vector3.ZERO, Vector3(1, 1, 0.6)]]
@@ -772,8 +779,8 @@ func _make_accessories(list: Array) -> void:
 		m.set_shader_parameter("tex", _white())
 		m.set_shader_parameter("albedo", col)
 		m.set_shader_parameter("shade", col.darkened(0.3).lerp(Color(0.55, 0.5, 0.75), 0.4))
-		if kind.begins_with("hair_"):
-			m.set_shader_parameter("hair_sheen", 1.0)
+		if kind.begins_with("hair_") or kind in ["beard", "mustache"]:
+			m.set_shader_parameter("hair_sheen", 1.0 if kind.begins_with("hair_") else 0.6)
 			m.set_shader_parameter("sheen_color", col.lightened(0.6).lerp(Color(0.8, 0.86, 1.0), 0.6))
 			m.set_shader_parameter("shade", col.lightened(0.15).lerp(Color(0.5, 0.48, 0.7), 0.45))
 		if kind == "visor":
