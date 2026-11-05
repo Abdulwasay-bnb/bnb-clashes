@@ -67,9 +67,6 @@ static func _recorded(C: Dictionary, kind: String) -> AudioStream:
 static func get_sound(C: Dictionary, kind: String) -> AudioStream:
 	var rec := _recorded(C, kind)
 	if rec != null: return rec
-	# synthesized fallback: kept rare and quiet (it sounds robotic up close)
-	if kind == "attack": return null
-	if kind == "hurt" and randf() < 0.6: return null
 	if kind == "win":
 		return _cached(C, "win", 0, func(): return _laugh(profile(C)))
 	var opts: Array = KINDS.get(kind, [])
@@ -119,8 +116,8 @@ static func _make(v: Dictionary, k: Array) -> AudioStreamWAV:
 		var prev_ph := ph
 		ph += f0 / RATE
 		if floorf(ph) != floorf(prev_ph):   # new glottal cycle: a little jitter and shimmer, like a real voice
-			jit = 1.0 + randf_range(-0.012, 0.012)
-			shim = 1.0 + randf_range(-0.08, 0.08)
+			jit = 1.0 + randf_range(-0.03, 0.03)     # strained voices wobble more
+			shim = 1.0 + randf_range(-0.16, 0.16)
 		var x := fposmod(ph, 1.0)
 		# Rosenberg glottal pulse (smooth opening, quicker closing, closed phase), then its slope (lip radiation)
 		var g := 0.0
@@ -132,12 +129,17 @@ static func _make(v: Dictionary, k: Array) -> AudioStreamWAV:
 		pulse += randf_range(-1.0, 1.0) * v.rasp * 0.35
 		var noise := randf_range(-1.0, 1.0)
 		var voiced: float = 0.0 if t < breath_t else 1.0
-		var src: float = pulse * voiced * (1.0 - v.breath * 0.6) + noise * (v.breath * 0.35 + (0.5 if t < breath_t else 0.0))
+		# effort: breath runs through the whole sound, a creaky (fry) onset, a shaky tremor
+		var air := maxf(v.breath, 0.28)
+		var fry: float = 1.0 - smoothstep(0.0, 0.06, t)
+		var trem := 1.0 + 0.12 * sin(t * 47.0 + randf() * 0.3)
+		var src: float = pulse * voiced * (1.0 - air * 0.55) * trem * (1.0 - fry * 0.5) \
+			+ noise * (air * 0.5 + (0.55 if t < breath_t else 0.0) + fry * 0.25)
 		var out := 0.0
 		for j in 3: out += _step(res[j], src) * float(amps[j])
 		lp += (out - lp) * 0.45            # gentle low-pass: takes the hiss / buzz off the top
 		var env: float = minf(1.0, t / 0.02) * pow(1.0 - u, 1.3)
-		data.encode_s16(i * 2, int(clampf(lp * env * 3.2 * k[5] * v.vol, -1.0, 1.0) * 14000.0))
+		data.encode_s16(i * 2, int(clampf(lp * env * 3.2 * k[5] * v.vol, -1.0, 1.0) * 21000.0))
 	return _wav(data)
 
 

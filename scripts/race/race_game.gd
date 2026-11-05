@@ -225,7 +225,7 @@ func _event(e: Array) -> void:
 			var near: bool = mine or (sim.racers[me] as RaceSim.Racer).pos.distance_to(r.pos) < 60.0
 			if near:
 				cutin = {C = r.C, t = 1.6, mine = mine}
-				world.punch = 1.0
+				world.punch = 0.4 if mine else 0.0
 			if not near: _toast(String(r.C.get("surge_name", "POWER")) if mine else "%s: %s" % [r.C.person.get("short", r.C.name) if r.C.has("person") else r.C.name, r.C.get("surge_name", "")])
 		"use": if mine: G.sfx("whoosh")
 		"lap": if mine: G.sfx("vs"); _toast("LAP %d / %d" % [mini((sim.racers[me] as RaceSim.Racer).lap + 1, RaceSim.LAPS), RaceSim.LAPS])
@@ -327,31 +327,26 @@ func _draw_hud() -> void:
 	_draw_touch()
 
 
+## Power cut-in: a compact strip on the left (under the lap / time), so the road stays clear.
 func _draw_cutin(s: Vector2) -> void:
 	if cutin.is_empty(): return
 	var C: Dictionary = cutin.C
 	var t: float = 1.6 - cutin.t
-	var slide := clampf(t / 0.18, 0.0, 1.0) * (1.0 - clampf((t - 1.3) / 0.3, 0.0, 1.0))   # in, hold, out
+	var slide := clampf(t / 0.15, 0.0, 1.0) * (1.0 - clampf((t - 1.3) / 0.3, 0.0, 1.0))
 	var acc: Color = C.get("accent", Color(0.6, 0.3, 0.9))
-	var y := s.y * 0.42
-	var h := 150.0
-	var off := (1.0 - slide) * s.x * (-1.0 if cutin.mine else 1.0)
-	# slanted band with speed lines
-	var band := PackedVector2Array([Vector2(off, y + 40), Vector2(s.x + off, y - 30), Vector2(s.x + off, y - 30 + h), Vector2(off, y + 40 + h)])
-	hud.draw_colored_polygon(band, Color(0.04, 0.02, 0.08, 0.86 * slide))
-	for k in 9:
-		var ly := y + 30 + k * 16.0 - fmod(t * 600.0 + k * 37.0, 30.0) * 0.2
-		hud.draw_line(Vector2(off, ly + 30), Vector2(s.x + off, ly - 40), Color(acc, 0.25 * slide), 2.0)
-	hud.draw_polyline(PackedVector2Array([band[0], band[1]]), Color(acc, slide), 5.0)
-	hud.draw_polyline(PackedVector2Array([band[3], band[2]]), Color(acc, slide), 5.0)
+	var w := 360.0
+	var h := 64.0
+	var x := -w + slide * (w + 24.0)
+	var y := 215.0 if not _touch() else s.y * 0.3
+	var box := PackedVector2Array([Vector2(x, y), Vector2(x + w, y), Vector2(x + w - 18, y + h), Vector2(x, y + h)])
+	hud.draw_colored_polygon(box, Color(0.04, 0.02, 0.08, 0.78))
+	hud.draw_rect(Rect2(Vector2(x, y), Vector2(6, h)), acc)
+	hud.draw_line(Vector2(x, y + h), Vector2(x + w - 18, y + h), Color(acc, 0.9), 2.0)
 	var tex: Texture2D = G.portraits.get(C.id)
-	var px := s.x * (0.12 if cutin.mine else 0.66) + off
-	if tex != null: hud.draw_texture_rect(tex, Rect2(Vector2(px, y - 20), Vector2(h + 20, h + 20)), false, Color(1, 1, 1, slide))
+	if tex != null: hud.draw_texture_rect(tex, Rect2(Vector2(x + 10, y + 4), Vector2(h - 8, h - 8)), false)
 	var name: String = String(C.person.get("short", C.name)).to_upper() if C.has("person") else String(C.name).to_upper()
-	var tx := s.x * (0.12 if cutin.mine else 0.2) + (h + 40 if cutin.mine else 0.0) + off
-	hud.draw_string(font, Vector2(tx, y + 70), name, HORIZONTAL_ALIGNMENT_LEFT, -1, 30, Color(1, 1, 1, slide))
-	hud.draw_string(font, Vector2(tx, y + 120), String(C.get("surge_name", "POWER")).to_upper() + "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 46, Color(acc.lightened(0.35), slide))
-	if t < 0.12: hud.draw_rect(Rect2(Vector2.ZERO, s), Color(1, 1, 1, 0.35 * (1.0 - t / 0.12)))   # flash
+	hud.draw_string(small, Vector2(x + h + 12, y + 24), name + ("  (YOU)" if cutin.mine else ""), HORIZONTAL_ALIGNMENT_LEFT, w - h - 30, 18, Color(0.85, 0.88, 0.95))
+	hud.draw_string(font, Vector2(x + h + 12, y + 52), String(C.get("surge_name", "POWER")).to_upper() + "!", HORIZONTAL_ALIGNMENT_LEFT, w - h - 30, 24, acc.lightened(0.4))
 
 
 # ---------------------------------------------------------------- touch controls
