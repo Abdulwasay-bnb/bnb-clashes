@@ -273,7 +273,7 @@ func voice(f: Fighter, kind: String) -> void:
 			var vp := AudioStreamPlayer.new(); vp.volume_db = -3; add_child(vp); voice_players.append(vp)
 	var p: AudioStreamPlayer = voice_players[f.side * 2 + (1 if kind in ["hurt", "ko"] else 0)]
 	p.stream = s
-	p.pitch_scale = randf_range(0.97, 1.04)
+	p.pitch_scale = Voices.pitch(f.C) * randf_range(0.97, 1.04)
 	p.play()
 
 

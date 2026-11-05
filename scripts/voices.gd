@@ -50,6 +50,14 @@ static func profile(C: Dictionary) -> Dictionary:
 static var recorded := {}   # "male:hurt" -> [AudioStream]
 
 
+## Per-person pitch for the recorded voices (deeper / higher people), around 1.0.
+static func pitch(C: Dictionary) -> float:
+	var v := profile(C)
+	var p: Dictionary = C.get("person", {})
+	var base := 198.0 if String(p.get("model", "")) == "female" else 104.0
+	return clampf(float(v.f0) / base, 0.86, 1.14)
+
+
 static func _recorded(C: Dictionary, kind: String) -> AudioStream:
 	var p: Dictionary = C.get("person", {})
 	var g := "female" if String(p.get("model", "")) == "female" else "male"
@@ -65,7 +73,7 @@ static func _recorded(C: Dictionary, kind: String) -> AudioStream:
 
 
 static func get_sound(C: Dictionary, kind: String) -> AudioStream:
-	var rec := _recorded(C, kind)
+	var rec := _recorded(C, "power" if kind == "win" else kind)   # a victory yell for the win
 	if rec != null: return rec
 	if kind == "win":
 		return _cached(C, "win", 0, func(): return _laugh(profile(C)))
