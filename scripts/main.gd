@@ -1070,7 +1070,7 @@ func apply_hit(att: Fighter, def: Fighter, res: Dictionary) -> void:
 		if def.state != "air":
 			# what the fall looks like: launched / power -> flying back, sweeps -> legs taken out, KO -> varied
 			def.fall_kind = "fly" if (launch or m.surge) else ("sweep" if m.lvl == "low" else "back")
-			if def.hp <= 0 and not m.surge: def.fall_kind = ["back", "forward", "fly"][(att.move_id + def.combo_hits) % 3]
+			if def.hp <= 0 and not m.surge: def.fall_kind = ["back", "forward", "fly"][(def.combo_hits * 7 + def.combo_dmg) % 3]
 			def.air_est = int(2.0 * def.vy / GRAV) + 4
 			def.set_state("air")
 		def.move = null; def.queued = ""; def.stance = ""
@@ -1973,7 +1973,7 @@ func _run_autotest() -> void:
 				var C := Data.by_id(id)
 				for kind in ["attack", "heavy", "hurt", "ko", "power", "win"]:
 					var w := Voices.get_sound(C, kind)
-					w.save_to_wav("user://voice_%s_%s.wav" % [id, kind])
+					if w is AudioStreamWAV: (w as AudioStreamWAV).save_to_wav("user://voice_%s_%s.wav" % [id, kind])
 			print("AUTOTEST voices saved")
 			await start_match({mode = "training", stage = "open_office"}, [Data.by_id("hamza_khan"), Data.by_id("kashaf_ud_duja")])
 			for f in F:

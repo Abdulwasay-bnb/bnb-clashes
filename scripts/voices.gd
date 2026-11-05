@@ -46,7 +46,30 @@ static func profile(C: Dictionary) -> Dictionary:
 	return v
 
 
-static func get_sound(C: Dictionary, kind: String) -> AudioStreamWAV:
+## Recorded voices win when present: assets/audio/voices/<male|female>/<kind>_N.ogg (attack / heavy / hurt / ko / power / win).
+static var recorded := {}   # "male:hurt" -> [AudioStream]
+
+
+static func _recorded(C: Dictionary, kind: String) -> AudioStream:
+	var p: Dictionary = C.get("person", {})
+	var g := "female" if String(p.get("model", "")) == "female" else "male"
+	var key := g + ":" + kind
+	if not recorded.has(key):
+		var set := []
+		for i in 12:
+			var path := "res://assets/audio/voices/%s/%s_%d.ogg" % [g, kind, i]
+			if ResourceLoader.exists(path): set.append(load(path))
+		recorded[key] = set
+	var arr: Array = recorded[key]
+	return null if arr.is_empty() else arr[randi() % arr.size()]
+
+
+static func get_sound(C: Dictionary, kind: String) -> AudioStream:
+	var rec := _recorded(C, kind)
+	if rec != null: return rec
+	# synthesized fallback: kept rare and quiet (it sounds robotic up close)
+	if kind == "attack": return null
+	if kind == "hurt" and randf() < 0.6: return null
 	if kind == "win":
 		return _cached(C, "win", 0, func(): return _laugh(profile(C)))
 	var opts: Array = KINDS.get(kind, [])
@@ -114,7 +137,7 @@ static func _make(v: Dictionary, k: Array) -> AudioStreamWAV:
 		for j in 3: out += _step(res[j], src) * float(amps[j])
 		lp += (out - lp) * 0.45            # gentle low-pass: takes the hiss / buzz off the top
 		var env: float = minf(1.0, t / 0.02) * pow(1.0 - u, 1.3)
-		data.encode_s16(i * 2, int(clampf(lp * env * 3.2 * k[5] * v.vol, -1.0, 1.0) * 27000.0))
+		data.encode_s16(i * 2, int(clampf(lp * env * 3.2 * k[5] * v.vol, -1.0, 1.0) * 14000.0))
 	return _wav(data)
 
 

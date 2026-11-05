@@ -67,7 +67,7 @@ func _layout() -> void:
 		{bits = 8, label = "4", center = c + Vector2(g, g), radius = r, color = K},
 		{bits = 3, label = "1+2", center = c + Vector2(-g * 2.9, -g * 0.2), radius = r * 0.62, color = Color(0.75, 0.6, 1.0)},
 		{bits = 5, label = "BLUE", center = c + Vector2(-g * 2.9, g * 1.35), radius = r * 0.62, color = Color(0.3, 0.6, 1.0)},
-		{bits = 10, label = "FINAL", center = c + Vector2(-g * 1.5, g * 2.6), radius = r * 0.62, color = Color(1.0, 0.4, 0.3)},
+		{bits = 10, label = "FINAL", center = c + Vector2(-g * 2.9, -g * 1.75), radius = r * 0.62, color = Color(1.0, 0.4, 0.3)},
 	]
 	# ▲ ▼ next to the stick zone (stick mode)
 	var vr := r * 0.72
