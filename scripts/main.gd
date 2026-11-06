@@ -2286,6 +2286,60 @@ func _run_autotest() -> void:
 			for k in 3: await get_tree().physics_frame
 			await shot.call("ops_enemy")
 			end_ops()
+		"opsgear":
+			# the loadout table: walk up, take a Sheriff and every throwable, throw them; spawn protection
+			await start_ops(Data.by_id("hamza_khan"), {mine = 3, them = 3, gun = "smg", skill = 0.7})
+			var me0: OpsSim.Soldier = ops.sim.soldiers[0]
+			print("AUTOTEST opsgear protect at spawn=%d guns=%s" % [me0.protect, me0.guns])
+			for k in 140: await get_tree().physics_frame
+			var tb: Dictionary = ops.sim.tables[0]
+			me0.pos = tb.pos + Vector3(1.4, 0, 0); me0.prev_pos = me0.pos; me0.yaw = -PI / 2.0; me0.pitch = -0.45
+			for o in ops.sim.soldiers: if o.team != me0.team: o.pos = Vector3(20, 0, 15); o.prev_pos = o.pos
+			ops.test_inp = {look_x = 0.0}
+			for k in 5: await get_tree().physics_frame
+			await shot.call("opsgear_table")
+			var took := []
+			for want in ["sheriff", "lmg", "frag", "flash", "molly", "frag"]:
+				for it in tb.items:
+					if it.kind == want:
+						me0.pos = Vector3(tb.pos.x + 1.3, 0, it.pos.z); me0.prev_pos = me0.pos   # step in front of it
+						var d: Vector3 = (it.pos - me0.eye())
+						me0.yaw = atan2(d.x, d.z); me0.pitch = atan2(d.y, Vector2(d.x, d.z).length())
+				ops.test_inp = {use = true}
+				for k in 2: await get_tree().physics_frame
+				ops.test_inp = {use = false}
+				for k in 2: await get_tree().physics_frame
+				took.append(ops.sim.pick_target(me0).get("kind", "?"))
+			print("AUTOTEST opsgear guns=%s nades=%s slot=%d (aimed at %s)" % [me0.guns, me0.nades, me0.slot, took])
+			await shot.call("opsgear_hud")
+			# throw: face the open office and lob each kind
+			me0.pos = Vector3(-10, 0, -3); me0.prev_pos = me0.pos; me0.yaw = PI / 2.0; me0.pitch = 0.15
+			var ev := {}
+			for kind in ["frag", "flash", "molly"]:
+				me0.nade_sel = kind
+				ops.test_inp = {slot = 2}
+				for k in 25: await get_tree().physics_frame
+				ops.test_inp = {fire = true}
+				for k in 3: await get_tree().physics_frame
+				ops.test_inp = {fire = false}
+				for k in 40: await get_tree().physics_frame
+				if kind == "molly":
+					for k in 40: await get_tree().physics_frame
+					await shot.call("opsgear_fire")
+			for k in 60: await get_tree().physics_frame
+			print("AUTOTEST opsgear events=%s fires=%d nades left=%s" % [ops.stats, ops.sim.fires.size(), me0.nades])
+			# spawn protection blocks damage and shooting
+			me0.protect = 100
+			var hp0 := me0.hp
+			ops.sim._damage(me0, ops.sim.soldiers[4], 50.0, false, Vector3.ZERO)
+			ops.test_inp = {slot = 0}
+			for k in 20: await get_tree().physics_frame
+			var mag0: int = me0.mag[0]
+			ops.test_inp = {fire = true}
+			for k in 20: await get_tree().physics_frame
+			print("AUTOTEST opsgear protected: hp %d->%d  fired=%s" % [hp0, me0.hp, me0.mag[0] != mag0])
+			ops.test_inp = {}
+			end_ops()
 		"trade":
 			for setup in [["throw vs jab", "12", "1", 2], ["jab vs throw", "1", "12", -2], ["throw vs throw", "12", "12", 0]]:
 				await start_match({mode = "training"}, [Data.by_id("tao"), Data.by_id("lio")])

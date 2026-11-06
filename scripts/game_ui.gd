@@ -2003,7 +2003,9 @@ func show_race_tracks(C: Dictionary) -> void:
 		var t: Dictionary = RaceSim.TRACKS[id]
 		var tid: String = id
 		items.append([String(t.name).to_upper(), func(): G.start_race(tid, C), 28, {"city": "Neon towers, night traffic, two big jumps.",
-			"park": "Trees, glass offices and a hill with a jump.", "rooftop": "Thirty storeys up, over the rooftops at sunset."}.get(id, "")])
+			"park": "Trees, glass offices and a hill with a jump.", "rooftop": "Thirty storeys up, over the rooftops at sunset.",
+			"seaside": "Palm trees, beach and the open sea on a sunny morning.", "desert": "Red canyon walls, cacti and dust at sunset, two jumps.",
+			"snow": "Pine forest and mountain peaks in falling snow."}.get(id, "")])
 	items.append(["PLAY WITH FRIENDS", func(): G.lobby.show_menu("race", C), 24, "Online room or Wi-Fi: up to 10 players, CPU drivers fill the empty seats."])
 	items.append(["BACK", show_title, 20, "Back to the main menu."])
 	var m := _menu_list(items)
@@ -2043,7 +2045,7 @@ func show_clash_menu() -> void:
 
 
 # ---------------------------------------------------------------- BNB Office Ops
-var ops_cfg := {mine = 4, them = 4, gun = "rifle", skill = 1.0}
+var ops_cfg := {mine = 4, them = 4, gun = "smg", skill = 1.0}
 
 
 func show_ops_setup(C: Dictionary) -> void:
@@ -2072,10 +2074,9 @@ func show_ops_setup(C: Dictionary) -> void:
 		col.add_child(h)
 	row.call("YOUR TEAM", [1, 2, 3, 4], "mine", ["1", "2", "3", "4"])
 	row.call("ENEMY TEAM", [1, 2, 3, 4], "them", ["1", "2", "3", "4"])
-	row.call("GUN", ["rifle", "smg", "shotgun", "sniper"], "gun", ["RIFLE", "SMG", "SHOTGUN", "SNIPER"])
 	row.call("BOTS", [0.7, 1.0, 1.4], "skill", ["EASY", "NORMAL", "HARD"])
-	var g: Dictionary = OpsSim.GUNS[ops_cfg.gun]
-	col.add_child(lbl("%s  ·  %d damage  ·  %d rounds  ·  %d rpm   (plus a P-9 pistol)" % [g.name, g.dmg * g.pellets, g.mag, g.rpm], 18, F_MED, Color(0.79, 0.83, 0.88)))
+	ops_cfg.gun = "smg"
+	col.add_child(lbl("You start with an SMG and a pistol: grab other guns, grenades, flashbangs and molotovs from your team's loadout table.", 18, F_MED, Color(0.79, 0.83, 0.88)))
 	col.add_child(lbl("%d v %d   ·   bots fill the empty slots   ·   first to %d kills or 5 minutes" % [ops_cfg.mine, ops_cfg.them, 10 + maxi(ops_cfg.mine, ops_cfg.them) * 5], 18, F_MED, Color(0.79, 0.83, 0.88)))
 	var go := HBoxContainer.new()
 	go.add_theme_constant_override("separation", 16)

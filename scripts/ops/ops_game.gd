@@ -41,6 +41,11 @@ var move_origin := Vector2.ZERO
 var look_id := -1
 var look_last := Vector2.ZERO
 var scoreboard := false
+var item_tags: Array = []       # [{it, tag}] on the loadout tables
+var nade_nodes := {}            # thrown grenade uid -> node
+var fire_nodes := {}            # fire uid -> node
+var shake := 0.0
+var white := 0.0                # flashbang white-out on screen
 
 
 # multiplayer: the host runs the match and streams it; guests send their controls and aim
@@ -162,6 +167,7 @@ func _build_map() -> void:
 		if h < 1.0 and b.size.x > 1.5:   # monitors on desks
 			_box(Vector3(0.6, 0.38, 0.04), _mat(Color(0.05, 0.05, 0.07), 0.4), c + Vector3(0, 0.6, 0))
 			_box(Vector3(0.55, 0.32, 0.02), _mat(TEAM_COL[int(c.x > 0)], 0.3, 0.0, 1.2), c + Vector3(0, 0.6, 0.025))
+	_build_tables()
 	for side in [-1.0, 1.0]:   # logos on the end walls
 		var sp := Sprite3D.new(); sp.texture = mark; sp.pixel_size = 2.4 / mark.get_height(); sp.shaded = false
 		sp.position = Vector3(side * 31.9, 2.4, 0); sp.rotation.y = -side * PI / 2
@@ -169,31 +175,121 @@ func _build_map() -> void:
 		world.add_child(sp)
 
 
+## Each team's loadout table: wood top on metal legs, a cloth runner in the team colour, every gun and
+## throwable laid out with its name, and a sign over it.
+func _build_tables() -> void:
+	for t in sim.tables:
+		var at: Vector3 = t.pos
+		var yaw: float = t.yaw
+		var root := Node3D.new(); root.position = at; root.rotation.y = yaw
+		world.add_child(root)
+		var col: Color = TEAM_COL[t.team]
+		_box(Vector3(6.4, 0.08, 1.0), _mat(Color(0.42, 0.28, 0.18), 0.5), Vector3(0, 0.86, 0), root)
+		_box(Vector3(6.4, 0.02, 0.5), _mat(col.darkened(0.2), 0.8), Vector3(0, 0.91, 0), root)
+		for lx in [-3.0, 3.0]:
+			for lz in [-0.4, 0.4]:
+				_box(Vector3(0.08, 0.84, 0.08), _mat(Color(0.2, 0.2, 0.22), 0.4, 0.7), Vector3(lx, 0.42, lz), root)
+		var sign := Label3D.new()
+		sign.text = "LOADOUT  ·  E TO TAKE" if not _touch() else "LOADOUT  ·  TAP USE"
+		sign.font = font; sign.font_size = 60; sign.outline_size = 10; sign.modulate = col.lightened(0.3)
+		sign.position = at + Vector3(0, 2.3, 0); sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		world.add_child(sign)
+		var lamp := OmniLight3D.new(); lamp.position = at + Vector3(0, 2.6, 0); lamp.omni_range = 5.0; lamp.light_energy = 1.2
+		lamp.light_color = col.lightened(0.5)
+		world.add_child(lamp)
+		for it in t.items:
+			var kind: String = it.kind
+			var holder := Node3D.new()
+			world.add_child(holder)
+			holder.position = it.pos
+			var nade := OpsSim.NADES.has(kind)
+			var m := _gun_mesh(kind, holder, 1.0 if not nade else 2.2)
+			# guns lie on their side across the table, pointing out to the map; throwables stand up
+			if not nade:
+				m.rotation = Vector3(0, 0, PI / 2)
+				holder.rotation.y = yaw + PI
+				m.position = Vector3(0, 0.03, GUN_LEN.get(kind, 0.5) * 0.45)
+			var tag := Label3D.new()
+			tag.text = String(OpsSim.GUNS[kind].name if not nade else OpsSim.NADES[kind].name).replace("STAPLER ", "")
+			tag.font = small; tag.font_size = 30; tag.outline_size = 8; tag.modulate = Color(1.0, 0.88, 0.4)
+			tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED; tag.position = it.pos + Vector3(0, 0.3, 0)
+			tag.pixel_size = 0.0022; tag.visible = false
+			world.add_child(tag)
+			item_tags.append({it = it, tag = tag})
+
+
 # ---------------------------------------------------------------- soldiers
+const GUN_LEN := {"pistol": 0.2, "sheriff": 0.3, "mpistol": 0.24, "smg": 0.42, "rifle": 0.72, "shotgun": 0.8, "sniper": 1.05,
+	"dmr": 0.85, "lmg": 0.9, "marshal": 0.95}
+
+
 func _gun_mesh(kind: String, parent: Node3D, scale := 1.0) -> Node3D:
+	if OpsSim.NADES.has(kind): return _nade_mesh(kind, parent, scale)
 	var g := Node3D.new()
 	parent.add_child(g)
 	var metal := _mat(Color(0.12, 0.12, 0.14), 0.4, 0.7)
 	var grip := _mat(Color(0.2, 0.18, 0.16), 0.8)
 	var acc := _mat(Color(0.55, 0.32, 0.9), 0.4, 0.3)
-	var L: float = {"pistol": 0.2, "smg": 0.42, "rifle": 0.72, "shotgun": 0.8, "sniper": 1.05}.get(kind, 0.6)
-	_box(Vector3(0.06, 0.09, L), metal, Vector3(0, 0, -L / 2.0), g)                       # body
-	_box(Vector3(0.035, 0.035, L * 0.5), metal, Vector3(0, 0.02, -L - L * 0.2), g)        # barrel
-	_box(Vector3(0.05, 0.14, 0.06), grip, Vector3(0, -0.1, -0.06), g)                     # grip
-	if kind != "pistol":
-		_box(Vector3(0.05, 0.12, 0.05), metal, Vector3(0, -0.1, -L * 0.45), g)            # magazine
-		_box(Vector3(0.05, 0.08, 0.22), grip, Vector3(0, -0.01, 0.12), g)                 # stock
+	var wood := _mat(Color(0.45, 0.28, 0.15), 0.6)
+	var L: float = GUN_LEN.get(kind, 0.6)
+	var side: bool = OpsSim.GUNS[kind].get("side", false) or kind == "pistol"
+	_box(Vector3(0.06, 0.09, L), metal if kind != "marshal" else wood, Vector3(0, 0, -L / 2.0), g)   # body
+	_box(Vector3(0.035, 0.035, L * 0.5), metal, Vector3(0, 0.02, -L - L * 0.2), g)                  # barrel
+	_box(Vector3(0.05, 0.14, 0.06), grip if kind != "sheriff" else wood, Vector3(0, -0.1, -0.06), g)  # grip
+	match kind:
+		"sheriff":   # revolver: a fat cylinder in front of the grip, long barrel
+			var cy := CylinderMesh.new(); cy.top_radius = 0.045; cy.bottom_radius = 0.045; cy.height = 0.08
+			var mi := MeshInstance3D.new(); mi.mesh = cy; mi.material_override = metal; mi.rotation = Vector3(PI / 2, 0, 0); mi.position = Vector3(0, 0.01, -0.09)
+			g.add_child(mi)
+			_box(Vector3(0.03, 0.03, 0.22), metal, Vector3(0, 0.03, -0.32), g)
+		"mpistol":   # long magazine out of the grip
+			_box(Vector3(0.04, 0.2, 0.045), metal, Vector3(0, -0.2, -0.06), g)
+		"lmg":   # box magazine, bipod, carry handle
+			_box(Vector3(0.12, 0.12, 0.14), _mat(Color(0.3, 0.32, 0.25), 0.7), Vector3(0.04, -0.09, -L * 0.42), g)
+			_box(Vector3(0.02, 0.15, 0.02), metal, Vector3(0.04, -0.08, -L * 0.95), g)
+			_box(Vector3(0.02, 0.15, 0.02), metal, Vector3(-0.04, -0.08, -L * 0.95), g)
+			_box(Vector3(0.03, 0.05, 0.16), metal, Vector3(0, 0.08, -L * 0.3), g)
+	if not side:
+		if kind != "lmg": _box(Vector3(0.05, 0.12, 0.05), metal, Vector3(0, -0.1, -L * 0.45), g)   # magazine
+		_box(Vector3(0.05, 0.08, 0.22), grip if kind != "marshal" else wood, Vector3(0, -0.01, 0.12), g)   # stock
 		_box(Vector3(0.065, 0.02, L * 0.4), acc, Vector3(0, 0.055, -L * 0.45), g)          # rail in BNB purple
-	if kind == "sniper" or kind == "rifle":
-		_box(Vector3(0.05, 0.06, 0.28), metal, Vector3(0, 0.09, -L * 0.45), g)            # scope
+	if kind in ["sniper", "rifle", "dmr", "marshal"]:
+		_box(Vector3(0.05, 0.06, 0.28 if kind != "rifle" else 0.18), metal, Vector3(0, 0.09, -L * 0.45), g)   # scope
 	g.scale = Vector3.ONE * scale
 	return g
+
+
+## A throwable: frag (green, round), flashbang (grey can), molotov (bottle with a burning rag).
+func _nade_mesh(kind: String, parent: Node3D, scale := 1.0) -> Node3D:
+	var g := Node3D.new()
+	parent.add_child(g)
+	var add := func(mesh: Mesh, m: Material, pos: Vector3) -> void:
+		var mi := MeshInstance3D.new(); mi.mesh = mesh; mi.material_override = m; mi.position = pos; g.add_child(mi)
+	match kind:
+		"frag":
+			var sp := SphereMesh.new(); sp.radius = 0.045; sp.height = 0.1
+			add.call(sp, _mat(Color(0.25, 0.35, 0.2), 0.6, 0.3), Vector3.ZERO)
+			add.call(_cyl(0.018, 0.03), _mat(Color(0.6, 0.6, 0.62), 0.3, 0.8), Vector3(0, 0.055, 0))
+		"flash":
+			add.call(_cyl(0.032, 0.11), _mat(Color(0.65, 0.66, 0.7), 0.3, 0.7), Vector3.ZERO)
+			add.call(_cyl(0.034, 0.02), _mat(Color(0.95, 0.85, 0.2), 0.4), Vector3(0, 0.03, 0))
+		_:
+			add.call(_cyl(0.035, 0.12), _mat(Color(0.35, 0.55, 0.25, 0.85), 0.1, 0.0), Vector3.ZERO)
+			add.call(_cyl(0.014, 0.06), _mat(Color(0.35, 0.55, 0.25), 0.1), Vector3(0, 0.085, 0))
+			add.call(_cyl(0.012, 0.04), _mat(Color(1.0, 0.55, 0.15), 0.5, 0.0, 3.0), Vector3(0, 0.13, 0))
+	g.scale = Vector3.ONE * scale
+	return g
+
+
+func _cyl(r: float, h: float) -> CylinderMesh:
+	var c := CylinderMesh.new(); c.top_radius = r; c.bottom_radius = r; c.height = h; c.radial_segments = 12
+	return c
 
 
 func _soldier_visual(s: OpsSim.Soldier) -> Dictionary:
 	var rig := Main.make_rig(s.C, 0)
 	world.add_child(rig)
-	var gun := _gun_mesh(s.guns[0], world, 1.6)
+	var gun := _gun_mesh(s.holding(), world, 1.6)
 	var tag := Label3D.new()
 	tag.text = String(s.C.person.get("short", s.C.name)) if s.C.has("person") else s.C.name
 	tag.font = font; tag.font_size = 30; tag.outline_size = 8
@@ -201,7 +297,7 @@ func _soldier_visual(s: OpsSim.Soldier) -> Dictionary:
 	world.add_child(tag)
 	if s.id == me:
 		rig.visible = false; gun.visible = false; tag.visible = false
-	return {rig = rig, gun = gun, gun_kind = s.guns[0], tag = tag, dead_t = 0.0}
+	return {rig = rig, gun = gun, gun_kind = s.holding(), tag = tag, dead_t = 0.0}
 
 
 func _clip_for(s: OpsSim.Soldier, anim_t: float, dead_t: float) -> Array:
@@ -253,24 +349,26 @@ func _rebuild_view_gun() -> void:
 	for c in view_gun.get_children():
 		if c != flash: c.queue_free()
 	var s: OpsSim.Soldier = sim.soldiers[me]
-	var kind: String = s.guns[s.slot]
-	var g := _gun_mesh(kind, view_gun, 1.0)
+	var kind: String = s.holding()
+	var g := _gun_mesh(kind, view_gun, 1.0 if not OpsSim.NADES.has(kind) else 1.4)
 	g.name = "model"
 	view_gun.set_meta("kind", kind)
 	# a hand under the grip, in the person's skin tone
 	var sk: Array = (s.C.get("person", {}) as Dictionary).get("skin", [0.86, 0.72, 0.62])
 	_box(Vector3(0.09, 0.08, 0.16), _mat(Color(sk[0], sk[1], sk[2]), 0.8), Vector3(0, -0.12, -0.03), g)
-	var L: float = {"pistol": 0.2, "smg": 0.42, "rifle": 0.72, "shotgun": 0.8, "sniper": 1.05}.get(kind, 0.6)
+	var L: float = GUN_LEN.get(kind, 0.1)
 	if flash != null: flash.position = Vector3(0, 0.02, -L * 1.25)
 
 
 # ---------------------------------------------------------------- loop
 var hold_ads := false   # tests: keep aiming without a mouse
+var test_inp := {}      # tests: the player's controls this tick
 
 
 func _physics_process(_dt: float) -> void:
 	if sim == null or (paused and not online_match()): return
 	var inp: Dictionary = sim._bot(sim.soldiers[me]) if autopilot else ({} if paused else _controls())
+	if not test_inp.is_empty(): inp = test_inp.duplicate()
 	look = Vector2.ZERO
 	if guest:
 		_guest_tick(inp)
@@ -345,6 +443,8 @@ func _unhandled_input(e: InputEvent) -> void:
 		return
 	if e is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		look += e.relative
+	if e is InputEventMouseButton and e.pressed and e.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
+		wheel = 1
 	if e is InputEventKey and e.pressed and not e.echo:
 		if e.physical_keycode == KEY_ESCAPE:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
@@ -390,12 +490,31 @@ func _controls() -> Dictionary:
 		crouch = k.call([KEY_C, KEY_CTRL]) or _t("crouch") or (not pads.is_empty() and Input.is_joy_button_pressed(pads[0], JOY_BUTTON_B)),
 		jump = k.call([KEY_SPACE]) or _t("jump") or (not pads.is_empty() and Input.is_joy_button_pressed(pads[0], JOY_BUTTON_A)),
 		reload = k.call([KEY_R]) or _t("reload") or (not pads.is_empty() and Input.is_joy_button_pressed(pads[0], JOY_BUTTON_X)),
-		swap = k.call([KEY_Q, KEY_1, KEY_2]) and not _held_swap() or _t_once("swap") or (not pads.is_empty() and Input.is_joy_button_pressed(pads[0], JOY_BUTTON_Y) and not _held_swap())}
+		swap = k.call([KEY_Q]) and not _held_swap() or _t_once("swap") or wheel != 0 or (not pads.is_empty() and Input.is_joy_button_pressed(pads[0], JOY_BUTTON_Y) and not _held_swap()),
+		use = k.call([KEY_E, KEY_F]) or _t("use") or (not pads.is_empty() and Input.is_joy_button_pressed(pads[0], JOY_BUTTON_RIGHT_SHOULDER))}.merged(_slot_keys())
+
+
+var wheel := 0
+var _keys_was := {}
+## 1 / 2 / 3 pick a slot, G (or the NADE button) cycles throwables: each on a fresh press.
+func _slot_keys() -> Dictionary:
+	var out := {}
+	var fresh := func(key: int) -> bool:
+		var now := Input.is_physical_key_pressed(key)
+		var was: bool = _keys_was.get(key, false)
+		_keys_was[key] = now
+		return now and not was
+	if fresh.call(KEY_1): out.slot = 0
+	if fresh.call(KEY_2): out.slot = 1
+	if fresh.call(KEY_3): out.slot = 2
+	if fresh.call(KEY_G) or _t_once("nade"): out.cycle_nade = true
+	wheel = 0
+	return out
 
 
 var _swap_was := false
 func _held_swap() -> bool:
-	var now := Input.is_physical_key_pressed(KEY_Q) or Input.is_physical_key_pressed(KEY_1) or Input.is_physical_key_pressed(KEY_2)
+	var now := Input.is_physical_key_pressed(KEY_Q)
 	var was := _swap_was
 	_swap_was = now
 	return was
@@ -434,6 +553,22 @@ func _event(e: Array) -> void:
 			if e[2] == me: G.sfx("surge")
 		"reload": if e[2] == me: G.sfx("grab")
 		"swap": if e[2] == me: _rebuild_view_gun()
+		"pickup":
+			if e[2] == me:
+				_rebuild_view_gun(); G.sfx("grab")
+				var got := String(e[3])
+				killfeed.push_front(["TOOK  " + String(OpsSim.GUNS[got].name if OpsSim.GUNS.has(got) else OpsSim.NADES[got].name), 2.0, -1])
+		"throw":
+			if e[2] == me: G.sfx("whoosh")
+		"boom":
+			_blast(e[1], Color(1.0, 0.6, 0.2, 0.9), 5.0, 0.6)
+			var d: float = (e[1] as Vector3).distance_to(sim.soldiers[me].pos)
+			shake = maxf(shake, clampf(1.0 - d / 18.0, 0.0, 1.0))
+			G.sfx("heavy")
+		"flash":
+			_blast(e[1], Color(1, 1, 1, 0.95), 3.0, 0.4)
+			G.sfx("surge")
+		"fire": G.sfx("block")
 		"respawn": if e[2] == me: _rebuild_view_gun()
 		"go": G.sfx("vs")
 		"done": G.sfx("ko")
@@ -487,9 +622,9 @@ func _process(dt: float) -> void:
 		rig.set_clip(cl[0], cl[1], true, false)
 		rig.apply_pose(s.C.pose.guard, true)
 		rig.visible = s.alive or v.dead_t < 4.0
-		if v.gun_kind != s.guns[s.slot]:
+		if v.gun_kind != s.holding():
 			(v.gun as Node).queue_free()
-			v.gun = _gun_mesh(s.guns[s.slot], world, 1.6); v.gun_kind = s.guns[s.slot]
+			v.gun = _gun_mesh(s.holding(), world, 1.6); v.gun_kind = s.holding()
 		var gn: Node3D = v.gun
 		gn.visible = s.alive
 		if s.alive:
@@ -499,7 +634,14 @@ func _process(dt: float) -> void:
 		tag.visible = s.alive
 		tag.position = p + Vector3(0, 2.15 * s.C.scale, 0)
 		tag.text = "%s  %d" % [_nm(s), roundi(s.hp)] if s.team == sim.soldiers[me].team else _nm(s)
+	_sync_nades(dt)
+	# loadout table: only the item you'd take shows its name
+	var tgt := sim.pick_target(sim.soldiers[me])
+	for t in item_tags: (t.tag as Label3D).visible = not tgt.is_empty() and t.it == tgt
 	_camera(a, dt)
+	white = maxf(0.0, white - dt * 0.6)
+	var me_s: OpsSim.Soldier = sim.soldiers[me]
+	if me_s.blind > 0: white = maxf(white, minf(1.0, me_s.blind / 80.0))
 	for t in tracers.duplicate():
 		t[1] -= dt
 		if t[1] <= 0.0: (t[0] as Node).queue_free(); tracers.erase(t)
@@ -507,6 +649,74 @@ func _process(dt: float) -> void:
 	killfeed = killfeed.filter(func(k): return k[1] > 0.0)
 	hitmark = maxf(0.0, hitmark - dt)
 	hud.queue_redraw()
+
+
+func _sync_nades(dt: float) -> void:
+	var alive := {}
+	for n in sim.thrown:
+		alive[n.uid] = true
+		if not nade_nodes.has(n.uid):
+			nade_nodes[n.uid] = _nade_mesh(String(n.kind), world, 2.0)
+		var nd: Node3D = nade_nodes[n.uid]
+		nd.position = nd.position.lerp(n.pos, 0.6) if nd.position != Vector3.ZERO else n.pos
+		nd.rotation.x += dt * 9.0
+	for k in nade_nodes.keys():
+		if not alive.has(k): (nade_nodes[k] as Node).queue_free(); nade_nodes.erase(k)
+	var lit := {}
+	for f in sim.fires:
+		lit[f.uid] = true
+		if not fire_nodes.has(f.uid): fire_nodes[f.uid] = _fire_node(f.pos)
+		var fn: Node3D = fire_nodes[f.uid]
+		var life := clampf(float(f.t) / 60.0, 0.0, 1.0)
+		fn.scale = Vector3.ONE * (0.3 + 0.7 * life)
+	for k in fire_nodes.keys():
+		if not lit.has(k): (fire_nodes[k] as Node).queue_free(); fire_nodes.erase(k)
+
+
+## A molotov's fire: flickering flames, embers, a glow on the floor and an orange light.
+func _fire_node(at: Vector3) -> Node3D:
+	var n := Node3D.new(); n.position = at; world.add_child(n)
+	var disc := MeshInstance3D.new(); var cy := CylinderMesh.new(); cy.top_radius = OpsSim.NADES.molly.r; cy.bottom_radius = OpsSim.NADES.molly.r; cy.height = 0.02
+	disc.mesh = cy; disc.material_override = _mat(Color(0.35, 0.12, 0.02), 0.9, 0.0, 0.6); disc.position.y = 0.02
+	n.add_child(disc)
+	var p := CPUParticles3D.new()
+	p.amount = 90; p.lifetime = 0.9
+	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE; p.emission_sphere_radius = OpsSim.NADES.molly.r * 0.8
+	p.direction = Vector3.UP; p.spread = 12; p.gravity = Vector3(0, 2.5, 0)
+	p.initial_velocity_min = 0.8; p.initial_velocity_max = 2.0
+	p.scale_amount_min = 0.6; p.scale_amount_max = 1.3
+	var q := QuadMesh.new(); q.size = Vector2(0.55, 0.8)
+	var qm := StandardMaterial3D.new(); qm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	qm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED; qm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	qm.vertex_color_use_as_albedo = true; qm.albedo_color = Color(1.6, 0.7, 0.2)
+	q.material = qm
+	p.mesh = q
+	var grad := Gradient.new(); grad.set_color(0, Color(1.0, 0.85, 0.3, 0.95)); grad.set_color(1, Color(0.9, 0.2, 0.05, 0.0))
+	p.color_ramp = grad
+	p.position.y = 0.3
+	n.add_child(p)
+	var l := OmniLight3D.new(); l.light_color = Color(1.0, 0.55, 0.2); l.light_energy = 2.5; l.omni_range = 7.0; l.position.y = 1.0
+	n.add_child(l)
+	return n
+
+
+## A short-lived ball of light: grenade explosions and flashbangs.
+func _blast(at: Vector3, col: Color, size: float, life: float) -> void:
+	var mi := MeshInstance3D.new()
+	var sp := SphereMesh.new(); sp.radius = 0.5; sp.height = 1.0
+	mi.mesh = sp
+	var m := StandardMaterial3D.new(); m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.albedo_color = col; m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mi.material_override = m
+	mi.position = at; mi.scale = Vector3.ONE * 0.3
+	world.add_child(mi)
+	var l := OmniLight3D.new(); l.light_color = Color(col.r, col.g, col.b); l.light_energy = 6.0; l.omni_range = size * 3.0
+	mi.add_child(l)
+	var tw := mi.create_tween()
+	tw.tween_property(mi, "scale", Vector3.ONE * size, life * 0.35).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(m, "albedo_color:a", 0.0, life)
+	tw.parallel().tween_property(l, "light_energy", 0.0, life)
+	tw.tween_callback(mi.queue_free)
 
 
 func _camera(a: float, dt: float) -> void:
@@ -517,21 +727,23 @@ func _camera(a: float, dt: float) -> void:
 	bob += dt * spd * 1.6
 	var bob_off := Vector3(sin(bob) * 0.02, absf(cos(bob)) * 0.03, 0) * clampf(spd / 6.0, 0.0, 1.0)
 	cam.position = p + Vector3(0, eye, 0) + (bob_off if not s.ads else Vector3.ZERO)
-	cam.rotation = Vector3(s.pitch, s.yaw + PI, 0)
+	cam.rotation = Vector3(s.pitch, s.yaw + PI, 0) + Vector3(randf_range(-1, 1), randf_range(-1, 1), 0) * shake * 0.03
 	cam.rotation_order = EULER_ORDER_YXZ
-	var target_fov: float = s.gun().fov if s.ads else (82.0 if s.sprint else 75.0)
+	shake = maxf(0.0, shake - dt * 2.5)
+	var target_fov: float = s.gun().fov if (s.ads and s.slot < 2) else (82.0 if s.sprint else 75.0)
 	cam.fov = lerpf(cam.fov, target_fov, clampf(dt * 14.0, 0.0, 1.0))
 	# the gun: hip position, or centred for aiming; recoil kick; hidden in a sniper scope
 	kick = maxf(0.0, kick - dt * 9.0)
-	var kind: String = s.guns[s.slot]
+	var kind: String = s.holding()
+	var scoped := s.slot < 2 and float(s.gun().fov) < 30.0
 	var hip := Vector3(0.22, -0.2, -0.42)
-	var aimp := Vector3(0.0, -0.12 if kind != "sniper" else -0.1, -0.32)
+	var aimp := Vector3(0.0, -0.12 if not scoped else -0.1, -0.32)
 	var want := aimp if s.ads else hip
 	if s.sprint: want = Vector3(0.18, -0.28, -0.38)
 	if s.reload_t > 0: want += Vector3(0, -0.12, 0.05)
 	view_gun.position = view_gun.position.lerp(want + Vector3(0, 0, kick * 0.06) + bob_off * 0.6, clampf(dt * 16.0, 0.0, 1.0))
 	view_gun.rotation = Vector3(kick * 0.08 + (0.6 if s.reload_t > 0 else 0.0), 0.0 if s.ads else -0.04, 0.0 if s.ads else 0.03)
-	view_gun.visible = s.alive and not (s.ads and kind == "sniper" and cam.fov < 30.0)
+	view_gun.visible = s.alive and not (s.ads and scoped and cam.fov < 32.0)
 	flash.visible = flash.visible and kick > 0.6
 	if not s.alive:   # death cam: look at the floor where you fell, from above
 		cam.position = p + Vector3(0, 3.5, 0); cam.rotation = Vector3(-1.2, s.yaw + PI, 0)
@@ -547,10 +759,11 @@ func _draw_hud() -> void:
 	var s: OpsSim.Soldier = sim.soldiers[me]
 	var c := sz / 2.0
 	var ink := Color(0.95, 0.96, 1.0)
-	var kind: String = s.guns[s.slot]
+	var kind: String = s.holding()
 	var g: Dictionary = s.gun()
+	var scoped := s.slot < 2 and float(g.fov) < 30.0
 	# sniper scope
-	if s.ads and kind == "sniper" and cam.fov < 30.0:
+	if s.ads and scoped and cam.fov < 32.0:
 		var r := sz.y * 0.42
 		var black := Color(0, 0, 0, 1)
 		hud.draw_rect(Rect2(Vector2.ZERO, Vector2(c.x - r, sz.y)), black)
@@ -564,6 +777,9 @@ func _draw_hud() -> void:
 		hud.draw_line(Vector2(c.x - r, c.y), Vector2(c.x + r, c.y), Color(0, 0, 0, 0.9), 1.5)
 		hud.draw_line(Vector2(c.x, c.y - r), Vector2(c.x, c.y + r), Color(0, 0, 0, 0.9), 1.5)
 		hud.draw_circle(c, 2.0, Color(1, 0.2, 0.2))
+	elif s.alive and s.slot == 2:   # throwable: a little arc marker
+		hud.draw_arc(c, 10.0, PI * 1.1, PI * 1.9, 12, Color(1, 1, 1, 0.9), 2.0)
+		hud.draw_circle(c, 2.0, Color(1, 1, 1, 0.9))
 	elif s.alive:
 		# crosshair: the gap shows how steady the aim is
 		var spread: float = (g.ads_spread if s.ads else g.spread) + s.recoil
@@ -592,8 +808,27 @@ func _draw_hud() -> void:
 	# ammo + gun
 	# (on phones the fire button lives bottom-right, so the ammo goes above the health bar)
 	var ammo_at := Vector2(sz.x - 330, sz.y - 30) if not _touch() else Vector2(300, sz.y - 28)
-	hud.draw_string(font, ammo_at, "%d / %d" % [s.mag[s.slot], s.reserve[s.slot]], HORIZONTAL_ALIGNMENT_RIGHT if not _touch() else HORIZONTAL_ALIGNMENT_LEFT, 300, 40 if not _touch() else 30, ink)
-	hud.draw_string(small, ammo_at + Vector2(0, -48 if not _touch() else -100), String(g.name) + ("   RELOADING…" if s.reload_t > 0 else ""), HORIZONTAL_ALIGNMENT_RIGHT if not _touch() else HORIZONTAL_ALIGNMENT_LEFT, 300, 20, Color(0.8, 0.82, 0.9))
+	var al := HORIZONTAL_ALIGNMENT_RIGHT if not _touch() else HORIZONTAL_ALIGNMENT_LEFT
+	if s.slot == 2:
+		hud.draw_string(font, ammo_at, "× %d" % int(s.nades[s.nade_sel]), al, 300, 40 if not _touch() else 30, ink)
+		hud.draw_string(small, ammo_at + Vector2(0, -48 if not _touch() else -100), String(OpsSim.NADES[s.nade_sel].name) + "   ·   G next", al, 300, 20, Color(0.8, 0.82, 0.9))
+	else:
+		hud.draw_string(font, ammo_at, "%d / %d" % [s.mag[s.slot], s.reserve[s.slot]], al, 300, 40 if not _touch() else 30, ink)
+		hud.draw_string(small, ammo_at + Vector2(0, -48 if not _touch() else -100), String(g.name) + ("   RELOADING…" if s.reload_t > 0 else ""), al, 300, 20, Color(0.8, 0.82, 0.9))
+	_draw_slots(s, sz)
+	# next to the loadout table: what E takes
+	var it := sim.pick_target(s)
+	if not it.is_empty():
+		var nm := String(OpsSim.GUNS[it.kind].name if OpsSim.GUNS.has(it.kind) else OpsSim.NADES[it.kind].name)
+		var full := OpsSim.NADES.has(it.kind) and int(s.nades[it.kind]) >= OpsSim.NADE_MAX
+		var msg := ("%s  TAKE  %s" % ["E" if not _touch() else "USE", nm]) if not full else "%s  ·  FULL (%d)" % [nm, OpsSim.NADE_MAX]
+		hud.draw_rect(Rect2(Vector2(c.x - 230, c.y + 60), Vector2(460, 40)), Color(0, 0, 0, 0.55))
+		hud.draw_string(font, Vector2(c.x - 230, c.y + 90), msg, HORIZONTAL_ALIGNMENT_CENTER, 460, 24, Color(1.0, 0.85, 0.35))
+	# spawn protection
+	if s.alive and s.protect > 0 and sim.state != "warmup":
+		hud.draw_string(font, Vector2(0, sz.y * 0.28), "SPAWN PROTECTION  %.1f" % (s.protect / 60.0), HORIZONTAL_ALIGNMENT_CENTER, sz.x, 30, Color(0.5, 0.85, 1.0))
+		hud.draw_string(small, Vector2(0, sz.y * 0.28 + 28), "you can't be hit — and can't shoot yet", HORIZONTAL_ALIGNMENT_CENTER, sz.x, 18, Color(0.75, 0.88, 1.0, 0.85))
+		hud.draw_rect(Rect2(Vector2.ZERO, sz), Color(0.3, 0.6, 1.0, 0.06 + 0.04 * sin(Time.get_ticks_msec() / 120.0)))
 	# score + time
 	var mid := sz.x / 2.0
 	hud.draw_rect(Rect2(Vector2(mid - 170, 14), Vector2(340, 50)), Color(0, 0, 0, 0.5))
@@ -619,8 +854,29 @@ func _draw_hud() -> void:
 	if not _touch() and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not results_shown:
 		hud.draw_string(font, Vector2(0, sz.y * 0.6), "CLICK TO PLAY   ·   ESC frees the mouse", HORIZONTAL_ALIGNMENT_CENTER, sz.x, 26, Color(1, 1, 1, 0.85))
 	if not _touch():
-		hud.draw_string(small, Vector2(0, sz.y - 8), "WASD move · MOUSE aim · LMB fire · RMB aim / scope · SHIFT sprint · C crouch · SPACE jump · R reload · Q swap · TAB scores", HORIZONTAL_ALIGNMENT_CENTER, sz.x, 15, Color(0.8, 0.82, 0.9, 0.6))
+		hud.draw_string(small, Vector2(0, sz.y - 8), "WASD move · MOUSE aim · LMB fire / throw · RMB aim · SHIFT sprint · C crouch · SPACE jump · R reload · 1 2 3 / Q / wheel weapons · G throwables · E take · TAB scores", HORIZONTAL_ALIGNMENT_CENTER, sz.x, 15, Color(0.8, 0.82, 0.9, 0.6))
 	_draw_touch()
+	# flashbanged: the screen goes white and slowly comes back
+	if white > 0.0: hud.draw_rect(Rect2(Vector2.ZERO, sz), Color(1, 1, 1, clampf(white, 0.0, 1.0) * 0.97))
+
+
+## Weapon slots (PUBG style): primary, sidearm, throwables with their counts; the one in hand is lit.
+func _draw_slots(s: OpsSim.Soldier, sz: Vector2) -> void:
+	var w := 150.0
+	var x0 := sz.x - 3 * (w + 8) - 22 if not _touch() else sz.x / 2.0 - 1.5 * (w + 8)
+	var y := sz.y - 150 if not _touch() else 14.0 + 74.0
+	var names := [String(OpsSim.GUNS[s.guns[0]].name), String(OpsSim.GUNS[s.guns[1]].name), ""]
+	var parts := []
+	for nk in OpsSim.NADE_KINDS:
+		if int(s.nades[nk]) > 0: parts.append("%s %d" % [{"frag": "FRAG", "flash": "FLASH", "molly": "MOLLY"}[nk], s.nades[nk]])
+	names[2] = "  ".join(parts) if not parts.is_empty() else "NO THROWABLES"
+	for k in 3:
+		var on := s.slot == k
+		var r := Rect2(Vector2(x0 + k * (w + 8), y), Vector2(w, 40))
+		hud.draw_rect(r, Color(0.62, 0.38, 1.0, 0.55) if on else Color(0, 0, 0, 0.45))
+		if on: hud.draw_rect(r, Color(1, 1, 1, 0.9), false, 2.0)
+		hud.draw_string(small, r.position + Vector2(6, 15), str(k + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(1, 1, 1, 0.6))
+		hud.draw_string(small, r.position + Vector2(4, 33), String(names[k]).replace("STAPLER ", "").replace("BREAKROOM ", ""), HORIZONTAL_ALIGNMENT_CENTER, w - 8, 15 if k < 2 else 14, Color(1, 1, 1, 0.95 if on else 0.65))
 
 
 func _draw_scoreboard(r: Rect2) -> void:
@@ -657,6 +913,8 @@ func _layout_touch() -> void:
 		crouch = {c = Vector2(s.x - r * 4.0, s.y - r * 3.6), r = r * 0.7, label = "DUCK", held = false},
 		reload = {c = Vector2(s.x - r * 6.3, s.y - r * 1.3), r = r * 0.7, label = "R", held = false},
 		swap = {c = Vector2(s.x - r * 6.4, s.y - r * 3.2), r = r * 0.7, label = "SWAP", held = false},
+		nade = {c = Vector2(s.x - r * 6.2, s.y - r * 5.1), r = r * 0.7, label = "NADE", held = false},
+		use = {c = Vector2(s.x / 2.0, s.y * 0.66), r = r * 0.85, label = "USE", held = false},
 		sprint = {c = Vector2(r * 1.4, s.y - r * 4.8), r = r * 0.7, label = "RUN", held = false},
 		pause = {c = Vector2(s.x / 2 - 210, 40), r = 26.0, label = "II", held = false},
 	}
@@ -668,7 +926,9 @@ func _input(e: InputEvent) -> void:
 		var vs: Vector2 = G.get_viewport().get_visible_rect().size
 		if e.pressed:
 			var hit := ""
+			var near := not sim.pick_target(sim.soldiers[me]).is_empty()
 			for n in touch_btn:
+				if n == "use" and not near: continue
 				if e.position.distance_to(touch_btn[n].c) <= touch_btn[n].r * 1.15: hit = n
 			if hit != "": touches[e.index] = hit
 			elif e.position.x < vs.x * 0.4 and move_id < 0: move_id = e.index; move_origin = e.position
@@ -695,9 +955,11 @@ func _draw_touch() -> void:
 	if move_id >= 0:
 		hud.draw_arc(move_origin, 70.0, 0, TAU, 40, Color(1, 1, 1, 0.35), 3.0)
 		hud.draw_circle(move_origin + touch_move * 70.0, 28.0, Color(0.62, 0.38, 1.0, 0.5))
+	var near := not sim.pick_target(sim.soldiers[me]).is_empty()
 	for n in touch_btn:
 		var b: Dictionary = touch_btn[n]
-		var col := Color(1.0, 0.35, 0.35) if n == "fire" else Color(0.62, 0.38, 1.0)
+		if n == "use" and not near: continue   # only next to the loadout table
+		var col := Color(1.0, 0.35, 0.35) if n == "fire" else (Color(1.0, 0.8, 0.3) if n == "use" else Color(0.62, 0.38, 1.0))
 		hud.draw_circle(b.c, b.r, Color(col, 0.5 if b.held else 0.18))
 		hud.draw_arc(b.c, b.r, 0, TAU, 40, Color(col, 0.9), 3.0)
 		var fs := int(b.r * (0.55 if String(b.label).length() <= 2 else 0.36))

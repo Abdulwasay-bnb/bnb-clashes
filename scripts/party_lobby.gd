@@ -9,7 +9,7 @@ var G
 var party: Party
 var mode := ""                 # race / ops
 var C: Dictionary              # this player's character
-var gun := "rifle"
+var gun := "smg"
 var players: Array = []        # [{pid, c, gun}] — pid 0 is the host
 var cfg := {track = "city", mine = 4, them = 4, skill = 1.0, fill = true, total = 8, mafia = 2, cool = 30.0, reveal = true}
 var status: Label
@@ -250,19 +250,22 @@ func _render_lobby() -> void:
 		var pc: Dictionary = Data.by_id(String(p.c))
 		var tag := "  (HOST)" if int(p.pid) == 0 else ""
 		var team := ""
-		if mode == "ops": team = "   ·   " + OpsGame.TEAM_NAME[k % 2] + "   ·   " + String(OpsSim.GUNS[String(p.gun)].name)
+		if mode == "ops": team = "   ·   " + OpsGame.TEAM_NAME[k % 2]
 		list_box.add_child(ui.lbl("%s%s%s" % [pc.name, tag, team], 22, ui.F_BODY, (pc.accent as Color).lightened(0.35)))
 	v.add_child(ui._centered(list_box))
 	# settings
 	if mode == "race":
 		if host:
-			var r := _row()
-			for id in RaceSim.TRACKS:
+			var r: Control = null
+			var tn := 0
+			for id in RaceSim.TRACKS:   # three tracks per row
+				if tn % 3 == 0:
+					r = _row(); v.add_child(r)
+				tn += 1
 				var tid: String = id
 				var b: Button = ui.big_btn(String(RaceSim.TRACKS[id].name).to_upper(), Color(0.13, 0.78, 0.92) if cfg.track == tid else Color(0.35, 0.38, 0.5), func(): cfg.track = tid; _changed())
-				b.add_theme_font_size_override("font_size", 20)
+				b.add_theme_font_size_override("font_size", 18)
 				r.add_child(b)
-			v.add_child(r)
 		else:
 			v.add_child(_centered_lbl("TRACK:  " + String(RaceSim.TRACKS.get(cfg.track, RaceSim.TRACKS.city).name).to_upper()))
 	elif mode == "mafia":
