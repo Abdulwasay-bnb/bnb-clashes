@@ -658,6 +658,7 @@ var party_kind := ""
 
 func _new_party(kind: String) -> Node:
 	match kind:
+		"dash": return load("res://scripts/dash/dash_game.gd").new()
 		"cricket": return CricketGame.new()
 		"carrom": return CarromGame.new()
 		"blast": return BlastGame.new()
@@ -691,6 +692,11 @@ func start_party(kind: String, C: Dictionary, others: int, pass_play := false) -
 
 func start_party_net(kind: String, people: Array, seed: int, slot: int, party: Party, is_guest: bool, pids: Dictionary) -> void:
 	await _begin_party(kind, "SETTING UP", func(n): n.start_net(self, people, seed, slot, party, is_guest, pids))
+
+
+## Deadline Dash: the single-player platformer (10 levels, bosses, 3 lives).
+func start_dash(C: Dictionary) -> void:
+	await _begin_party("dash", "LOADING LEVEL", func(n): n.start(self, C))
 
 
 func end_party() -> void:
@@ -2354,6 +2360,23 @@ func _run_autotest() -> void:
 					await shot.call("%s_%d" % [autotest, k])
 			print("AUTOTEST %s stats=%s" % [autotest, party_game.stats if party_game != null else {}])
 			end_party()
+		"dash":
+			# the platformer with the CPU playing; the game's own autotest(shot) if it has one (--level=N to start there)
+			await start_dash(Data.by_id("hamza_khan"))
+			party_game.autoplay = true
+			if party_game.has_method("autotest"):
+				await party_game.autotest(shot)
+			else:
+				for k in 3:
+					await get_tree().create_timer(5.0).timeout
+					await shot.call("dash_%d" % k)
+			print("AUTOTEST dash stats=%s" % [party_game.stats if party_game != null else {}])
+			end_party()
+		"dashsim":
+			var dn: Node = _new_party("dash")
+			if dn.has_method("selftest"): await dn.selftest(self)
+			else: print("AUTOTEST dashsim: no selftest")
+			dn.free()
 		"cricketsim", "carromsim", "blastsim", "cardssim":
 			# the game's rules engine on its own: a full game between CPUs, and snapshot / apply round trips
 			var kind := String(autotest).trim_suffix("sim")

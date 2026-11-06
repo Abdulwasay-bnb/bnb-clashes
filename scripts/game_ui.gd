@@ -735,6 +735,7 @@ const MENU_DESC := [
 	"BNB Rush Hour: a ten-car street race. Grab pickups, throw them at rivals, unleash your power.",
 	"BNB Office Ops: team deathmatch on four maps. Grab guns and grenades at your loadout table.",
 	"Office Cricket: a Super Over in the car park. Bat, bowl, hit sixes, vs CPU or a friend.",
+	"Deadline Dash: a side-scrolling platformer. 10 levels, bosses, 3 lives. Beat the CEO's deadline.",
 	"Ludo, Carrom, Cards, Office Blast and Mafia: board, card and party games for 2 to 10 players.",
 	"Hit levels, frame advantage, sidesteps, juggles, throws and Surge Arts, explained.",
 	"Keyboard and gamepad layouts for both players.",
@@ -791,9 +792,9 @@ func show_title() -> void:
 	wm.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	col.add_child(wm)
 	var sp := Control.new(); sp.custom_minimum_size = Vector2(0, 16 if not touch_enabled else 6); col.add_child(sp)
-	var labels := ["CLASH  ·  FIGHT", "RUSH HOUR  ·  RACE", "OFFICE OPS  ·  SHOOT", "OFFICE CRICKET", "PARTY GAMES", "HOW TO PLAY", "CONTROLS", "QUIT"]
+	var labels := ["CLASH  ·  FIGHT", "RUSH HOUR  ·  RACE", "OFFICE OPS  ·  SHOOT", "OFFICE CRICKET", "DEADLINE DASH", "PARTY GAMES", "HOW TO PLAY", "CONTROLS", "QUIT"]
 	var cbs := [show_clash_menu, func(): show_select({mode = "race"}), func(): show_select({mode = "ops"}), func(): show_select({mode = "cricket"}),
-		show_party_menu, show_how, show_controls, func(): G.get_tree().quit()]
+		func(): show_select({mode = "dash"}), show_party_menu, show_how, show_controls, func(): G.get_tree().quit()]
 	var items: Array = []
 	for i in labels.size():
 		items.append(["%02d   %s" % [i + 1, labels[i]], cbs[i], 25, MENU_DESC[i]])
@@ -908,7 +909,7 @@ func show_select(c: Dictionary) -> void:
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bv.add_child(t)
 	var sub := lbl({"cpu": "VS CPU  ·  " + ["EASY", "NORMAL", "HARD", "BOSS"][c.get("lv", 1)], "2p": "VERSUS  ·  LOCAL", "training": "TRAINING", "arcade": "ARCADE  ·  CLIMB TO THE CEO", "race": "RUSH HOUR  ·  PICK YOUR DRIVER", "ops": "OFFICE OPS  ·  PICK YOUR OPERATOR", "ludo": "LUDO  ·  PICK YOUR PLAYER", "mafia": "MAFIA  ·  WHO ARE YOU TONIGHT?",
-		"cricket": "OFFICE CRICKET  ·  PICK YOUR PLAYER", "carrom": "CARROM  ·  PICK YOUR PLAYER", "blast": "OFFICE BLAST  ·  PICK YOUR PLAYER", "cards": "RUNG  ·  PICK YOUR PLAYER", "online": "ONLINE  ·  " + ("WI-FI" if G.net.via == "lan" else "ROOM " + G.net.code)}[c.mode], 14, F_BODY, GOLD)
+		"cricket": "OFFICE CRICKET  ·  PICK YOUR PLAYER", "carrom": "CARROM  ·  PICK YOUR PLAYER", "blast": "OFFICE BLAST  ·  PICK YOUR PLAYER", "cards": "RUNG  ·  PICK YOUR PLAYER", "dash": "DEADLINE DASH  ·  PICK YOUR HERO", "online": "ONLINE  ·  " + ("WI-FI" if G.net.via == "lan" else "ROOM " + G.net.code)}[c.mode], 14, F_BODY, GOLD)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bv.add_child(sub)
 	# per-side info: watermark, name plate, radar, signature
@@ -1049,7 +1050,7 @@ func _render_select() -> void:
 	for s in 2:
 		var u: Dictionary = side_ui[s]
 		var waiting: bool = (sel.cfg.mode != "2p" and sel.cfg.mode != "online" and s == 1 and not sel.locked[0]) \
-			or (sel.cfg.mode in ["race", "ops", "ludo", "mafia", "cricket", "carrom", "blast", "cards"] and s == 1) \
+			or (sel.cfg.mode in ["race", "ops", "ludo", "mafia", "cricket", "carrom", "blast", "cards", "dash"] and s == 1) \
 			or (sel.cfg.mode == "online" and s != G.local_side and not sel.get("seen", false))
 		u.box.visible = not waiting
 		if waiting:
@@ -1136,6 +1137,11 @@ func _select_confirm(s: int) -> void:
 		G.net.send({t = "pick", i = sel.cur[s], cos = sel.cos[s]})
 		_render_select()
 		_online_both_picked()
+		return
+	if sel.cfg.mode == "dash":
+		var dc: Dictionary = Data.ROSTER[sel.cur[0]]
+		_render_select()
+		get_tree().create_timer(0.5).timeout.connect(func(): G.start_dash(dc))
 		return
 	if sel.cfg.mode in ["ludo", "mafia", "cricket", "carrom", "blast", "cards"]:
 		var lc: Dictionary = Data.ROSTER[sel.cur[0]]
