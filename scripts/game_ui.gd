@@ -2045,7 +2045,7 @@ func show_clash_menu() -> void:
 
 
 # ---------------------------------------------------------------- BNB Office Ops
-var ops_cfg := {mine = 4, them = 4, gun = "smg", skill = 1.0}
+var ops_cfg := {mine = 4, them = 4, gun = "smg", skill = 1.0, map = "office"}
 
 
 func show_ops_setup(C: Dictionary) -> void:
@@ -2072,6 +2072,8 @@ func show_ops_setup(C: Dictionary) -> void:
 			b.add_theme_font_size_override("font_size", 22)
 			h.add_child(b)
 		col.add_child(h)
+	row.call("MAP", OpsSim.MAPS.keys(), "map", OpsSim.MAPS.values().map(func(m): return String(m.name)))
+	col.add_child(lbl(String(OpsSim.MAPS[ops_cfg.map].sub), 18, F_MED, Color(0.79, 0.83, 0.88)))
 	row.call("YOUR TEAM", [1, 2, 3, 4], "mine", ["1", "2", "3", "4"])
 	row.call("ENEMY TEAM", [1, 2, 3, 4], "them", ["1", "2", "3", "4"])
 	row.call("BOTS", [0.7, 1.0, 1.4], "skill", ["EASY", "NORMAL", "HARD"])

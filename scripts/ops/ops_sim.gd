@@ -109,14 +109,101 @@ var thrown: Array = []         # grenades in flight: {uid, kind, pos, vel, t, by
 var fires: Array = []          # molotov fires burning: {uid, pos, t, by}
 var next_uid := 1
 var map_id := "office"
+var kinds: Array = []          # per box: what it is (the view picks the look): wall, pillar, glass, rack, cubicle, desk, crate, shelf, car...
+var bounds := Rect2(-28, -19, 56, 38)   # where bots may roam
+var ceiling := 4.0             # 0 = open sky
+
+const MAPS := {
+	"office": {name = "OFFICE FLOOR", sub = "Cubicles, meeting rooms and server racks"},
+	"warehouse": {name = "WAREHOUSE", sub = "Tall shelving aisles, crates and forklifts"},
+	"garage": {name = "PARKING GARAGE", sub = "Low ceiling, pillars and parked cars"},
+	"rooftop": {name = "ROOFTOP", sub = "Open sky: AC units, water tanks and a helipad"},
+}
 var rng := RandomNumberGenerator.new()
 var bot_skill := 1.0
 
 
-## Office floor: 64 x 44 m, cubicles and desks in the middle, server racks and meeting rooms at the ends.
+func _box(x: float, z: float, sx: float, sz: float, h: float, kind: String) -> void:
+	boxes.append(AABB(Vector3(x - sx / 2.0, 0.0, z - sz / 2.0), Vector3(sx, h, sz)))
+	kinds.append(kind)
+
+
 func build_map() -> void:
+	match map_id:
+		"warehouse": _map_warehouse()
+		"garage": _map_garage()
+		"rooftop": _map_rooftop()
+		_: _map_office()
+	_add_table(0, Vector3(bounds.position.x + 3.5, 0, 0), PI / 2.0)
+	_add_table(1, Vector3(bounds.end.x - 3.5, 0, 0), -PI / 2.0)
+	_build_waypoints()
+
+
+## Warehouse: 70 x 50 m, four rows of tall shelving with aisles through them, crates and forklifts in the lanes.
+func _map_warehouse() -> void:
+	ceiling = 7.0
+	bounds = Rect2(-33, -23, 66, 46)
+	_box(0, -25.5, 72, 1, 7, "wall"); _box(0, 25.5, 72, 1, 7, "wall"); _box(-35.5, 0, 1, 52, 7, "wall"); _box(35.5, 0, 1, 52, 7, "wall")
+	for z in [-15.0, -5.0, 5.0, 15.0]:
+		for seg in [[-25.0, 10.0], [-9.0, 14.0], [9.0, 14.0], [25.0, 10.0]]:   # gaps make cross aisles
+			_box(seg[0], z, seg[1], 1.4, 4.5, "shelf")
+	var crates := [[-14, -10, 1.5], [-12.4, -10, 3.0], [12, 10, 1.5], [13.6, 10, 3.0], [0, -20, 1.5], [0, 20, 1.5], [-22, 0, 1.5], [22, 0, 1.5],
+		[-4, 0, 3.0], [4, 0, 1.5], [-17, 20, 1.5], [17, -20, 1.5], [0, 10, 1.5], [0, -10, 1.5]]
+	for c in crates: _box(c[0], c[1], 1.5, 1.5, c[2], "crate")
+	for f in [[-8, 10], [8, -10], [-26, -20], [26, 20]]: _box(f[0], f[1], 1.4, 2.6, 2.2, "forklift")
+	for pl in [[-18, -10], [18, 10], [-6, 20], [6, -20]]: _box(pl[0], pl[1], 2.4, 2.0, 0.5, "pallet")
+	for i in 6:
+		spawns[0].append(Vector3(-32.0 + (i % 2) * 1.6, 0, -8.0 + i * 3.2))
+		spawns[1].append(Vector3(32.0 - (i % 2) * 1.6, 0, -8.0 + i * 3.2))
+
+
+## Parking garage: 60 x 44 m under a low ceiling, a grid of pillars, rows of parked cars, barriers and a booth.
+func _map_garage() -> void:
+	ceiling = 3.2
+	bounds = Rect2(-28, -19, 56, 38)
+	_box(0, -22.5, 62, 1, 3.2, "wall"); _box(0, 22.5, 62, 1, 3.2, "wall"); _box(-30.5, 0, 1, 46, 3.2, "wall"); _box(30.5, 0, 1, 46, 3.2, "wall")
+	for x in [-16.0, -8.0, 0.0, 8.0, 16.0]:
+		for z in [-14.0, -6.0, 6.0, 14.0]:
+			_box(x, z, 0.9, 0.9, 3.2, "pillar")
+	var rng2 := RandomNumberGenerator.new(); rng2.seed = 3
+	for z in [-18.0, -10.0, 10.0, 18.0]:   # parking bays: cars nose-in, some bays empty
+		for x in range(-22, 23, 3):
+			if rng2.randf() < 0.62 and absf(float(x)) > 2.0: _box(float(x), z, 1.9, 4.2, 1.45, "car")
+	for b in [[-12, 0, 3.2], [12, 0, 3.2], [0, -2.5, 3.2], [0, 2.5, 3.2]]: _box(b[0], b[1], 0.6, b[2], 1.0, "barrier")
+	_box(-20, 0, 2.6, 2.6, 2.6, "booth"); _box(20, 0, 2.6, 2.6, 2.6, "booth")
+	for x in [-8.0, 8.0]: _box(x, 0, 1.9, 4.2, 1.45, "car")
+	for i in 6:
+		spawns[0].append(Vector3(-27.6 + (i % 2) * 1.2, 0, -6.0 + i * 2.4))
+		spawns[1].append(Vector3(27.6 - (i % 2) * 1.2, 0, -6.0 + i * 2.4))
+
+
+## Rooftop: 60 x 44 m in the open, a low parapet round the edge, AC units, water tanks, the stair housing,
+## rows of solar panels (low: you can stand on them) and a helipad in the middle.
+func _map_rooftop() -> void:
+	ceiling = 0.0
+	bounds = Rect2(-28, -19, 56, 38)
+	_box(0, -22.2, 62, 0.6, 1.2, "parapet"); _box(0, 22.2, 62, 0.6, 1.2, "parapet"); _box(-30.2, 0, 0.6, 45, 1.2, "parapet"); _box(30.2, 0, 0.6, 45, 1.2, "parapet")
+	_box(0, -14, 8, 5, 3.6, "housing")
+	for t in [[-16, 12], [16, -12], [-6, 16]]: _box(t[0], t[1], 3.2, 3.2, 4.2, "tank")
+	for a in [[-12, -6], [-12, -3.6], [12, 6], [12, 3.6], [-20, 15], [20, -15], [4, 8], [-4, -8], [22, 10], [-22, -10]]: _box(a[0], a[1], 2.2, 2.2, 1.7, "ac")
+	for z in [-18.0, 18.0]:
+		for x in [-12.0, -4.0, 4.0]:
+			_box(x if z < 0 else -x, z, 6.0, 1.6, 0.9, "solar")
+	for v in [[-8, 4], [8, -4]]: _box(v[0], v[1], 0.8, 4.0, 1.3, "vent")
+	for i in 6:
+		spawns[0].append(Vector3(-27.6 + (i % 2) * 1.2, 0, -6.0 + i * 2.4))
+		spawns[1].append(Vector3(27.6 - (i % 2) * 1.2, 0, -6.0 + i * 2.4))
+
+
+## Office floor: 64 x 44 m, cubicles and desks in the middle, server racks and meeting rooms at the ends.
+func _map_office() -> void:
 	var add := func(x: float, z: float, sx: float, sz: float, h := 1.2):
-		boxes.append(AABB(Vector3(x - sx / 2.0, 0.0, z - sz / 2.0), Vector3(sx, h, sz)))
+		var k := "desk"
+		if h >= 4.0: k = "wall" if (absf(x) > 30.0 or absf(z) > 21.0) else "pillar"
+		elif h >= 2.9: k = "glass"
+		elif h >= 2.2: k = "rack"
+		elif h >= 1.4: k = "cubicle"
+		_box(x, z, sx, sz, h, k)
 	# outer walls
 	add.call(0, -22.5, 66, 1, 4); add.call(0, 22.5, 66, 1, 4); add.call(-32.5, 0, 1, 46, 4); add.call(32.5, 0, 1, 46, 4)
 	# meeting rooms (glass walls) at both ends with doors
@@ -136,10 +223,12 @@ func build_map() -> void:
 	for i in 6:
 		spawns[0].append(Vector3(-29.0 + (i % 2) * 2.0, 0, -9.0 + i * 3.6))
 		spawns[1].append(Vector3(29.0 - (i % 2) * 2.0, 0, -9.0 + i * 3.6))
-	_add_table(0, Vector3(-24.5, 0, 0), PI / 2.0)
-	_add_table(1, Vector3(24.5, 0, 0), -PI / 2.0)
-	for x in range(-28, 29, 4):
-		for z in range(-19, 20, 4):
+
+
+
+func _build_waypoints() -> void:
+	for x in range(int(bounds.position.x), int(bounds.end.x) + 1, 4):
+		for z in range(int(bounds.position.y), int(bounds.end.y) + 1, 4):
 			var p := Vector3(x, 0, z)
 			if not _blocked(p, 0.7): waypoints.append(p)
 	# connect neighbours that have a clear walk between them
@@ -157,6 +246,7 @@ func _add_table(team: int, at: Vector3, yaw: float) -> void:
 	var length := 6.4
 	var half := (along * length / 2.0).abs() + (Vector3(sin(yaw), 0, cos(yaw)) * 0.5).abs()
 	boxes.append(AABB(Vector3(at.x - half.x, 0.0, at.z - half.z), Vector3(half.x * 2.0, 0.9, half.z * 2.0)))
+	kinds.append("loadout")
 	var items := []
 	for k in TABLE_ITEMS.size():
 		var u := (k + 0.5) / TABLE_ITEMS.size() - 0.5
@@ -229,8 +319,9 @@ func _next_step(a: Vector3, b: Vector3) -> Vector3:
 	return waypoints[step]
 
 
-func setup(team_a: Array, team_b: Array, humans: Dictionary, loadouts: Dictionary, seed := 1) -> void:
+func setup(team_a: Array, team_b: Array, humans: Dictionary, loadouts: Dictionary, seed := 1, map := "office") -> void:
 	rng.seed = seed
+	map_id = map if MAPS.has(map) else "office"
 	build_map()
 	var sizes := maxi(team_a.size(), team_b.size())
 	goal = 10 + sizes * 5
@@ -444,7 +535,7 @@ func _tick_thrown() -> void:
 			else: v.y = 0.0
 			v.x *= 0.82; v.z *= 0.82
 			landed = true
-		if np.y > 3.9: np.y = 3.9; v.y = -absf(v.y) * 0.3   # the ceiling
+		if ceiling > 0.0 and np.y > ceiling - 0.1: np.y = ceiling - 0.1; v.y = -absf(v.y) * 0.3   # the ceiling
 		n.pos = np; n.vel = v
 		var kind: String = n.kind
 		if (kind == "molly" and landed and n.t > 8) or n.t >= int(NADES[kind].fuse):

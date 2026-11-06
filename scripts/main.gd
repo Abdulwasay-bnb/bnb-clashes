@@ -680,7 +680,7 @@ var ops: OpsGame
 var lobby: PartyLobby
 
 
-func start_ops_net(a: Array, b: Array, humans: Dictionary, guns: Dictionary, skill: float, seed: int, me: int, party: Party, is_guest: bool, pids: Dictionary) -> void:
+func start_ops_net(a: Array, b: Array, humans: Dictionary, guns: Dictionary, skill: float, seed: int, me: int, party: Party, is_guest: bool, pids: Dictionary, map := "office") -> void:
 	end_race(); end_ops(); end_ludo(); end_mafia()
 	loader.open("DEPLOYING")
 	await get_tree().process_frame
@@ -690,7 +690,7 @@ func start_ops_net(a: Array, b: Array, humans: Dictionary, guns: Dictionary, ski
 	ui.hide_screen(); ui.view = "ops"; ui.hide_hud()
 	ops = OpsGame.new()
 	add_child(ops)
-	ops.start_net(self, a, b, humans, guns, skill, seed, me, party, is_guest, pids)
+	ops.start_net(self, a, b, humans, guns, skill, seed, me, party, is_guest, pids, map)
 	ops.finished.connect(end_ops)
 	loader.close()
 
@@ -709,7 +709,7 @@ func start_ops(C: Dictionary, cfg: Dictionary) -> void:
 	var b := pool.slice(int(cfg.mine) - 1, int(cfg.mine) - 1 + int(cfg.them))
 	ops = OpsGame.new()
 	add_child(ops)
-	ops.start(self, a, b, String(cfg.gun), float(cfg.skill))
+	ops.start(self, a, b, String(cfg.gun), float(cfg.skill), String(cfg.get("map", "office")))
 	ops.finished.connect(end_ops)
 	loader.close()
 
@@ -2286,6 +2286,28 @@ func _run_autotest() -> void:
 			for k in 3: await get_tree().physics_frame
 			await shot.call("ops_enemy")
 			end_ops()
+		"opsmaps":
+			# every Office Ops map: an overview from above, a first-person look, then bots play for a while
+			var maps: Array = OpsSim.MAPS.keys()
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--maps="): maps = a.substr(7).split(",")
+			for mid in maps:
+				await start_ops(Data.by_id("hamza_khan"), {mine = 4, them = 4, gun = "smg", skill = 1.0, map = mid})
+				ops.autopilot = true
+				for k in 30: await get_tree().physics_frame
+				await shot.call("opsmap_%s_fp" % mid)
+				var c0: Camera3D = ops.cam
+				var over := Camera3D.new(); ops.world.add_child(over)
+				over.position = Vector3(-6, 34, 30); over.look_at(Vector3(0, 0, 0)); over.fov = 60; over.current = true
+				for k in 3: await get_tree().process_frame
+				await shot.call("opsmap_%s_over" % mid)
+				over.position = Vector3(-18, 2.2, -8); over.look_at(Vector3(6, 1.2, 4)); over.fov = 70
+				for k in 3: await get_tree().process_frame
+				await shot.call("opsmap_%s_floor" % mid)
+				over.queue_free(); c0.current = true
+				await get_tree().create_timer(12.0).timeout
+				print("AUTOTEST opsmaps %s boxes=%d waypoints=%d score=%s events=%s" % [mid, ops.sim.boxes.size(), ops.sim.waypoints.size(), ops.sim.score, ops.stats])
+				end_ops()
 		"opsgear":
 			# the loadout table: walk up, take a Sheriff and every throwable, throw them; spawn protection
 			await start_ops(Data.by_id("hamza_khan"), {mine = 3, them = 3, gun = "smg", skill = 0.7})

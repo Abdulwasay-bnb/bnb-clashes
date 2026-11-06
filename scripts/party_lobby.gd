@@ -11,7 +11,7 @@ var mode := ""                 # race / ops
 var C: Dictionary              # this player's character
 var gun := "smg"
 var players: Array = []        # [{pid, c, gun}] — pid 0 is the host
-var cfg := {track = "city", mine = 4, them = 4, skill = 1.0, fill = true, total = 8, mafia = 2, cool = 30.0, reveal = true}
+var cfg := {track = "city", map = "office", mine = 4, them = 4, skill = 1.0, fill = true, total = 8, mafia = 2, cool = 30.0, reveal = true}
 var status: Label
 var list_box: VBoxContainer
 var found_box: VBoxContainer
@@ -281,12 +281,13 @@ func _render_lobby() -> void:
 		else: v.add_child(_centered_lbl("EMPTY SEATS:  " + ("CPU PLAYERS" if cfg.fill else "LEFT EMPTY")))
 	elif mode == "ops":
 		if host:
+			v.add_child(_opt_row("MAP", OpsSim.MAPS.keys(), "map", OpsSim.MAPS.values().map(func(m): return String(m.name))))
 			v.add_child(_opt_row("TEAM SIZE", [1, 2, 3, 4], "mine", ["1", "2", "3", "4"]))
 			v.add_child(_opt_row("ENEMY SIZE", [1, 2, 3, 4], "them", ["1", "2", "3", "4"]))
 			v.add_child(_opt_row("BOTS", [0.7, 1.0, 1.4], "skill", ["EASY", "NORMAL", "HARD"]))
 		else:
 			var a_b := _team_sizes()
-			v.add_child(_centered_lbl("%d v %d   ·   BOTS %s" % [a_b[0], a_b[1], {0.7: "EASY", 1.0: "NORMAL", 1.4: "HARD"}.get(float(cfg.skill), "NORMAL")]))
+			v.add_child(_centered_lbl("%s   ·   %d v %d   ·   BOTS %s" % [String(OpsSim.MAPS.get(String(cfg.get("map", "office")), OpsSim.MAPS.office).name), a_b[0], a_b[1], {0.7: "EASY", 1.0: "NORMAL", 1.4: "HARD"}.get(float(cfg.skill), "NORMAL")]))
 	var r2 := _row()
 	if host:
 		var start: Button = ui.big_btn("START  ✔", Color(1.0, 0.81, 0.35), start_match)
@@ -479,8 +480,8 @@ func start_match() -> void:
 			var pid := int(players[k].pid)
 			if pid != 0:
 				pids[pid] = int(slot_of[k])
-				party.send_to(pid, {t = "start", mode = "ops", a = a, b = b, humans = humans, guns = guns, skill = cfg.skill, seed = seed, me = slot_of[k]})
-		G.start_ops_net(_people(a), _people(b), _int_keys(humans), _int_keys(guns), float(cfg.skill), seed, int(slot_of[0]), party, false, pids)
+				party.send_to(pid, {t = "start", mode = "ops", a = a, b = b, humans = humans, guns = guns, skill = cfg.skill, seed = seed, me = slot_of[k], map = cfg.map})
+		G.start_ops_net(_people(a), _people(b), _int_keys(humans), _int_keys(guns), float(cfg.skill), seed, int(slot_of[0]), party, false, pids, String(cfg.map))
 
 
 func _start_guest(d: Dictionary) -> void:
@@ -494,7 +495,7 @@ func _start_guest(d: Dictionary) -> void:
 	elif String(d.mode) == "race":
 		G.start_race_net(String(d.track), _people(d.people), int(d.humans), int(d.seed), int(d.me), party, true, {})
 	else:
-		G.start_ops_net(_people(d.a), _people(d.b), _int_keys(d.humans), _int_keys(d.guns), float(d.skill), int(d.seed), int(d.me), party, true, {})
+		G.start_ops_net(_people(d.a), _people(d.b), _int_keys(d.humans), _int_keys(d.guns), float(d.skill), int(d.seed), int(d.me), party, true, {}, String(d.get("map", "office")))
 
 
 func _mafia_cfg() -> Dictionary:

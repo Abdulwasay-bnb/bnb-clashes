@@ -58,14 +58,18 @@ var inbox: Array = []
 var aim := Vector2.ZERO     # guest: own yaw / pitch
 
 
-func start(g, team_a: Array, team_b: Array, primary: String, skill: float) -> void:
+var map_id := "office"
+
+
+func start(g, team_a: Array, team_b: Array, primary: String, skill: float, map := "office") -> void:
+	map_id = map
 	_begin(g, team_a, team_b, {0: 0}, {0: primary}, skill, randi())
 
 
 ## Online / Wi-Fi match. humans: soldier id -> player slot, loadouts: soldier id -> primary gun.
 func start_net(g, team_a: Array, team_b: Array, humans: Dictionary, loadouts: Dictionary, skill: float, seed: int, my_id: int,
-		party: Party, is_guest: bool, pids: Dictionary) -> void:
-	net = party; guest = is_guest; pid_of = pids; me = my_id
+		party: Party, is_guest: bool, pids: Dictionary, map := "office") -> void:
+	net = party; guest = is_guest; pid_of = pids; me = my_id; map_id = map
 	net.message.connect(_net_message)
 	if not guest: net.left.connect(_net_left)
 	_begin(g, team_a, team_b, humans, loadouts, skill, seed)
@@ -79,7 +83,7 @@ func _begin(g, team_a: Array, team_b: Array, humans: Dictionary, loadouts: Dicti
 	small = load("res://assets/fonts/Rajdhani-Bold.ttf")
 	sim = OpsSim.new()
 	sim.bot_skill = skill
-	sim.setup(team_a, team_b, humans, loadouts, seed)
+	sim.setup(team_a, team_b, humans, loadouts, seed, map_id)
 	world = Node3D.new()
 	G.add_child(world)
 	_build_map()
@@ -126,53 +130,272 @@ func _box(size: Vector3, m: Material, pos: Vector3, parent: Node3D = null) -> Me
 	return mi
 
 
+## Floor material with a little noise (carpet, concrete, asphalt, gravel), reusing the race ground shader.
+func _floor_mat(a: Color, b: Color, scale := 0.6) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = load("res://shaders/race_ground.gdshader")
+	m.set_shader_parameter("col_a", a); m.set_shader_parameter("col_b", b); m.set_shader_parameter("scale", scale)
+	return m
+
+
 func _build_map() -> void:
+	var id := sim.map_id
+	var B := sim.bounds
+	var W := B.size.x + 8.0
+	var D := B.size.y + 8.0
+	var mid := Vector3(B.get_center().x, 0, B.get_center().y)
 	var we := WorldEnvironment.new()
 	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR; env.background_color = Color(0.05, 0.04, 0.08)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.75, 0.74, 0.82); env.ambient_light_energy = 0.75
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.glow_enabled = true; env.glow_intensity = 0.3; env.glow_hdr_threshold = 1.3
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.glow_enabled = true; env.glow_intensity = 0.3; env.glow_hdr_threshold = 1.2
+	var sun := DirectionalLight3D.new()
+	sun.shadow_enabled = true; sun.directional_shadow_max_distance = 50
+	match id:
+		"rooftop":
+			var sky := Sky.new(); var sm := ProceduralSkyMaterial.new()
+			sm.sky_top_color = Color(0.15, 0.2, 0.45); sm.sky_horizon_color = Color(1.0, 0.6, 0.4)
+			sm.ground_bottom_color = Color(0.1, 0.08, 0.12); sm.ground_horizon_color = Color(0.5, 0.35, 0.35)
+			sky.sky_material = sm; env.background_mode = Environment.BG_SKY; env.sky = sky
+			sm.sky_top_color = Color(0.12, 0.22, 0.5); sm.sky_horizon_color = Color(0.85, 0.62, 0.5)
+			env.ambient_light_color = Color(0.68, 0.7, 0.8); env.ambient_light_energy = 0.4
+			env.fog_enabled = true; env.fog_density = 0.0012; env.fog_light_color = Color(0.6, 0.55, 0.6)
+			env.tonemap_exposure = 0.9
+			sun.rotation = Vector3(deg_to_rad(-32), deg_to_rad(55), 0); sun.light_energy = 0.95; sun.light_color = Color(1.0, 0.86, 0.72)
+		"warehouse":
+			env.background_mode = Environment.BG_COLOR; env.background_color = Color(0.04, 0.04, 0.05)
+			env.ambient_light_color = Color(0.7, 0.72, 0.8); env.ambient_light_energy = 0.35
+			sun.rotation = Vector3(deg_to_rad(-70), deg_to_rad(20), 0); sun.light_energy = 0.55; sun.light_color = Color(1.0, 0.95, 0.85)
+		"garage":
+			env.background_mode = Environment.BG_COLOR; env.background_color = Color(0.03, 0.03, 0.04)
+			env.ambient_light_color = Color(0.6, 0.7, 0.75); env.ambient_light_energy = 0.32
+			sun.light_energy = 0.0
+		_:
+			env.background_mode = Environment.BG_COLOR; env.background_color = Color(0.05, 0.04, 0.08)
+			env.ambient_light_color = Color(0.72, 0.72, 0.82); env.ambient_light_energy = 0.42
+			sun.rotation = Vector3(deg_to_rad(-62), deg_to_rad(25), 0); sun.light_energy = 0.45
 	we.environment = env
 	world.add_child(we)
-	var sun := DirectionalLight3D.new()
-	sun.rotation = Vector3(deg_to_rad(-62), deg_to_rad(25), 0); sun.light_energy = 0.65; sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 50
-	world.add_child(sun)
-	_box(Vector3(66, 0.1, 46), _mat(Color(0.22, 0.2, 0.3), 0.95), Vector3(0, -0.05, 0))               # carpet
-	_box(Vector3(66, 0.1, 46), _mat(Color(0.85, 0.85, 0.88), 0.9), Vector3(0, 4.05, 0))               # ceiling
-	for x in range(-28, 29, 8):
-		for z in range(-18, 19, 8):
-			_box(Vector3(2.4, 0.05, 0.8), _mat(Color(1, 0.98, 0.94), 0.3, 0.0, 2.2), Vector3(x, 4.0, z))
-			var l := OmniLight3D.new(); l.position = Vector3(x, 3.6, z); l.omni_range = 9.0; l.light_energy = 0.5
-			world.add_child(l)
-	var mark: Texture2D = load("res://assets/brand/bnb_mark_trim.png")
+	if sun.light_energy > 0.0: world.add_child(sun)
+	# floor
+	var floor_m: Material = {"office": _floor_mat(Color(0.25, 0.22, 0.34), Color(0.2, 0.18, 0.28), 1.6),
+		"warehouse": _floor_mat(Color(0.5, 0.5, 0.52), Color(0.42, 0.42, 0.44), 0.25),
+		"garage": _floor_mat(Color(0.3, 0.3, 0.32), Color(0.24, 0.24, 0.26), 0.35),
+		"rooftop": _floor_mat(Color(0.48, 0.46, 0.45), Color(0.38, 0.37, 0.37), 0.9)}.get(id)
+	_box(Vector3(W, 0.1, D), floor_m, mid + Vector3(0, -0.05, 0))
+	# floor markings
+	match id:
+		"warehouse":   # yellow lane lines along the aisles
+			for z in [-10.0, 0.0, 10.0, -20.0, 20.0]:
+				_box(Vector3(B.size.x, 0.012, 0.15), _mat(Color(0.95, 0.75, 0.1), 0.6), Vector3(mid.x, 0.01, z + 0.0))
+		"garage":      # bay lines and arrows
+			for z in [-18.0, -10.0, 10.0, 18.0]:
+				for x in range(-22, 24, 3):
+					_box(Vector3(0.1, 0.012, 4.6), _mat(Color(0.9, 0.9, 0.9), 0.6), Vector3(x - 1.5, 0.01, z))
+			_box(Vector3(B.size.x, 0.012, 0.15), _mat(Color(0.95, 0.8, 0.2), 0.6), Vector3(mid.x, 0.01, -5.0))
+			_box(Vector3(B.size.x, 0.012, 0.15), _mat(Color(0.95, 0.8, 0.2), 0.6), Vector3(mid.x, 0.01, 5.0))
+		"rooftop":     # the helipad
+			var hp := CylinderMesh.new(); hp.top_radius = 5.0; hp.bottom_radius = 5.0; hp.height = 0.04
+			var hm := MeshInstance3D.new(); hm.mesh = hp; hm.material_override = _mat(Color(0.2, 0.22, 0.25), 0.7); hm.position = Vector3(0, 0.02, 0)
+			world.add_child(hm)
+			var ring := MeshInstance3D.new(); var tr := TorusMesh.new(); tr.inner_radius = 4.3; tr.outer_radius = 4.55; ring.mesh = tr
+			ring.material_override = _mat(Color(0.95, 0.8, 0.2), 0.5); ring.position = Vector3(0, 0.03, 0); ring.scale = Vector3(1, 0.05, 1)
+			world.add_child(ring)
+			var hl := Label3D.new(); hl.text = "H"; hl.font = font; hl.font_size = 600; hl.modulate = Color(0.95, 0.95, 0.95)
+			hl.rotation = Vector3(-PI / 2, 0, 0); hl.position = Vector3(0, 0.05, 0); hl.pixel_size = 0.01; hl.outline_size = 0
+			world.add_child(hl)
+	# ceiling and lights (indoor maps)
+	if sim.ceiling > 0.0:
+		_box(Vector3(W, 0.1, D), _mat(Color(0.8, 0.8, 0.83) if id == "office" else Color(0.3, 0.3, 0.32), 0.9), mid + Vector3(0, sim.ceiling + 0.05, 0))
+		var step := 8 if id != "warehouse" else 10
+		for x in range(int(B.position.x), int(B.end.x) + 1, step):
+			for z in range(int(B.position.y) + 1, int(B.end.y), step):
+				var lc := Color(1, 0.97, 0.92) if id != "garage" else Color(0.85, 0.95, 1.0)
+				_box(Vector3(2.4 if id != "warehouse" else 1.2, 0.05, 0.6), _mat(lc, 0.3, 0.0, 2.4), Vector3(x, sim.ceiling - 0.02, z))
+				var l := OmniLight3D.new(); l.position = Vector3(x, sim.ceiling - 0.4, z)
+				l.omni_range = 9.0 if id != "warehouse" else 12.0; l.light_energy = 0.55 if id == "office" else 0.75; l.light_color = lc
+				world.add_child(l)
+		if id == "warehouse":   # skylight strips letting the daylight in
+			for z in [-10.0, 10.0]:
+				_box(Vector3(B.size.x, 0.06, 2.5), _mat(Color(0.8, 0.9, 1.0), 0.2, 0.0, 1.5), Vector3(mid.x, sim.ceiling + 0.02, z))
+	else:   # rooftop: the city all around, down below
+		var win := ShaderMaterial.new(); win.shader = load("res://shaders/windows.gdshader")
+		var rng := RandomNumberGenerator.new(); rng.seed = 5
+		for k in 40:
+			var a := TAU * k / 40.0
+			var r := rng.randf_range(70, 130)
+			var h := rng.randf_range(20, 70)
+			_box(Vector3(rng.randf_range(10, 20), h, rng.randf_range(10, 20)), win, Vector3(cos(a) * r, h / 2.0 - 30.0, sin(a) * r))
+	_build_blocks(id)
+	_build_tables()
+	_decor(id)
+
+
+## Every block of cover in the look of what it is.
+func _build_blocks(id: String) -> void:
 	var glass := _mat(Color(0.6, 0.75, 0.95), 0.05, 0.2)
 	glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA; glass.albedo_color.a = 0.25
-	for b in sim.boxes:
+	var rng := RandomNumberGenerator.new(); rng.seed = 9
+	var wall_c: Color = {"office": Color(0.72, 0.7, 0.76), "warehouse": Color(0.55, 0.52, 0.48), "garage": Color(0.5, 0.5, 0.52), "rooftop": Color(0.55, 0.53, 0.52)}.get(id)
+	for i in sim.boxes.size():
+		var b: AABB = sim.boxes[i]
+		var kind: String = sim.kinds[i] if i < sim.kinds.size() else "desk"
 		var c: Vector3 = b.position + b.size / 2.0
 		var h: float = b.size.y
-		var m: Material
-		if h >= 4.0 and (absf(c.x) > 30.0 or absf(c.z) > 21.0): m = _mat(Color(0.72, 0.7, 0.76), 0.9)   # outer walls
-		elif h >= 3.5: m = _mat(Color(0.78, 0.78, 0.82), 0.6)                                        # pillars
-		elif h >= 2.9: m = glass                                                                     # meeting rooms
-		elif h >= 2.2: m = _mat(Color(0.1, 0.1, 0.13), 0.4, 0.5)                                      # server racks
-		elif h >= 1.4: m = _mat(Color(0.45, 0.3, 0.62), 0.95)                                        # cubicle walls (BNB purple)
-		else: m = _mat(Color(0.62, 0.48, 0.34), 0.6)                                                 # desks / tables
-		_box(b.size, m, c)
-		if h >= 2.2 and h < 2.9:   # rack lights
-			for k in 5:
-				_box(Vector3(b.size.x + 0.02, 0.03, 0.3), _mat([Color(0.2, 1, 0.4), Color(0.2, 0.7, 1)][k % 2], 0.3, 0.0, 3.0), c + Vector3(0, -0.8 + k * 0.35, 0))
-		if h < 1.0 and b.size.x > 1.5:   # monitors on desks
-			_box(Vector3(0.6, 0.38, 0.04), _mat(Color(0.05, 0.05, 0.07), 0.4), c + Vector3(0, 0.6, 0))
-			_box(Vector3(0.55, 0.32, 0.02), _mat(TEAM_COL[int(c.x > 0)], 0.3, 0.0, 1.2), c + Vector3(0, 0.6, 0.025))
-	_build_tables()
-	for side in [-1.0, 1.0]:   # logos on the end walls
+		match kind:
+			"loadout": pass   # drawn by _build_tables
+			"wall":
+				_box(b.size, _mat(wall_c, 0.9), c)
+				_box(Vector3(b.size.x + 0.02, 0.15, b.size.z + 0.02), _mat(wall_c.darkened(0.4), 0.6), Vector3(c.x, 0.075, c.z))   # skirting
+			"pillar":
+				_box(b.size, _mat(Color(0.78, 0.78, 0.82) if id == "office" else Color(0.6, 0.6, 0.6), 0.7), c)
+				if id == "garage":   # hazard stripes at the foot
+					for k in 3: _box(b.size + Vector3(0.02, -b.size.y + 0.15, 0.02), _mat([Color(0.95, 0.8, 0.1), Color(0.1, 0.1, 0.1)][k % 2], 0.6), Vector3(c.x, 0.1 + k * 0.17, c.z))
+			"glass": _box(b.size, glass, c)
+			"rack":
+				_box(b.size, _mat(Color(0.1, 0.1, 0.13), 0.4, 0.5), c)
+				for k in 5:
+					_box(Vector3(b.size.x + 0.02, 0.03, 0.3), _mat([Color(0.2, 1, 0.4), Color(0.2, 0.7, 1)][k % 2], 0.3, 0.0, 3.0), c + Vector3(0, -0.8 + k * 0.35, 0))
+			"cubicle":
+				_box(b.size, _mat(Color(0.45, 0.3, 0.62), 0.95), c)
+				_box(Vector3(b.size.x + 0.02, 0.06, b.size.z + 0.04), _mat(Color(0.75, 0.75, 0.78), 0.4, 0.5), c + Vector3(0, h / 2.0, 0))   # top trim
+			"desk":
+				_box(Vector3(b.size.x, 0.06, b.size.z), _mat(Color(0.62, 0.48, 0.34), 0.5), c + Vector3(0, h / 2.0 - 0.03, 0))
+				_box(Vector3(b.size.x - 0.1, h - 0.06, b.size.z - 0.1), _mat(Color(0.3, 0.3, 0.33), 0.6, 0.4), c - Vector3(0, 0.03, 0))
+				if b.size.x > 1.5:   # monitor, keyboard, a chair
+					_box(Vector3(0.6, 0.38, 0.04), _mat(Color(0.05, 0.05, 0.07), 0.4), c + Vector3(0, 0.6, 0))
+					_box(Vector3(0.55, 0.32, 0.02), _mat(TEAM_COL[int(c.x > 0)], 0.3, 0.0, 1.2), c + Vector3(0, 0.6, 0.025))
+					_box(Vector3(0.45, 0.02, 0.15), _mat(Color(0.15, 0.15, 0.17), 0.5), c + Vector3(0, 0.42, 0.25))
+					_box(Vector3(0.5, 0.08, 0.5), _mat(Color(0.12, 0.12, 0.15), 0.7), c + Vector3(0.2, -0.05, 0.9))
+					_box(Vector3(0.5, 0.55, 0.08), _mat(Color(0.12, 0.12, 0.15), 0.7), c + Vector3(0.2, 0.25, 1.12))
+			"shelf":   # steel uprights, four shelves loaded with boxes
+				var steel := _mat(Color(0.2, 0.35, 0.6), 0.5, 0.5)
+				var orange := _mat(Color(0.95, 0.5, 0.15), 0.5, 0.4)
+				var n := int(b.size.x / 2.5)
+				for k in n + 1:
+					var x := b.position.x + k * b.size.x / n
+					for zz in [b.position.z + 0.05, b.end.z - 0.05]:
+						_box(Vector3(0.1, h, 0.1), steel, Vector3(x, h / 2.0, zz))
+				for lv in 4:
+					var y := 0.15 + lv * 1.15
+					_box(Vector3(b.size.x, 0.08, b.size.z), orange, Vector3(c.x, y, c.z))
+					var bx := b.position.x + 0.3
+					while bx < b.end.x - 0.4:
+						var w := rng.randf_range(0.5, 1.1)
+						if rng.randf() < 0.82:
+							var bh := rng.randf_range(0.4, 0.9)
+							_box(Vector3(w * 0.9, bh, b.size.z * 0.8), _mat(Color(0.7, 0.55, 0.35).lerp(Color(0.85, 0.75, 0.6), rng.randf()), 0.9), Vector3(bx + w / 2.0, y + 0.04 + bh / 2.0, c.z))
+						bx += w
+			"crate":
+				var wood := _mat(Color(0.62, 0.45, 0.25), 0.85)
+				_box(b.size, wood, c)
+				for yy in range(int(h / 1.5)):   # dark plank bands and the stencil
+					_box(Vector3(b.size.x + 0.02, 0.08, b.size.z + 0.02), _mat(Color(0.4, 0.28, 0.15), 0.85), Vector3(c.x, 0.1 + yy * 1.5, c.z))
+					_box(Vector3(b.size.x + 0.02, 0.08, b.size.z + 0.02), _mat(Color(0.4, 0.28, 0.15), 0.85), Vector3(c.x, 1.4 + yy * 1.5, c.z))
+			"pallet":
+				_box(b.size, _mat(Color(0.7, 0.55, 0.32), 0.9), c)
+				_box(Vector3(b.size.x * 0.9, 0.6, b.size.z * 0.9), _mat(Color(0.85, 0.85, 0.82), 0.6), c + Vector3(0, 0.55, 0))   # wrapped load
+			"forklift":
+				var yel := _mat(Color(0.95, 0.75, 0.1), 0.5, 0.3)
+				_box(Vector3(b.size.x, 1.0, b.size.z), yel, Vector3(c.x, 0.5, c.z))
+				_box(Vector3(b.size.x, 0.08, b.size.z * 0.6), _mat(Color(0.15, 0.15, 0.17), 0.5, 0.6), Vector3(c.x, h - 0.04, c.z - 0.3))   # roof
+				for sx in [-1.0, 1.0]:
+					for sz in [-1.0, 1.0]:
+						_box(Vector3(0.06, h - 1.0, 0.06), _mat(Color(0.15, 0.15, 0.17), 0.5, 0.6), Vector3(c.x + sx * b.size.x * 0.42, 1.0 + (h - 1.0) / 2.0, c.z - 0.3 + sz * b.size.z * 0.28))
+				_box(Vector3(b.size.x * 0.8, 2.0, 0.12), _mat(Color(0.2, 0.2, 0.22), 0.5, 0.7), Vector3(c.x, 1.0, b.end.z + 0.05))   # mast
+				_box(Vector3(0.12, 0.06, 1.0), _mat(Color(0.3, 0.3, 0.32), 0.5, 0.7), Vector3(c.x - 0.3, 0.1, b.end.z + 0.55))
+				_box(Vector3(0.12, 0.06, 1.0), _mat(Color(0.3, 0.3, 0.32), 0.5, 0.7), Vector3(c.x + 0.3, 0.1, b.end.z + 0.55))
+			"car":
+				var col: Color = [Color(0.7, 0.1, 0.12), Color(0.15, 0.3, 0.65), Color(0.85, 0.85, 0.88), Color(0.1, 0.1, 0.12), Color(0.95, 0.75, 0.15), Color(0.2, 0.5, 0.3)][rng.randi() % 6]
+				_box(Vector3(b.size.x, 0.75, b.size.z), _mat(col, 0.3, 0.5), Vector3(c.x, 0.55, c.z))
+				_box(Vector3(b.size.x * 0.9, 0.55, b.size.z * 0.55), _mat(Color(0.2, 0.25, 0.3), 0.1, 0.4), Vector3(c.x, 1.18, c.z - 0.1))   # cabin glass
+				for wx in [-1.0, 1.0]:
+					for wz in [-1.0, 1.0]:
+						var t := MeshInstance3D.new(); var cy := CylinderMesh.new(); cy.top_radius = 0.33; cy.bottom_radius = 0.33; cy.height = 0.22
+						t.mesh = cy; t.material_override = _mat(Color(0.05, 0.05, 0.06), 0.9); t.rotation = Vector3(0, 0, PI / 2)
+						t.position = Vector3(c.x + wx * b.size.x * 0.48, 0.33, c.z + wz * b.size.z * 0.32)
+						world.add_child(t)
+				_box(Vector3(b.size.x * 0.8, 0.1, 0.04), _mat(Color(1, 0.95, 0.8), 0.3, 0.0, 1.5), Vector3(c.x, 0.65, b.end.z + 0.01))
+				_box(Vector3(b.size.x * 0.8, 0.1, 0.04), _mat(Color(1, 0.15, 0.1), 0.3, 0.0, 1.5), Vector3(c.x, 0.7, b.position.z - 0.01))
+			"barrier":
+				_box(b.size, _mat(Color(0.65, 0.65, 0.63), 0.9), c)
+				for k in int(b.size.z / 0.8):
+					_box(Vector3(b.size.x + 0.02, 0.18, 0.4), _mat(Color(0.95, 0.75, 0.1), 0.6), Vector3(c.x, h - 0.2, b.position.z + 0.4 + k * 0.8))
+			"booth":
+				_box(Vector3(b.size.x, 1.1, b.size.z), _mat(Color(0.85, 0.85, 0.85), 0.6), Vector3(c.x, 0.55, c.z))
+				_box(Vector3(b.size.x, h - 1.4, b.size.z), glass, Vector3(c.x, 1.1 + (h - 1.4) / 2.0, c.z))
+				_box(Vector3(b.size.x + 0.3, 0.3, b.size.z + 0.3), _mat(Color(0.95, 0.75, 0.15), 0.5), Vector3(c.x, h - 0.15, c.z))
+			"parapet": _box(b.size, _mat(Color(0.6, 0.58, 0.56), 0.9), c)
+			"housing":
+				_box(b.size, _mat(Color(0.62, 0.6, 0.58), 0.9), c)
+				_box(Vector3(1.4, 2.2, 0.06), _mat(Color(0.3, 0.32, 0.38), 0.5, 0.5), Vector3(c.x, 1.1, b.end.z + 0.02))   # door
+				var sign := Label3D.new(); sign.text = "STAIRS"; sign.font = font; sign.font_size = 80; sign.modulate = Color(0.9, 0.9, 0.9)
+				sign.position = Vector3(c.x, 2.8, b.end.z + 0.05); sign.outline_size = 0
+				world.add_child(sign)
+			"tank":
+				var tm := MeshInstance3D.new(); var cy := CylinderMesh.new(); cy.top_radius = b.size.x * 0.48; cy.bottom_radius = b.size.x * 0.48; cy.height = h - 1.0
+				tm.mesh = cy; tm.material_override = _mat(Color(0.82, 0.82, 0.8), 0.5, 0.3); tm.position = Vector3(c.x, 1.0 + (h - 1.0) / 2.0, c.z)
+				world.add_child(tm)
+				for sx in [-1.0, 1.0]:
+					for sz in [-1.0, 1.0]:
+						_box(Vector3(0.12, 1.0, 0.12), _mat(Color(0.3, 0.3, 0.32), 0.5, 0.7), Vector3(c.x + sx * b.size.x * 0.35, 0.5, c.z + sz * b.size.z * 0.35))
+			"ac":
+				_box(b.size, _mat(Color(0.75, 0.77, 0.8), 0.4, 0.5), c)
+				var fan := MeshInstance3D.new(); var fc := CylinderMesh.new(); fc.top_radius = 0.75; fc.bottom_radius = 0.75; fc.height = 0.04
+				fan.mesh = fc; fan.material_override = _mat(Color(0.15, 0.15, 0.17), 0.6); fan.position = c + Vector3(0, h / 2.0 + 0.02, 0)
+				world.add_child(fan)
+			"solar":
+				_box(Vector3(b.size.x, 0.4, b.size.z * 0.3), _mat(Color(0.5, 0.5, 0.52), 0.6, 0.6), Vector3(c.x, 0.2, c.z))
+				var pm := _box(Vector3(b.size.x, 0.06, b.size.z), _mat(Color(0.1, 0.15, 0.35), 0.15, 0.5), Vector3(c.x, h - 0.15, c.z))
+				pm.rotation.x = 0.35
+			"vent":
+				_box(b.size, _mat(Color(0.55, 0.57, 0.6), 0.4, 0.7), c)
+				for k in 6: _box(Vector3(b.size.x + 0.02, 0.04, 0.3), _mat(Color(0.2, 0.2, 0.22), 0.5), Vector3(c.x, h - 0.3, b.position.z + 0.4 + k * 0.6))
+			_:
+				_box(b.size, _mat(Color(0.6, 0.6, 0.62), 0.7), c)
+
+
+## Props that aren't cover: plants, whiteboards, logos, signs, cones.
+func _decor(id: String) -> void:
+	var mark: Texture2D = load("res://assets/brand/bnb_mark_trim.png")
+	var B := sim.bounds
+	for side in [-1.0, 1.0]:   # Bit & Bytes logos on the end walls
 		var sp := Sprite3D.new(); sp.texture = mark; sp.pixel_size = 2.4 / mark.get_height(); sp.shaded = false
-		sp.position = Vector3(side * 31.9, 2.4, 0); sp.rotation.y = -side * PI / 2
+		var wx := (B.end.x + 3.4) if side > 0 else (B.position.x - 3.4)
+		sp.position = Vector3(wx - side * 0.05, 2.4 if sim.ceiling == 0.0 or sim.ceiling > 3.5 else 1.9, 0); sp.rotation.y = -side * PI / 2
 		sp.modulate = Color(1.3, 1.3, 1.3)
-		world.add_child(sp)
+		if id != "rooftop": world.add_child(sp)
+	match id:
+		"office":
+			for p in [[-30.5, -20], [-30.5, 20], [30.5, -20], [30.5, 20], [-18, -20.8], [18, 20.8], [-18, 20.8], [18, -20.8]]:
+				_plant(Vector3(p[0], 0, p[1]))
+			for z in [-21.9, 21.9]:   # whiteboards on the long walls
+				_box(Vector3(4.0, 1.6, 0.06), _mat(Color(0.95, 0.95, 0.97), 0.3), Vector3(-6, 1.7, z * 0.995))
+				_box(Vector3(4.0, 1.6, 0.06), _mat(Color(0.95, 0.95, 0.97), 0.3), Vector3(6, 1.7, z * 0.995))
+				for k in 4:
+					_box(Vector3(randf_range(0.8, 2.6), 0.06, 0.02), _mat([TEAM_COL[0], TEAM_COL[1], Color(0.9, 0.2, 0.2)][k % 3], 0.5), Vector3(-6.8 + k * 0.4, 1.4 + k * 0.25, z * 0.99))
+		"warehouse":
+			for p in [[-30, -22], [30, 22], [-6, -22], [6, 22]]:
+				for k in 3:
+					var cone := MeshInstance3D.new(); var cm := CylinderMesh.new(); cm.top_radius = 0.04; cm.bottom_radius = 0.22; cm.height = 0.6
+					cone.mesh = cm; cone.material_override = _mat(Color(1, 0.45, 0.1), 0.6); cone.position = Vector3(p[0] + k * 0.7, 0.3, p[1])
+					world.add_child(cone)
+		"garage":
+			for x in [-24.0, 24.0]:
+				var sg := Label3D.new(); sg.text = "LEVEL B2"; sg.font = font; sg.font_size = 90; sg.modulate = Color(0.95, 0.8, 0.2)
+				sg.position = Vector3(x, 2.4, -21.9); sg.outline_size = 0
+				world.add_child(sg)
+
+
+func _plant(at: Vector3) -> void:
+	var pot := MeshInstance3D.new(); var cy := CylinderMesh.new(); cy.top_radius = 0.32; cy.bottom_radius = 0.25; cy.height = 0.55
+	pot.mesh = cy; pot.material_override = _mat(Color(0.9, 0.9, 0.9), 0.5); pot.position = at + Vector3(0, 0.27, 0)
+	world.add_child(pot)
+	for k in 3:
+		var leaf := MeshInstance3D.new(); var sp := SphereMesh.new(); sp.radius = 0.4; sp.height = 0.9
+		leaf.mesh = sp; leaf.material_override = _mat(Color(0.18, 0.5, 0.25).lerp(Color(0.3, 0.6, 0.2), k * 0.4), 0.8)
+		leaf.position = at + Vector3(sin(k * 2.1) * 0.15, 0.95 + k * 0.25, cos(k * 2.1) * 0.15)
+		world.add_child(leaf)
 
 
 ## Each team's loadout table: wood top on metal legs, a cloth runner in the team colour, every gun and
