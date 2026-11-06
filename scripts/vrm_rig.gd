@@ -736,7 +736,7 @@ func _acc_parts(kind: String) -> Array:
 		# ---- G.O.A.T. form: an anime goat head built round the measured skull (it encloses the human head)
 		"goat_head", "goat_horns", "goat_nose", "goat_eyes", "goat_pupils":
 			return _goat_parts(kind)
-		"kig_hood", "suit_body", "suit_arms", "suit_legs", "suit_paws", "lion_mane", "ears_round", "tail_tuft", "tail_stick", "bull_horns", "bull_snout", "nose_ring", "ears_side", "wool_head", "wool_body", "ram_horns", "snake_hood", "snake_eyes", "snake_fangs", "snake_tail", "banana_peel", "banana_stem", "bun_top", "sesame", "lettuce", "cheese", "patty", "bun_bottom", "smoke_body", "smoke_head", "cricket_helmet", "helmet_grille", "batting_gloves", "cricket_bat", "thigh_pad", "beret", "palette", "dab0", "dab1", "dab2", "dab3", "dab4", "dab5", "paint_brush":
+		"kig_hood", "suit_body", "tail", "banana_tip", "banana_body", "banana_ridges", "banana_end", "phone_body", "phone_screen", "app0", "app1", "app2", "app3", "phone_cam", "phone_back", "cig_body", "cig_filter", "cig_band", "cig_ash", "cig_ember", "cig_smoke", "waistcoat", "gamcha", "gamcha_check", "suit_arms", "suit_legs", "suit_paws", "lion_mane", "ears_round", "tail_tuft", "bull_horns", "bull_snout", "nose_ring", "ears_side", "wool_head", "wool_body", "ram_horns", "snake_hood", "snake_eyes", "snake_fangs", "snake_tail", "banana_peel", "banana_stem", "bun_top", "sesame", "lettuce", "cheese", "patty", "bun_bottom", "smoke_body", "smoke_head", "cricket_helmet", "helmet_grille", "batting_gloves", "cricket_bat", "thigh_pad", "beret", "palette", "dab0", "dab1", "dab2", "dab3", "dab4", "dab5", "paint_brush":
 			return _mascot_parts(kind)
 		"fur_arms":     # shaggy fur over the forearms and the backs of the hands
 			return [["leftLowerArm", ToonRig.cyl(0.05, 0.042, 0.25), Vector3(0.12, 0, 0), Z90, Vector3.ONE],
@@ -848,6 +848,11 @@ func _hair_parts(kind: String) -> Array:
 	return out
 
 
+## A point along a mascot tail (hips space), t from base (0) to tip (1).
+static func _tail_pt(t: float) -> Vector3:
+	return Vector3(0.05 * sin(t * 3.0), -0.04 - 0.42 * t + 0.3 * t * t, -0.14 - 0.2 * t - 0.06 * t * t)
+
+
 ## Full-body mascot suits (kigurumi style: the face shows through the hood) and props worn with them.
 func _mascot_parts(kind: String) -> Array:
 	var H := "head"
@@ -885,10 +890,88 @@ func _mascot_parts(kind: String) -> Array:
 		"suit_paws":
 			return [S.call("leftHand", Vector3(0.05, 0, 0), 0.06, 0.045, 0.055), S.call("rightHand", Vector3(-0.05, 0, 0), 0.06, 0.045, 0.055),
 				S.call("leftFoot", Vector3(0, -0.02, 0.05), 0.065, 0.05, 0.12), S.call("rightFoot", Vector3(0, -0.02, 0.05), 0.065, 0.05, 0.12)]
-		"tail_stick":   # a short tail behind
-			return [["hips", ToonRig.cyl(0.018, 0.026, 0.42), Vector3(0, -0.1, -0.24), Vector3(-0.9, 0, 0), Vector3.ONE]]
-		"tail_tuft":
-			return [S.call("hips", Vector3(0, -0.22, -0.42), 0.05, 0.05, 0.05)]
+		"tail":         # hangs from the base of the back, sways down and curls up at the end
+			var out := []
+			for k in 12:
+				var t := k / 11.0
+				out.append(S.call("hips", _tail_pt(t), 0.034 - t * 0.01, 0.034 - t * 0.01, 0.034 - t * 0.01))
+			return out
+		"tail_tuft":    # the tassel on the tail's end
+			var e := _tail_pt(1.0)
+			return [S.call("hips", e + Vector3(0, 0.03, -0.015), 0.045, 0.06, 0.045, Vector3(0.5, 0, 0)),
+				S.call("hips", e + Vector3(0, 0.07, -0.03), 0.03, 0.04, 0.03, Vector3(0.5, 0, 0))]
+		# ---- banana: a long curved yellow fruit from the head down to the thighs, brown tip on top
+		"banana_tip":   # the hood rises into the banana's narrow top, leaning forward
+			return [[H, ToonRig.cyl(0.035, r * 1.12, 0.2), Vector3(0, top + 0.06, c.z - 0.04), Vector3(0.22, 0, 0), Vector3(1.0, 1.0, 0.92)]]
+		"banana_end":   # brown stalk at the top and the dark tip at the bottom
+			return [[H, ToonRig.cyl(0.02, 0.03, 0.07), Vector3(0, top + 0.19, c.z + 0.0), Vector3(0.3, 0, 0), Vector3.ONE],
+				S.call("hips", Vector3(0, -0.5, 0.06), 0.06, 0.045, 0.055)]
+		"banana_body":  # one long smooth curved fruit: chest piece and hip piece overlap into a gentle bend
+			var cap1 := CapsuleMesh.new(); cap1.radius = 0.25; cap1.height = 0.66
+			var cap2 := CapsuleMesh.new(); cap2.radius = 0.23; cap2.height = 0.62
+			return [["chest", cap1, Vector3(0, -0.07, -0.01), Vector3(-0.06, 0, 0), Vector3(1.0, 1.0, 0.85)],
+				["hips", cap2, Vector3(0, -0.2, 0.03), Vector3(0.14, 0, 0), Vector3(1.0, 1.0, 0.85)]]
+		"banana_ridges":   # the darker ridges running down a banana's sides
+			var out := []
+			for sx in [-1.0, 1.0]:
+				out.append(["chest", ToonRig.box(0.012, 0.5, 0.012), Vector3(sx * 0.16, 0.0, 0.165), Vector3(-0.06, 0, 0), Vector3.ONE])
+				out.append(["hips", ToonRig.box(0.012, 0.42, 0.012), Vector3(sx * 0.15, -0.2, 0.17), Vector3(0.14, 0, 0), Vector3.ONE])
+			return out
+		# ---- mobile phone: a big phone around the body, head out through the top
+		"phone_body":
+			return [["chest", ToonRig.box(0.5, 0.72, 0.3), Vector3(0, -0.17, 0.01), Vector3.ZERO, Vector3.ONE]]
+		"phone_screen":
+			return [["chest", ToonRig.box(0.44, 0.6, 0.01), Vector3(0, -0.17, 0.162), Vector3.ZERO, Vector3.ONE]]
+		"app0", "app1", "app2", "app3":   # a column of app icons each
+			var i := int(kind.substr(3))
+			var out := []
+			for row in 4:
+				out.append(["chest", ToonRig.box(0.07, 0.07, 0.008), Vector3(-0.15 + i * 0.1, 0.03 - row * 0.1, 0.168), Vector3.ZERO, Vector3.ONE])
+			return out
+		"phone_cam":    # front camera, speaker and home bar
+			return [["chest", ToonRig.box(0.08, 0.014, 0.006), Vector3(0, 0.1, 0.168), Vector3.ZERO, Vector3.ONE],
+				S.call("chest", Vector3(0.07, 0.1, 0.168), 0.012, 0.012, 0.004),
+				["chest", ToonRig.box(0.12, 0.012, 0.006), Vector3(0, -0.43, 0.168), Vector3.ZERO, Vector3.ONE],
+			]
+		"phone_back":   # rear camera block with three lenses
+			return [["chest", ToonRig.box(0.16, 0.16, 0.02), Vector3(-0.12, 0.06, -0.16), Vector3.ZERO, Vector3.ONE],
+				S.call("chest", Vector3(-0.09, 0.09, -0.172), 0.03, 0.03, 0.01), S.call("chest", Vector3(-0.15, 0.09, -0.172), 0.03, 0.03, 0.01),
+				S.call("chest", Vector3(-0.09, 0.03, -0.172), 0.03, 0.03, 0.01)]
+		# ---- cigarette: white paper tube, orange filter at the bottom, glowing tip on the head
+		"cig_body":
+			return [["chest", ToonRig.cyl(0.215, 0.215, 0.62), Vector3(0, 0.0, 0.01), Vector3.ZERO, Vector3.ONE]]
+		"cig_filter":
+			return [["hips", ToonRig.cyl(0.218, 0.218, 0.34), Vector3(0, -0.12, 0.01), Vector3.ZERO, Vector3.ONE]]
+		"cig_band":
+			return [["hips", ToonRig.cyl(0.222, 0.222, 0.02), Vector3(0, 0.05, 0.01), Vector3.ZERO, Vector3.ONE]]
+		"cig_ash":      # grey ash ring round the top of the hood
+			return [[H, ToonRig.cyl(r * 1.05, r * 1.15, 0.05), Vector3(0, top + 0.015, c.z - 0.03), Vector3.ZERO, Vector3.ONE]]
+		"cig_ember":
+			return [[H, ToonRig.cyl(r * 0.8, r * 1.0, 0.03), Vector3(0, top + 0.05, c.z - 0.03), Vector3.ZERO, Vector3.ONE]]
+		"cig_smoke":    # a wisp rising off the tip
+			var out := []
+			for k in 6:
+				out.append(S.call(H, Vector3(sin(k * 1.3) * 0.04, top + 0.1 + k * 0.06, c.z - 0.03 - k * 0.01), 0.035 + k * 0.006, 0.03, 0.035 + k * 0.006))
+			return out
+		# ---- chai wala
+		"waistcoat":    # open-front waistcoat over the kurta
+			var out := []
+			for sx in [-1.0, 1.0]:
+				out.append(["upperChest", ToonRig.box(0.13, 0.24, 0.02), Vector3(sx * 0.09, -0.02, 0.13), Vector3(0, sx * 0.15, 0), Vector3.ONE])
+				out.append(["chest", ToonRig.box(0.12, 0.2, 0.02), Vector3(sx * 0.085, -0.06, 0.135), Vector3(0, sx * 0.15, 0), Vector3.ONE])
+			out.append(["upperChest", ToonRig.box(0.32, 0.26, 0.02), Vector3(0, -0.02, -0.13), Vector3.ZERO, Vector3.ONE])
+			out.append(["chest", ToonRig.box(0.3, 0.22, 0.02), Vector3(0, -0.06, -0.13), Vector3.ZERO, Vector3.ONE])
+			return out
+		"gamcha":       # checked cotton towel over the left shoulder
+			return [["upperChest", ToonRig.box(0.09, 0.012, 0.3), Vector3(0.12, 0.14, 0.0), Vector3.ZERO, Vector3.ONE],
+				["upperChest", ToonRig.box(0.09, 0.26, 0.012), Vector3(0.12, 0.02, 0.15), Vector3(0.1, 0, 0), Vector3.ONE],
+				["upperChest", ToonRig.box(0.09, 0.3, 0.012), Vector3(0.12, 0.0, -0.15), Vector3(-0.1, 0, 0), Vector3.ONE]]
+		"gamcha_check":   # the towel's checks
+			var out := []
+			for k in 3:
+				out.append(["upperChest", ToonRig.box(0.094, 0.018, 0.016), Vector3(0.12, 0.1 - k * 0.08, 0.152), Vector3(0.1, 0, 0), Vector3.ONE])
+			out.append(["upperChest", ToonRig.box(0.02, 0.26, 0.016), Vector3(0.12, 0.02, 0.153), Vector3(0.1, 0, 0), Vector3.ONE])
+			return out
 		"ears_round":
 			return [S.call(H, Vector3(r * 0.85, top - 0.005, c.z - 0.02), 0.045, 0.045, 0.02), S.call(H, Vector3(-r * 0.85, top - 0.005, c.z - 0.02), 0.045, 0.045, 0.02)]
 		"ears_side":
@@ -1095,7 +1178,7 @@ func _make_accessories(list: Array) -> void:
 	for a in list:
 		var kind: String = a[0]
 		var col: Color = a[1]
-		var flat := kind in ["visor", "glasses", "mustache", "beard", "kameez", "shalwar", "sleeves", "hijab", "dupatta", "lanyard", "goat_eyes", "goat_pupils", "goat_nose"]
+		var flat := kind in ["visor", "glasses", "mustache", "beard", "kameez", "shalwar", "sleeves", "hijab", "dupatta", "lanyard", "goat_eyes", "goat_pupils", "goat_nose", "phone_screen", "app0", "app1", "app2", "app3", "gamcha_check", "banana_ridges", "phone_cam"]
 		if kind != "visor":
 			col = col * 0.72   # keep within the texture range of the models so accessories don't bloom
 			col.a = 1.0
@@ -1105,12 +1188,12 @@ func _make_accessories(list: Array) -> void:
 		m.set_shader_parameter("tex", _white())
 		m.set_shader_parameter("albedo", col)
 		m.set_shader_parameter("shade", col.darkened(0.3).lerp(Color(0.55, 0.5, 0.75), 0.4))
-		if kind.begins_with("hair_") or kind in ["beard", "mustache", "goat_head", "fur_arms", "lion_mane", "wool_head", "wool_body", "tail_tuft", "smoke_body", "smoke_head"]:
+		if kind.begins_with("hair_") or kind in ["beard", "mustache", "goat_head", "fur_arms", "lion_mane", "tail", "wool_head", "wool_body", "tail_tuft", "smoke_body", "smoke_head"]:
 			m.set_shader_parameter("hair_sheen", 1.0 if kind.begins_with("hair_") else 0.6)
 			m.set_shader_parameter("sheen_color", col.lightened(0.6).lerp(Color(0.8, 0.86, 1.0), 0.6))
 			m.set_shader_parameter("shade", col.lightened(0.15).lerp(Color(0.5, 0.48, 0.7), 0.45))
-		if kind == "visor":
-			m.set_shader_parameter("emission_strength", 1.1)
+		if kind in ["visor", "cig_ember", "phone_screen"]:
+			m.set_shader_parameter("emission_strength", 1.1 if kind == "visor" else 0.6)
 		elif not flat:
 			m.next_pass = outline
 		mats.append(m)

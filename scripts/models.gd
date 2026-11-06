@@ -290,7 +290,8 @@ const PERSONA := {
 	"zia_khan": ["Legacy Wizard", [Color(0.12, 0.1, 0.2), "scales", GOLD, Color(0.2, 0.15, 0.3), 1.4], Color(0.1, 0.08, 0.16), Color(0.15, 0.1, 0.08),
 		[["coat", Color(0.14, 0.11, 0.24)], ["scarf", GOLD]]],
 	"ali": ["Chai Wala", [Color(0.95, 0.9, 0.8), "", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.95, 0.9, 0.8), Color(0.45, 0.28, 0.14),
-		[["kameez", Color(0.95, 0.9, 0.8)], ["shalwar", Color(0.95, 0.9, 0.8)], ["apron", Color(0.55, 0.33, 0.16)], ["bandana", Color(0.78, 0.45, 0.23)]]],
+		[["kameez", Color(0.95, 0.9, 0.8)], ["shalwar", Color(0.95, 0.9, 0.8)], ["sleeves", Color(0.95, 0.9, 0.8)], ["waistcoat", Color(0.42, 0.25, 0.12)],
+			["gamcha", Color(0.85, 0.18, 0.15)], ["gamcha_check", Color(0.95, 0.92, 0.85)]]],
 	"muhammad_mubarak": ["Viper", [Color(0.15, 0.45, 0.2), "scales", Color(0.3, 0.75, 0.35), Color(0.05, 0.2, 0.08), 1.6], Color(0.08, 0.12, 0.08), Color(0.06, 0.08, 0.06),
 		[["shades", Color(0.05, 0.08, 0.05)], ["chain", GOLD]]],
 	"kashaf_ud_duja": ["Red Alert", [Color(0.75, 0.1, 0.16), "pinstripes", Color(0.95, 0.4, 0.45), Color(0, 0, 0, 0), 0.6], Color(0.18, 0.08, 0.1), Color(0.1, 0.05, 0.06),
@@ -302,8 +303,15 @@ const PERSONA := {
 
 ## Full-body mascot suits (kigurumi: the face shows through the hood): [name, suit, pattern [kind, a, b, scale], paws, parts].
 const MASCOT := {
-	"muhammad_nauman_nawaz": ["Banana Suit", Color(1.0, 0.85, 0.15), ["dots", Color(0.45, 0.3, 0.1), Color(1.0, 0.9, 0.35), 2.2], Color(0.35, 0.25, 0.1),
-		[["banana_peel", Color(1.0, 0.88, 0.25)], ["banana_stem", Color(0.4, 0.3, 0.12)]]],
+	"muhammad_nauman_nawaz": ["Banana Suit", Color(1.0, 0.86, 0.18), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.3, 0.2, 0.08),
+		[["banana_tip", Color(1.0, 0.86, 0.18)], ["banana_body", Color(1.0, 0.86, 0.18)], ["banana_ridges", Color(0.85, 0.65, 0.1)],
+			["banana_end", Color(0.32, 0.22, 0.08)]], {skip = ["suit_body"], legs = Color(0.3, 0.22, 0.1)}],
+	"muhammad_saad": ["Mobile Phone", Color(0.1, 0.1, 0.12), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.1, 0.1, 0.12),
+		[["phone_body", Color(0.12, 0.12, 0.14)], ["phone_screen", Color(0.2, 0.45, 0.95)], ["app0", Color(0.95, 0.3, 0.35)], ["app1", Color(0.3, 0.85, 0.4)],
+			["app2", Color(1.0, 0.8, 0.2)], ["app3", Color(0.95, 0.95, 0.98)], ["phone_cam", Color(0.03, 0.03, 0.04)], ["phone_back", Color(0.55, 0.56, 0.6)]], {skip = ["suit_body"], legs = Color(0.18, 0.2, 0.28)}],
+	"usman_najeeb": ["Cigarette", Color(0.95, 0.95, 0.93), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.08, 0.08, 0.08),
+		[["cig_body", Color(0.97, 0.97, 0.95)], ["cig_filter", Color(0.9, 0.55, 0.2)], ["cig_band", GOLD], ["cig_ash", Color(0.45, 0.45, 0.47)],
+			["cig_ember", Color(1.0, 0.35, 0.08)], ["cig_smoke", Color(0.75, 0.76, 0.8)]], {skip = ["suit_body"], legs = Color(0.08, 0.08, 0.09)}],
 	"nabeel_ahmad": ["Big Burger", Color(0.5, 0.27, 0.12), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.85, 0.55, 0.25),
 		[["bun_top", Color(0.88, 0.55, 0.22)], ["sesame", Color(1.0, 0.95, 0.8)], ["lettuce", Color(0.35, 0.75, 0.2)], ["cheese", Color(1.0, 0.75, 0.1)],
 			["patty", Color(0.35, 0.18, 0.08)], ["bun_bottom", Color(0.85, 0.52, 0.2)]]],
@@ -312,10 +320,10 @@ const MASCOT := {
 	"faizan_ali": ["Smoke Form", Color(0.55, 0.57, 0.62), ["gradient", Color(0.8, 0.82, 0.86), Color(0, 0, 0, 0), 1.0], Color(0.7, 0.72, 0.76),
 		[["smoke_head", Color(0.72, 0.74, 0.78)], ["smoke_body", Color(0.66, 0.68, 0.72)]]],
 	"hamza_khan": ["Lion King", Color(0.85, 0.62, 0.3), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.95, 0.85, 0.65),
-		[["lion_mane", Color(0.62, 0.32, 0.1)], ["ears_round", Color(0.85, 0.62, 0.3)], ["tail_stick", Color(0.85, 0.62, 0.3)], ["tail_tuft", Color(0.55, 0.28, 0.08)]]],
+		[["lion_mane", Color(0.62, 0.32, 0.1)], ["ears_round", Color(0.85, 0.62, 0.3)], ["tail", Color(0.85, 0.62, 0.3)], ["tail_tuft", Color(0.55, 0.28, 0.08)]]],
 	"abdul_wasay": ["Raging Bull", Color(0.45, 0.25, 0.14), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.15, 0.1, 0.08),
 		[["bull_horns", Color(0.95, 0.9, 0.78)], ["bull_snout", Color(0.75, 0.55, 0.48)], ["nose_ring", GOLD], ["ears_side", Color(0.45, 0.25, 0.14)],
-			["tail_stick", Color(0.45, 0.25, 0.14)], ["tail_tuft", Color(0.1, 0.07, 0.05)]]],
+			["tail", Color(0.45, 0.25, 0.14)], ["tail_tuft", Color(0.1, 0.07, 0.05)]]],
 	"sarfraz_yousaf": ["Woolly Sheep", Color(0.95, 0.93, 0.88), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.15, 0.13, 0.13),
 		[["wool_head", Color(0.97, 0.95, 0.9)], ["wool_body", Color(0.97, 0.95, 0.9)], ["ears_side", Color(0.2, 0.17, 0.17)], ["ram_horns", Color(0.75, 0.62, 0.45)]]],
 }
@@ -328,8 +336,12 @@ static func _mascot_outfit(id: String, female: bool) -> Dictionary:
 	var t := {c = suit, sat = 0.0, bright = 0.62}
 	if String(pt[0]) != "":
 		t.pat = {kind = pt[0], a = pt[1], b = pt[2], scale = pt[3]}
-	var tint := {"Hair": "hide", "Tie": "hide", "Tops": t, "Bottoms": {c = suit, sat = 0.0, bright = 0.6}, "Shoes": {c = d[3], sat = 0.0, bright = 0.6}}
-	var acc: Array = [["kig_hood", suit], ["suit_body", suit], ["suit_arms", suit], ["suit_legs", suit], ["suit_paws", d[3]]]
+	var opt: Dictionary = d[5] if d.size() > 5 else {}
+	var legs: Color = opt.get("legs", suit)
+	var tint := {"Hair": "hide", "Tie": "hide", "Tops": t, "Bottoms": {c = legs, sat = 0.0, bright = 0.6}, "Shoes": {c = d[3], sat = 0.0, bright = 0.6}}
+	var acc: Array = []
+	for base in [["kig_hood", suit], ["suit_body", suit], ["suit_arms", suit], ["suit_legs", legs], ["suit_paws", d[3]]]:
+		if not base[0] in opt.get("skip", []): acc.append(base)
 	acc.append_array((d[4] as Array).duplicate(true))
 	return {name = d[0], tint = tint, acc = acc}
 
