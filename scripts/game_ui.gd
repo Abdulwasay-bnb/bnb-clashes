@@ -562,7 +562,7 @@ func update_hud(g) -> void:
 		p.surge.value = 1.0 if f.blue_ready() else 0.0
 		p.surge.chip = 0.0
 		p.surge.low = f.blue_ready()
-		var fin := "FINAL READY [2+4]" if f.final_ready() else ("FINAL USED" if f.final_used else "FINAL  ≤30% HP")
+		var fin := "FINAL READY [2+4]" if f.final_ready() else ("FINAL USED" if f.final_used else "FINAL AT 30% HP")
 		p.pw.text = ("BLUE [1+3]   " if f.blue_ready() else "BLUE USED   ") + fin if i == 0 else fin + ("   [1+3] BLUE" if f.blue_ready() else "   BLUE USED")
 		p.pw.modulate = Color(1.0, 0.45, 0.35) if f.final_ready() and int(Time.get_ticks_msec() / 250) % 2 == 0 else Color(0.75, 0.82, 1.0)
 		p.dia.n = 0 if g.mode == "training" else g.wins[i]
@@ -1715,7 +1715,7 @@ func show_how() -> void:
 The game runs 60 fixed steps per second. Every move has [b]startup[/b] (frames before it can hit), [b]active[/b] frames and [b]recovery[/b]. "i10" = hits on frame 10.
 
 [color=#2ee6ff][b]2 · FRAME ADVANTAGE[/b][/color]
-"−13 on block" means the attacker recovers 13 frames after the defender. Any move with startup ≤ 13 is a guaranteed [b]punish[/b]. Plus frames mean it is still your turn.
+"−13 on block" means the attacker recovers 13 frames after the defender. Any move with startup of 13 or less is a guaranteed [b]punish[/b]. Plus frames mean it is still your turn.
 
 [color=#2ee6ff][b]3 · HIT LEVELS[/b][/color]
 [color=#ffcf5a][b]HIGH[/b][/color] is blocked standing and whiffs on crouchers. [color=#2ee6ff][b]MID[/b][/color] must be blocked standing. [color=#ff6b81][b]LOW[/b][/color] must be blocked crouching.

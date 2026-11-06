@@ -275,7 +275,7 @@ func final_ready() -> bool: return not final_used and hp <= max_hp * FINAL_HP an
 func power_ok(k: String) -> bool:
 	if k == "34" or k == "13": return blue_ready()
 	if k == "24":
-		if not final_ready() and not G.resim: G.ui.pop_text("FINAL USED" if final_used else "FINAL: HEALTH ≤ 30%", side)
+		if not final_ready() and not G.resim: G.ui.pop_text("FINAL USED" if final_used else "FINAL: AT 30% HEALTH", side)
 		return final_ready()
 	return true
 
