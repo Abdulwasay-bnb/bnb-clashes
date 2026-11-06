@@ -596,7 +596,7 @@ var test_inp := {}      # tests: the player's controls this tick
 
 func _physics_process(_dt: float) -> void:
 	if sim == null or (paused and not online_match()): return
-	var inp: Dictionary = sim._bot(sim.soldiers[me]) if autopilot else ({} if paused else _controls())
+	var inp: Dictionary = sim._bot(sim.soldiers[me]) if autopilot else ({} if (paused or G.comms_typing) else _controls())
 	if not test_inp.is_empty(): inp = test_inp.duplicate()
 	look = Vector2.ZERO
 	if guest:

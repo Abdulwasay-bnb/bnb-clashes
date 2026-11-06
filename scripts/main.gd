@@ -623,6 +623,20 @@ func start_ludo(C: Dictionary, cpus: int, pass_play: bool) -> void:
 
 func start_ludo_net(people: Array, seed: int, slot: int, party: Party, is_guest: bool, pids: Dictionary) -> void:
 	await _begin_ludo(func(l: LudoGame): l.start_net(self, people, seed, slot, party, is_guest, pids))
+	_attach_comms(ludo, party)
+
+
+## Online matches: text chat + push-to-talk voice on top of the game (it lives and dies with the game node).
+var comms_typing := false   # a chat box is open: games ignore movement keys
+
+
+func _attach_comms(game: Node, party: Party, chat := true, can_talk := Callable()) -> void:
+	if party == null or game == null: return
+	var nc: Node = load("res://scripts/net_comms.gd").new()
+	game.add_child(nc)
+	var who: Dictionary = lobby.C if lobby != null and lobby.C is Dictionary and not lobby.C.is_empty() else Data.ROSTER[0]
+	var nm: String = String(who.person.get("short", who.name)) if who.has("person") else String(who.name)
+	nc.setup(self, party, nm, who.accent, chat, can_talk)
 
 
 func _begin_ludo(init: Callable) -> void:
@@ -692,6 +706,7 @@ func start_party(kind: String, C: Dictionary, others: int, pass_play := false) -
 
 func start_party_net(kind: String, people: Array, seed: int, slot: int, party: Party, is_guest: bool, pids: Dictionary) -> void:
 	await _begin_party(kind, "SETTING UP", func(n): n.start_net(self, people, seed, slot, party, is_guest, pids))
+	_attach_comms(party_game, party)
 
 
 ## Deadline Dash: the single-player platformer (10 levels, bosses, 3 lives).
@@ -723,6 +738,8 @@ func start_mafia(people: Array, cfg: Dictionary, seed: int, me: int, party: Part
 	add_child(mafia)
 	if party != null: mafia.start_net(self, people, cfg, seed, me, party, is_guest, pids)
 	else: mafia.start(self, people, cfg, seed, me)
+	# Mafia has its own meeting chat; voice only while a meeting is on (no talking while the killer hunts)
+	if party != null: _attach_comms(mafia, party, false, func() -> bool: return mafia != null and mafia.meeting_phase != "")
 	mafia.finished.connect(end_mafia)
 	loader.close()
 
@@ -750,6 +767,7 @@ func start_ops_net(a: Array, b: Array, humans: Dictionary, guns: Dictionary, ski
 	ops = OpsGame.new()
 	add_child(ops)
 	ops.start_net(self, a, b, humans, guns, skill, seed, me, party, is_guest, pids, map)
+	_attach_comms(ops, party)
 	ops.finished.connect(end_ops)
 	loader.close()
 
@@ -2384,6 +2402,38 @@ func _run_autotest() -> void:
 			if cls.has_method("selftest"): await cls.selftest(self)
 			else: print("AUTOTEST %s: no selftest" % autotest)
 			cls.free()
+		"comms":
+			# chat + voice over a real LAN link in one process: host and guest, each with NetComms
+			var NC = load("res://scripts/net_comms.gd")
+			var err := 0.0
+			for k in 200:
+				var x := sin(k * 0.13) * 0.8
+				err = maxf(err, absf(NC._ulaw_dec(NC._ulaw_enc(x)) - x))
+			print("AUTOTEST comms ulaw max error=%.4f" % err)
+			var hp := Party.new(); add_child(hp)
+			var gp := Party.new(); add_child(gp)
+			hp.host_lan("ludo")
+			gp.join_lan("ludo", "127.0.0.1")
+			var hn: Node = NC.new(); add_child(hn); hn.setup(self, hp, "HOST", Color(0.6, 0.4, 1.0))
+			var gn: Node = NC.new(); add_child(gn); gn.setup(self, gp, "GUEST", Color(0.2, 0.8, 0.9))
+			for k in 120:
+				await get_tree().process_frame
+				if gp.ok and not hp.peers().is_empty(): break
+			print("AUTOTEST comms linked host_peers=%s guest_ok=%s" % [hp.peers(), gp.ok])
+			gn._submit("hello from the guest")
+			hn._submit("hi guest, host here")
+			# a voice packet from the guest: a 60 ms tone
+			var pkt := PackedByteArray(); pkt.resize(NC.CHUNK)
+			for i in NC.CHUNK: pkt[i] = NC._ulaw_enc(sin(i * 0.3) * 0.5)
+			gp.send({t = "vc", n = "GUEST", p = Marshalls.raw_to_base64(pkt)})
+			for k in 30: await get_tree().process_frame
+			var host_lines: Array = hn.lines.map(func(l): return (l[0] as Label).text)
+			var guest_lines: Array = gn.lines.map(func(l): return (l[0] as Label).text)
+			print("AUTOTEST comms host sees %s" % [host_lines])
+			print("AUTOTEST comms guest sees %s" % [guest_lines])
+			print("AUTOTEST comms host voice players=%d speaking=%s" % [hn.players.size(), hn.speaking.keys()])
+			await shot.call("comms")
+			hn.queue_free(); gn.queue_free(); hp.close(); gp.close()
 		"opsmaps":
 			# every Office Ops map: an overview from above, a first-person look, then bots play for a while
 			var maps: Array = OpsSim.MAPS.keys()
