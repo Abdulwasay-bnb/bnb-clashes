@@ -9,6 +9,7 @@ signal finished
 var G
 var sim: LudoSim
 var world: Node3D
+var env: Environment
 var cam: Camera3D
 var layer: CanvasLayer
 var hud: Control
@@ -100,23 +101,24 @@ static func W(c: Vector2, y := 0.0) -> Vector3:
 
 func _build_world() -> void:
 	var we := WorldEnvironment.new()
-	var env := Environment.new()
+	env = Environment.new()
 	env.background_mode = Environment.BG_COLOR; env.background_color = Color(0.04, 0.03, 0.07)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.7, 0.68, 0.8); env.ambient_light_energy = 0.6
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.glow_enabled = true; env.glow_intensity = 0.25
+	env.ambient_light_color = Color(0.55, 0.55, 0.7); env.ambient_light_energy = 0.28
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES; env.tonemap_exposure = 0.95
+	env.ssao_enabled = true; env.ssao_intensity = 1.2   # soft contact shadows round the pawns and tiles
+	env.glow_enabled = true; env.glow_intensity = 0.12; env.glow_hdr_threshold = 1.2   # only the emissive bits glow
 	we.environment = env
 	world.add_child(we)
 	var sun := DirectionalLight3D.new()
-	sun.rotation = Vector3(deg_to_rad(-60), deg_to_rad(30), 0); sun.light_energy = 1.0; sun.shadow_enabled = true
+	sun.rotation = Vector3(deg_to_rad(-60), deg_to_rad(30), 0); sun.light_energy = 0.42; sun.light_color = Color(1.0, 0.95, 0.88); sun.shadow_enabled = true
 	world.add_child(sun)
-	var lamp := OmniLight3D.new(); lamp.position = Vector3(0, 9, 0); lamp.omni_range = 22; lamp.light_energy = 0.8
+	var lamp := OmniLight3D.new(); lamp.position = Vector3(0, 9, 0); lamp.omni_range = 22; lamp.light_energy = 0.3
 	lamp.light_color = Color(1.0, 0.95, 0.85)
 	world.add_child(lamp)
 	# boardroom: carpet, the long table, chairs, glass walls with the city behind
 	_box(Vector3(60, 0.1, 60), _mat(Color(0.16, 0.13, 0.22), 0.95), Vector3(0, -2.05, 0))
-	_box(Vector3(19, 0.5, 19), _mat(Color(0.32, 0.2, 0.13), 0.4), Vector3(0, -0.3, 0))     # table top
+	_box(Vector3(19, 0.5, 19), _mat(Color(0.24, 0.14, 0.09), 0.35), Vector3(0, -0.3, 0))     # table top
 	for c in [Vector3(-8, -1.2, -8), Vector3(8, -1.2, -8), Vector3(-8, -1.2, 8), Vector3(8, -1.2, 8)]:
 		_box(Vector3(0.6, 1.6, 0.6), _mat(Color(0.12, 0.1, 0.1), 0.5), c)
 	var glass := _mat(Color(0.5, 0.65, 0.9), 0.05)
@@ -134,9 +136,9 @@ func _build_world() -> void:
 			_box(Vector3(1.2, 0.5, 0.05), _mat([Color(1, 0.85, 0.5), Color(0.4, 0.8, 1.0), Color(0.75, 0.5, 1.0)][w], 0.5, 2.0),
 				Vector3(cos(a) * (r - 3.6), rng.randf_range(0, h - 2), sin(a) * (r - 3.6)))
 	# the board
-	_box(Vector3(15.6, 0.3, 15.6), _mat(Color(0.95, 0.93, 0.88), 0.7), Vector3(0, -0.12, 0))
+	_box(Vector3(15.6, 0.3, 15.6), _mat(Color(0.8, 0.77, 0.7), 0.7), Vector3(0, -0.12, 0))
 	_box(Vector3(16.2, 0.32, 16.2), _mat(Color(0.35, 0.18, 0.6), 0.5), Vector3(0, -0.16, 0))   # BNB purple rim
-	var white := _mat(Color(0.98, 0.97, 0.94), 0.7)
+	var white := _mat(Color(0.84, 0.81, 0.74), 0.75)
 	var line := _mat(Color(0.2, 0.2, 0.25), 0.8)
 	var t := LudoSim.track()
 	for i in 52:
@@ -160,7 +162,7 @@ func _build_world() -> void:
 		for k in 4:
 			var spot := MeshInstance3D.new()
 			var cy := CylinderMesh.new(); cy.top_radius = 0.42; cy.bottom_radius = 0.42; cy.height = 0.04
-			spot.mesh = cy; spot.material_override = _mat(col.lightened(0.25), 0.5)
+			spot.mesh = cy; spot.material_override = _mat(col.lightened(0.1), 0.5)
 			spot.position = W(LudoSim.cell(s, -1, k), 0.12)
 			world.add_child(spot)
 		# home triangle in the centre
@@ -188,6 +190,10 @@ func _build_world() -> void:
 		rig.position = W(corner, -0.05)
 		rig.rotation.y = atan2(-(corner.x - 7.0), -(corner.y - 7.0))
 		rig.scale = Vector3.ONE * 1.25
+		var key := OmniLight3D.new()   # a little light on each player so they read against the dark room
+		key.position = W(corner, 3.2) + (W(corner, 0) - Vector3.ZERO).normalized() * -1.2
+		key.omni_range = 5.0; key.light_energy = 1.1; key.light_color = Color(1.0, 0.92, 0.85)
+		world.add_child(key)
 		rigs.append(rig); react.append(["", 0.0])
 		var tag := Label3D.new()
 		tag.text = _nm(p); tag.font = font; tag.font_size = 64; tag.outline_size = 12
@@ -196,6 +202,7 @@ func _build_world() -> void:
 		world.add_child(tag)
 	_build_die()
 	cam = Camera3D.new(); cam.fov = 46; cam.far = 200
+	cam.environment = env   # the camera's own environment wins over any other in the scene
 	world.add_child(cam); cam.current = true
 
 

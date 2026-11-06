@@ -3,6 +3,16 @@ extends Node3D
 ## A fight stage: sky, lighting, fog, floor, set pieces, weather particles and per-frame animation.
 ## Build with Stage.make(id). All stages share the same fighting ring (radius Main.ARENA_R).
 
+var env_node: WorldEnvironment
+
+
+## A hidden stage (while Ludo, Rush Hour, Office Ops or Mafia runs) gives up its environment,
+## otherwise its sky and ambient light override the other game's own lighting.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_VISIBILITY_CHANGED and env_node != null:
+		env_node.environment = env if visible else null
+
+
 const LIST := [
 	{id = "open_office", name = "Open Office", sub = "Bit & Bytes HQ · after hours", accent = Color(0.62, 0.42, 1.0)},
 	{id = "server_room", name = "Server Room", sub = "Cold aisle · blinking racks", accent = Color(0.25, 0.75, 1.0)},
@@ -104,6 +114,7 @@ func setup_env(top: Color, horizon: Color, ground: Color, amb: Color, amb_e: flo
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	we.environment = env
 	add_child(we)
+	env_node = we
 
 
 func setup_sun(c: Color, energy: float, pitch: float, yaw: float, rims: Array) -> void:
