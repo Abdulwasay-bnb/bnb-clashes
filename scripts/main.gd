@@ -2219,6 +2219,23 @@ func _run_autotest() -> void:
 				add_child(r)
 				if r is VrmRig: print("AUTOTEST skull %s %s" % [id, r.skull])
 				r.queue_free()
+		"gamecards":
+			# the menu game cards: every item on the main menu and the party menu
+			ui.show_title()
+			await get_tree().create_timer(1.0).timeout
+			for k in 6:
+				var btn: Control = ui.screen.find_children("*", "Button", true, false)[k]
+				btn.grab_focus()
+				await get_tree().create_timer(0.5).timeout
+				await shot.call("card_main_%d" % k)
+			ui.show_party_menu()
+			await get_tree().create_timer(0.6).timeout
+			for k in 5:
+				var btn: Control = ui.screen.find_children("*", "Button", true, false)[k]
+				btn.grab_focus()
+				await get_tree().create_timer(0.5).timeout
+				await shot.call("card_party_%d" % k)
+			print("AUTOTEST gamecards done")
 		"grandprix":
 			# the Grand Prix flow: six wins in a row -> certificate screen; a loss ends the run
 			await start_grand_prix(Data.by_id("hamza_khan"))

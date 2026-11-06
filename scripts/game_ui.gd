@@ -730,6 +730,120 @@ func _menu_list(items: Array) -> VBoxContainer:
 	return v
 
 
+## The game card that slides in on the right of the menus: what the game is and how to play it.
+const GAME_INFO := {
+	"clash": {title = "CLASH", tag = "3D OFFICE FIGHTING", col = Color(0.62, 0.38, 1.0), icon = "✊",
+		what = "26 colleagues, each with their own fighting style, grapples, outfits and two powers. Settle it the old-fashioned way.",
+		how = ["U I J K  =  punch 1, punch 2, kick 3, kick 4", "A / D move  ·  double-tap forward to RUN  ·  hold W to jump", "Stand still or hold back to block; hold S for lows", "1+2 grapple  ·  1+3 BLUE power (once a round)", "2+4 FINAL power at 30 % health or less (blockable!)"],
+		chips = ["1–2 PLAYERS", "ARCADE", "ONLINE", "TRAINING", "🏆 CERTIFICATE"]},
+	"rush": {title = "RUSH HOUR", tag = "10-CAR STREET RACING", col = Color(0.13, 0.78, 0.92), icon = "🏁",
+		what = "Six tracks from Downtown to Snowy Pass. Grab item boxes, fire them at your rivals and unleash your power. Win the Grand Prix for a trophy.",
+		how = ["W / S gas and brake  ·  A / D steer", "SPACE drift through corners  ·  SHIFT nitro", "J use your item  ·  K your power (it charges as you drive)", "GRAND PRIX: 1st place on all six tracks, one loss ends it"],
+		chips = ["1–10 PLAYERS", "6 TRACKS", "GRAND PRIX", "ONLINE", "🏆 CERTIFICATE"]},
+	"ops": {title = "OFFICE OPS", tag = "TEAM DEATHMATCH FPS", col = Color(1.0, 0.35, 0.3), icon = "🎯",
+		what = "Team Bit vs Team Byte on four maps. Grab guns and grenades from your loadout table and hold the office. Enemies glow red.",
+		how = ["WASD move  ·  mouse aim  ·  LMB fire  ·  RMB aim / scope", "E take from the table  ·  1 2 3 / Q / wheel switch weapon", "G cycle frag, flashbang, molotov  ·  R reload", "SHIFT sprint  ·  C crouch  ·  SPACE jump  ·  TAB scores"],
+		chips = ["1v1 – 4v4", "4 MAPS", "BOTS", "ONLINE", "CHAT + VOICE"]},
+	"cricket": {title = "OFFICE CRICKET", tag = "SUPER OVER", col = Color(0.35, 0.85, 0.4), icon = "🏏",
+		what = "One over each on the office lawn at golden hour. Bat, bowl, hit sixes over the car park, and hope the umpire is in a good mood.",
+		how = ["BOWL: 1–4 pick pace, spin, yorker or bouncer", "A / D aim the line, SPACE to stop the meter", "BAT: A / D leg, straight or off side", "Press when the ring closes: SPACE ground shot, SHIFT loft"],
+		chips = ["1–2 PLAYERS", "VS CPU", "PASS & PLAY", "ONLINE"]},
+	"dash": {title = "DEADLINE DASH", tag = "SIDE-SCROLLING PLATFORMER", col = Color(1.0, 0.6, 0.15), icon = "⏱",
+		what = "Ten levels from Monday Morning to the CEO's penthouse. Stomp stapler bots, collect BNB coins and beat four bosses before the deadline.",
+		how = ["A / D move  ·  hold SHIFT to run", "SPACE jump (hold to jump higher)  ·  stomp enemies", "Hit sticky notes from below: coffee = extra hit", "Energy drink: J throws paper planes  ·  100 coins = 1 life", "3 lives — lose them all and it's back to level 1"],
+		chips = ["1 PLAYER", "10 LEVELS", "4 BOSSES", "🏆 CERTIFICATE"]},
+	"party": {title = "PARTY GAMES", tag = "BOARD · CARDS · CHAOS", col = Color(1.0, 0.81, 0.35), icon = "🎲",
+		what = "Ludo on the boardroom table, Carrom, Rung with your team, bomb-dropping Office Blast and the Mafia whodunit.",
+		how = ["Play vs CPU, pass the phone round, or online with friends", "Online: ENTER to chat, hold V to talk", "CPU players fill any empty seats"],
+		chips = ["5 GAMES", "2–10 PLAYERS", "ONLINE", "CHAT + VOICE"]},
+	"ludo": {title = "LUDO", tag = "THE CLASSIC BOARD GAME", col = Color(1.0, 0.81, 0.35), icon = "🎲",
+		what = "Race your four pawns round the board and home. Land on a rival to send them back to the start. Stars are safe.",
+		how = ["SPACE or click to roll the die", "Click a glowing pawn (or 1–4) to move it", "Roll a 6 to bring a pawn out — and roll again", "First to get all four home wins"],
+		chips = ["2–4 PLAYERS", "PASS & PLAY", "ONLINE"]},
+	"carrom": {title = "CARROM", tag = "FLICK · POCKET · COVER THE QUEEN", col = Color(0.95, 0.5, 0.3), icon = "⚪",
+		what = "Flick the striker to pocket your nine coins before the other side. Pocket the red queen too — but you must cover her.",
+		how = ["A / D slide the striker along your line", "Mouse or ← → aim (dotted guide shows the path)", "Hold SPACE / click to charge, release to shoot", "Pocket your own coin to shoot again; striker in = foul"],
+		chips = ["2 OR 4 PLAYERS", "TEAMS", "PASS & PLAY", "ONLINE"]},
+	"cards": {title = "RUNG", tag = "COURT PIECE · TEAMS OF TWO", col = Color(0.3, 0.8, 0.55), icon = "♠",
+		what = "Pakistan's favourite trick-taking game round the break-room table. You and the partner opposite against the other two.",
+		how = ["After 5 cards, pick the rung (trumps) with 1–4", "Follow the suit that was led if you can", "Highest rung wins the trick, else highest of the suit", "7 tricks win the hand  ·  all 13 is a KOT  ·  first to 5"],
+		chips = ["4 PLAYERS", "VS CPU", "PASS & PLAY", "ONLINE"]},
+	"blast": {title = "OFFICE BLAST", tag = "BOMBS IN THE OPEN PLAN", col = Color(1.0, 0.45, 0.2), icon = "💣",
+		what = "Drop timed coffee-mug bombs to blow up the boxes and cubicles, grab power-ups and trap your rivals in the blast. Last one standing.",
+		how = ["WASD / arrows move  ·  SPACE drop a bomb", "Blasts go four ways and break the first box they hit", "Power-ups: more bombs, bigger blasts, speed, kick", "Win 3 rounds to win the match"],
+		chips = ["2–4 PLAYERS", "VS CPU", "ONLINE"]},
+	"mafia": {title = "MAFIA", tag = "WHO IS THE KILLER?", col = Color(0.95, 0.3, 0.35), icon = "🔪",
+		what = "Someone in the office is Mafia. Staff do tasks and fix sabotage; the Mafia picks them off. Talk it out in meetings and vote someone out.",
+		how = ["WASD move  ·  E / SPACE use and do tasks", "R report a body  ·  M / TAB map", "Mafia: Q kill, F sabotage the power", "Meetings: chat, accuse, vote (voice works here too)"],
+		chips = ["4–10 PLAYERS", "BOTS", "ONLINE", "CHAT + VOICE"]},
+}
+var game_card: Control = null
+
+
+## Show (or swap) the game card on the right of the screen; "" hides it.
+func show_game_card(key: String) -> void:
+	if game_card != null and is_instance_valid(game_card):
+		var old := game_card
+		var tw0 := old.create_tween()
+		tw0.tween_property(old, "modulate:a", 0.0, 0.12)
+		tw0.tween_callback(old.queue_free)
+	game_card = null
+	if key == "" or not GAME_INFO.has(key) or screen == null: return
+	var I: Dictionary = GAME_INFO[key]
+	var accent: Color = I.col
+	var p := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.03, 0.02, 0.07, 0.86); sb.border_color = accent
+	sb.border_width_left = 6; sb.border_width_top = 1; sb.border_width_right = 1; sb.border_width_bottom = 1
+	sb.set_content_margin_all(22); sb.corner_radius_top_right = 18; sb.corner_radius_bottom_left = 18
+	sb.shadow_color = Color(accent, 0.25); sb.shadow_size = 18
+	p.add_theme_stylebox_override("panel", sb)
+	var w := 560.0 if not touch_enabled else 470.0
+	p.custom_minimum_size = Vector2(w, 0)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 6)
+	p.add_child(v)
+	var head := HBoxContainer.new(); head.add_theme_constant_override("separation", 14)
+	if not OS.has_feature("web"):   # emoji come from the system font; the browser build has none
+		head.add_child(lbl(String(I.icon), 54 if not touch_enabled else 40, F_TITLE, accent))
+	var tv := VBoxContainer.new(); tv.add_theme_constant_override("separation", -4)
+	tv.add_child(lbl(String(I.title), 40 if not touch_enabled else 30, F_TITLE, Color.WHITE, 6))
+	tv.add_child(lbl(String(I.tag), 17, F_BODY, accent))
+	head.add_child(tv)
+	v.add_child(head)
+	var what := lbl(String(I.what), 19 if not touch_enabled else 16, F_MED, Color(0.86, 0.88, 0.94))
+	what.autowrap_mode = TextServer.AUTOWRAP_WORD; what.custom_minimum_size = Vector2(w - 50, 0)
+	v.add_child(what)
+	var sep := ColorRect.new(); sep.color = Color(accent, 0.5); sep.custom_minimum_size = Vector2(w - 50, 2)
+	v.add_child(sep)
+	v.add_child(lbl("HOW TO PLAY", 16, F_TITLE, accent))
+	for line in I.how:
+		var r := lbl("›  " + String(line), 18 if not touch_enabled else 15, F_BODY, Color(0.93, 0.94, 0.98))
+		r.autowrap_mode = TextServer.AUTOWRAP_WORD; r.custom_minimum_size = Vector2(w - 50, 0)
+		v.add_child(r)
+	var chips := HFlowContainer.new(); chips.add_theme_constant_override("h_separation", 8); chips.add_theme_constant_override("v_separation", 6)
+	chips.custom_minimum_size = Vector2(w - 50, 0)
+	for c in I.chips:
+		var cp := PanelContainer.new()
+		var cs := StyleBoxFlat.new(); cs.bg_color = Color(accent, 0.18); cs.border_color = Color(accent, 0.8); cs.set_border_width_all(1)
+		cs.set_corner_radius_all(10); cs.content_margin_left = 10; cs.content_margin_right = 10; cs.content_margin_top = 2; cs.content_margin_bottom = 2
+		cp.add_theme_stylebox_override("panel", cs)
+		cp.add_child(lbl(String(c), 14, F_TITLE, Color.WHITE))
+		chips.add_child(cp)
+	var gap := Control.new(); gap.custom_minimum_size = Vector2(0, 4); v.add_child(gap)
+	v.add_child(chips)
+	screen.add_child(p)
+	p.reset_size()
+	var vs := get_viewport().get_visible_rect().size
+	var to := Vector2(vs.x - p.size.x - (40 if not touch_enabled else 20), maxf(30.0, vs.y - p.size.y - (110 if not touch_enabled else 30)))
+	p.position = to + Vector2(60, 0)
+	p.modulate.a = 0.0
+	var tw := p.create_tween().set_parallel()
+	tw.tween_property(p, "position", to, 0.28).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	tw.tween_property(p, "modulate:a", 1.0, 0.2)
+	game_card = p
+
+
 const MENU_DESC := [
 	"The fighting game: Arcade up to the CEO, versus, online rooms and training.",
 	"BNB Rush Hour: a ten-car street race. Grab pickups, throw them at rivals, unleash your power.",
@@ -800,11 +914,22 @@ func show_title() -> void:
 		items.append(["%02d   %s" % [i + 1, labels[i]], cbs[i], 25, MENU_DESC[i]])
 	var m := _menu_list(items)
 	col.add_child(m)
+	var card_keys := ["clash", "rush", "ops", "cricket", "dash", "party", "", "", ""]
+	var featured: Array = []
+	var kids := m.get_children()
+	for k in kids.size():
+		var key: String = card_keys[k] if k < card_keys.size() else ""
+		var on_focus := func():
+			show_game_card(key)
+			for f in featured: (f as CanvasItem).visible = key == ""
+		(kids[k] as Control).focus_entered.connect(on_focus)
+		(kids[k] as Control).mouse_entered.connect(func(): (kids[k] as Control).grab_focus())
 	desc_lbl = lbl(MENU_DESC[0], 20, F_MED, Color(0.79, 0.83, 0.88))
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 	desc_lbl.custom_minimum_size = Vector2(460, 60)
 	var sp2 := Control.new(); sp2.custom_minimum_size = Vector2(0, 18); col.add_child(sp2)
 	col.add_child(desc_lbl)
+	desc_lbl.modulate.a = 0.0   # the game card on the right says it all
 	if touch_enabled:
 		sp2.visible = false; desc_lbl.visible = false
 		for btn in m.get_children(): btn.custom_minimum_size.y = 40
@@ -833,6 +958,8 @@ func show_title() -> void:
 	var st := lbl("%s  ·  %s" % [a.style.split("—")[0].strip_edges(), b.style.split("—")[0].strip_edges()], 16, F_BODY, DIM)
 	st.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	card.add_child(st)
+	featured.append(card)
+	card.visible = false   # the game card shows instead while a game is highlighted
 	var foot := lbl("↑↓ / W S  select    ·    Enter / U  confirm    ·    Esc / J  back", 15, F_BODY, DIM)
 	place(foot, screen, Control.PRESET_BOTTOM_LEFT, Vector2(110, -34))
 	foot.visible = not touch_enabled
@@ -2094,6 +2221,12 @@ func show_party_menu() -> void:
 	var m := _menu_list(items)
 	m.set_meta("back", show_title)
 	col.add_child(m)
+	var pk := ["ludo", "carrom", "cards", "blast", "mafia", ""]
+	var pkids := m.get_children()
+	for k in pkids.size():
+		var key: String = pk[k] if k < pk.size() else ""
+		(pkids[k] as Control).focus_entered.connect(func(): show_game_card(key))
+		(pkids[k] as Control).mouse_entered.connect(func(): (pkids[k] as Control).grab_focus())
 	desc_lbl = lbl(PARTY_DESC[0], 20, F_MED, Color(0.79, 0.83, 0.88))
 	desc_lbl.custom_minimum_size = Vector2(460, 60)
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
