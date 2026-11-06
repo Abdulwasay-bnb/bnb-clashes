@@ -1947,24 +1947,35 @@ func show_ladder() -> void:
 
 
 func show_arcade_win() -> void:
-	clear_screen(); screen.visible = true; view = "info"
 	var A: Dictionary = G.arcade
 	G.arcade = null
+	show_cert_screen("clash", A.player, A.cos, "PROMOTED!", "%s beat the whole office, HR, the PM and the CEO.\nThe corner office is yours… until Monday's stand-up." % A.player.name, "")
+
+
+## The winner's screen for the three competitive runs (Clash Arcade, Rush Hour Grand Prix, Deadline Dash):
+## the hero celebrating on the rooftop, and a certificate (PDF) made out to the name you type.
+func show_cert_screen(kind: String, player: Dictionary, cos: int, title: String, sub: String, stats: String) -> void:
+	clear_screen(); screen.visible = true; view = "info"
 	G.set_stage("rooftop")
-	G.set_preview(0, A.player, A.cos)
+	G.set_preview(0, player, cos)
 	if G.preview[1] != null:
 		G.preview[1].rig.queue_free(); G.preview[1] = null
 	G.preview[0].win = true
+	var A := {player = player}
 	var v := VBoxContainer.new()
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_theme_constant_override("separation", 12)
 	screen.add_child(full(v))
-	var t := lbl("PROMOTED!", 96, F_TITLE, GOLD, 14)
+	var t := lbl(title, 96, F_TITLE, GOLD, 14)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(t)
-	var s := lbl("%s beat the whole office, HR, the PM and the CEO.\nThe corner office is yours… until Monday's stand-up." % A.player.name, 26, F_BODY, INK)
+	var s := lbl(sub, 26, F_BODY, INK)
 	s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(s)
+	if stats != "":
+		var st := lbl(stats, 22, F_MED, P2C)
+		st.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		v.add_child(st)
 	# the (unofficial) certificate: type a name, get a PDF
 	var cert_row := HBoxContainer.new()
 	cert_row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -1983,8 +1994,8 @@ func show_arcade_win() -> void:
 		if who == "":
 			status.text = "Type a name first."; return
 		status.text = "Printing your certificate…"
-		var img: Image = await Certificate.render(self, who, A.player, G.portraits.get(A.player.id))
-		status.text = Certificate.save(Certificate.to_pdf(img), who)
+		var img: Image = await Certificate.render(self, who, A.player, G.portraits.get(A.player.id), kind, stats)
+		status.text = Certificate.save(Certificate.to_pdf(img), who, kind)
 	name_in.text_submitted.connect(func(_t): make_cert.call())
 	cert_row.add_child(big_btn("GET CERTIFICATE", GOLD, make_cert))
 	v.add_child(cert_row)
@@ -2008,7 +2019,7 @@ func show_race_tracks(C: Dictionary) -> void:
 	col.position = Vector2(90, 90) if not touch_enabled else Vector2(70, 100)
 	col.add_child(lbl("RUSH HOUR", 64, F_TITLE, P2C, 10))
 	col.add_child(lbl("%s  ·  10 RACERS  ·  %d LAPS" % [C.name, RaceSim.LAPS], 20, F_BODY, GOLD))
-	var items := []
+	var items := [["GRAND PRIX  ·  ARCADE", func(): G.start_grand_prix(C), 30, "All six tracks back to back against the same nine rivals. Finish 1st in every race to win the Grand Prix and your champion certificate. One loss ends the run."]]
 	for id in RaceSim.TRACKS:
 		var t: Dictionary = RaceSim.TRACKS[id]
 		var tid: String = id

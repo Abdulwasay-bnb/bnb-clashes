@@ -30,6 +30,7 @@ var small: Font
 var hero
 var hero_anim := 0.0
 var hero_scale := 0.62
+var run_started := 0
 var boss_rig = null
 var boss_C: Dictionary = {}
 var boss_anim := 0.0
@@ -62,6 +63,7 @@ var particles: Array = []   # [node, vel, life]
 # ---------------------------------------------------------------- start / stop
 func start(g, c: Dictionary) -> void:
 	G = g; C = c
+	run_started = Time.get_ticks_msec()
 	font = load("res://assets/fonts/RussoOne-Regular.ttf")
 	small = load("res://assets/fonts/Rajdhani-Bold.ttf")
 	sim = DashSim.new()
@@ -513,13 +515,20 @@ func _game_over() -> void:
 
 
 func _restart_run() -> void:
+	run_started = Time.get_ticks_msec()
 	sim.new_run(); _build_level(); _intro()
 
 
 func _victory() -> void:
 	flow = "victory"; flow_t = 0.0
 	stats["victory"] = 1
-	_panel("YOU BEAT THE DEADLINE!", "All 10 levels cleared  ·  score %d" % sim.score, [["PLAY AGAIN", _restart_run], ["MAIN MENU", _quit]])
+	var secs := (Time.get_ticks_msec() - run_started) / 1000.0
+	var line := "10 / 10 LEVELS   ·   SCORE %d   ·   %d COINS   ·   %d %s LEFT   ·   %d:%02d" % [sim.score, sim.coins, sim.lives, "LIFE" if sim.lives == 1 else "LIVES", int(secs) / 60, int(secs) % 60]
+	_panel("YOU BEAT THE DEADLINE!", "All 10 levels cleared  ·  score %d" % sim.score, [["GET YOUR CERTIFICATE", func():
+		paused = false
+		finished.emit()
+		G.ui.show_cert_screen("dash", C, 0, "DEADLINE BEATEN!", "%s cleared all ten levels and beat the CEO to the deadline." % C.name, line)],
+		["PLAY AGAIN", _restart_run], ["MAIN MENU", _quit]])
 
 
 func _quit() -> void:

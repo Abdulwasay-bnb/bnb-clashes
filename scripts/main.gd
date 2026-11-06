@@ -576,6 +576,35 @@ func arcade_fight() -> void:
 var race: RaceGame
 
 
+## Rush Hour Grand Prix (arcade): every track in order, the same nine rivals, 1st place every time or it's over.
+var gp = null   # {C, field: Array, idx, time, tracks}
+
+
+func start_grand_prix(C: Dictionary) -> void:
+	var others := Data.ROSTER.filter(func(c): return c.id != C.id)
+	others.shuffle()
+	gp = {C = C, field = others.slice(0, 9), idx = 0, time = 0.0, tracks = RaceSim.TRACKS.keys()}
+	await start_race(String(gp.tracks[0]), C)
+
+
+## After a Grand Prix race: won -> next track (or the trophy after the last), lost -> the run is over.
+func grand_prix_next(won: bool, race_time: float) -> void:
+	if gp == null: return
+	if not won:
+		gp = null
+		return
+	gp.time += race_time
+	gp.idx += 1
+	if gp.idx >= gp.tracks.size():
+		var C: Dictionary = gp.C
+		var tt: float = gp.time
+		gp = null
+		ui.show_cert_screen("rush", C, 0, "GRAND PRIX CHAMPION!", "%s won all six races from first place.\nThe whole office is still looking at your tail lights." % C.name,
+			"6 / 6 WINS   ·   TOTAL TIME %d:%05.2f" % [int(tt) / 60, fmod(tt, 60.0)])
+		return
+	await start_race(String(gp.tracks[gp.idx]), gp.C)
+
+
 func start_race(track_id: String, C: Dictionary) -> void:
 	loader.open("LOADING RACE")
 	await get_tree().process_frame
@@ -587,6 +616,7 @@ func start_race(track_id: String, C: Dictionary) -> void:
 	ui.hide_hud()
 	race = RaceGame.new()
 	add_child(race)
+	if gp != null: race.gp_field = gp.field
 	race.start(self, track_id, C)
 	race.finished.connect(end_race)
 	loader.close()
@@ -2189,7 +2219,28 @@ func _run_autotest() -> void:
 				add_child(r)
 				if r is VrmRig: print("AUTOTEST skull %s %s" % [id, r.skull])
 				r.queue_free()
+		"grandprix":
+			# the Grand Prix flow: six wins in a row -> certificate screen; a loss ends the run
+			await start_grand_prix(Data.by_id("hamza_khan"))
+			var tracks := []
+			var fields_same := true
+			var f0: Array = gp.field
+			for k in 6:
+				tracks.append(race.track)
+				fields_same = fields_same and race.gp_field == f0
+				await get_tree().create_timer(1.0).timeout
+				end_race()
+				await grand_prix_next(true, 120.0 + k)
+			print("AUTOTEST grandprix tracks=%s same_field=%s gp_after=%s view=%s" % [tracks, fields_same, gp, ui.view])
+			await get_tree().create_timer(1.0).timeout
+			await shot.call("grandprix_win")
+			await start_grand_prix(Data.by_id("ali"))
+			end_race(); await grand_prix_next(false, 0.0)
+			print("AUTOTEST grandprix loss ends run: gp=%s" % [gp])
 		"certificate":
+			for kd in [["rush", "hamza_khan", "6 / 6 WINS   ·   TOTAL TIME 14:32.80"], ["dash", "muhammad_nauman_nawaz", "10 / 10 LEVELS   ·   SCORE 48200   ·   212 COINS   ·   2 LIVES LEFT   ·   21:07"]]:
+				var ki: Image = await Certificate.render(self, "Abdul Wasay", Data.by_id(kd[1]), portraits.get(kd[1]), kd[0], kd[2])
+				ki.save_png("user://shot_certificate_%s.png" % kd[0])
 			var img: Image = await Certificate.render(self, "Abdul Wasay", Data.by_id("muhammad_nauman_nawaz"), portraits.get("muhammad_nauman_nawaz"))
 			img.save_png("user://shot_certificate.png")
 			var pdf := Certificate.to_pdf(img)

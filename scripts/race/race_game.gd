@@ -40,10 +40,14 @@ var inbox: Array = []      # guest: snapshots / events waiting to be shown
 var track := ""
 
 
+var gp_field: Array = []   # Grand Prix: the same nine rivals every race
+
+
 func start(g, track_id: String, player: Dictionary) -> void:
 	# ten racers: the player plus nine colleagues (bosses included)
 	var others := Data.ROSTER.filter(func(c): return c.id != player.id)
 	others.shuffle()
+	if not gp_field.is_empty(): others = gp_field
 	_begin(g, track_id, [player] + others.slice(0, 9), 1, randi())
 
 
@@ -425,6 +429,20 @@ func _show_results() -> void:
 	if net != null:
 		btns.add_child(ui.big_btn("BACK TO LOBBY", Color(0.13, 0.78, 0.92), func(): finished.emit(); G.lobby.back_to_lobby()))
 		btns.add_child(ui.big_btn("LEAVE", Color(0.55, 0.62, 0.75), func(): finished.emit(); G.lobby.leave()))
+	elif G.gp != null:
+		var mine: RaceSim.Racer = sim.racers[me]
+		var won := mine.place == 1
+		var C: Dictionary = mine.C
+		var t_me: float = maxf(0.0, mine.finished)
+		var n: int = G.gp.tracks.size()
+		var k: int = G.gp.idx + 1
+		if won:
+			v.add_child(ui.lbl("GRAND PRIX  ·  RACE %d / %d WON" % [k, n], 26, font, Color(0.4, 1.0, 0.55), 6))
+			btns.add_child(ui.big_btn("CLAIM YOUR TROPHY" if k == n else "NEXT RACE  ›", Color(1.0, 0.81, 0.35), func(): finished.emit(); G.grand_prix_next(true, t_me)))
+		else:
+			v.add_child(ui.lbl("GRAND PRIX OVER  ·  YOU NEEDED 1ST (RACE %d / %d)" % [k, n], 26, font, Color(1.0, 0.4, 0.4), 6))
+			btns.add_child(ui.big_btn("START OVER", Color(0.13, 0.78, 0.92), func(): finished.emit(); G.grand_prix_next(false, 0.0); G.start_grand_prix(C)))
+			btns.add_child(ui.big_btn("MAIN MENU", Color(0.55, 0.62, 0.75), func(): finished.emit(); G.grand_prix_next(false, 0.0); ui.show_title()))
 	else:
 		btns.add_child(ui.big_btn("RACE AGAIN", Color(0.13, 0.78, 0.92), func(): finished.emit(); ui.show_race_tracks(sim.racers[me].C)))
 		btns.add_child(ui.big_btn("MAIN MENU", Color(0.55, 0.62, 0.75), func(): finished.emit(); ui.show_title()))
