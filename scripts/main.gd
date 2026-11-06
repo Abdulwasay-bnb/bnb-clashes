@@ -594,7 +594,7 @@ func start_race(track_id: String, C: Dictionary) -> void:
 
 ## Online / Wi-Fi race (see PartyLobby).
 func start_race_net(track_id: String, people: Array, humans: int, seed: int, me: int, party: Party, is_guest: bool, pids: Dictionary) -> void:
-	end_race(); end_ops(); end_ludo(); end_mafia()
+	end_race(); end_ops(); end_ludo(); end_mafia(); end_party()
 	loader.open("LOADING RACE")
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -626,7 +626,7 @@ func start_ludo_net(people: Array, seed: int, slot: int, party: Party, is_guest:
 
 
 func _begin_ludo(init: Callable) -> void:
-	end_race(); end_ops(); end_ludo(); end_mafia()
+	end_race(); end_ops(); end_ludo(); end_mafia(); end_party()
 	loader.open("SETTING UP THE BOARD")
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -647,13 +647,66 @@ func end_ludo() -> void:
 		camera.current = true
 
 
+# ------------------------------------------------------------------ party games (cricket, carrom, blast, cards)
+## Each is a Node class with the same contract as LudoGame: start(g, people, seed, slot, pass_play),
+## start_net(g, people, seed, slot, party, is_guest, pids), stop(), signal finished, var autoplay, var stats.
+## people = [{C, human, slot}] (slot -2 = played on this device in pass & play, -1 = CPU, >= 0 = lobby seat).
+const PARTY_GAMES := ["cricket", "carrom", "blast", "cards"]
+var party_game: Node = null
+var party_kind := ""
+
+
+func _new_party(kind: String) -> Node:
+	match kind:
+		"cricket": return CricketGame.new()
+		"carrom": return CarromGame.new()
+		"blast": return BlastGame.new()
+		_: return CardsGame.new()
+
+
+func _begin_party(kind: String, title: String, init: Callable) -> void:
+	end_race(); end_ops(); end_ludo(); end_mafia(); end_party()
+	loader.open(title)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	clear_preview()
+	if stage != null: stage.visible = false
+	ui.hide_screen(); ui.view = kind; ui.hide_hud()
+	party_kind = kind
+	party_game = _new_party(kind)
+	add_child(party_game)
+	init.call(party_game)
+	party_game.finished.connect(end_party)
+	loader.close()
+
+
+## Solo / pass & play: you plus CPU players (or other people on this device).
+func start_party(kind: String, C: Dictionary, others: int, pass_play := false) -> void:
+	var pool := Data.ROSTER.filter(func(c): return c.id != C.id)
+	pool.shuffle()
+	var people := [{C = C, human = true, slot = -2 if pass_play else 0}]
+	for k in others: people.append({C = pool[k], human = pass_play, slot = -2 if pass_play else -1})
+	await _begin_party(kind, "SETTING UP", func(n): n.start(self, people, randi(), 0, pass_play))
+
+
+func start_party_net(kind: String, people: Array, seed: int, slot: int, party: Party, is_guest: bool, pids: Dictionary) -> void:
+	await _begin_party(kind, "SETTING UP", func(n): n.start_net(self, people, seed, slot, party, is_guest, pids))
+
+
+func end_party() -> void:
+	if party_game != null:
+		party_game.stop(); party_game.queue_free(); party_game = null
+		if stage != null: stage.visible = true
+		camera.current = true
+
+
 # ------------------------------------------------------------------ BNB Mafia
 var mafia: MafiaGame
 
 
 ## people: [{C, human, slot}] (index = agent id); me: this player's agent.
 func start_mafia(people: Array, cfg: Dictionary, seed: int, me: int, party: Party = null, is_guest := false, pids := {}) -> void:
-	end_race(); end_ops(); end_ludo(); end_mafia()
+	end_race(); end_ops(); end_ludo(); end_mafia(); end_party()
 	loader.open("CLOCKING IN")
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -681,7 +734,7 @@ var lobby: PartyLobby
 
 
 func start_ops_net(a: Array, b: Array, humans: Dictionary, guns: Dictionary, skill: float, seed: int, me: int, party: Party, is_guest: bool, pids: Dictionary, map := "office") -> void:
-	end_race(); end_ops(); end_ludo(); end_mafia()
+	end_race(); end_ops(); end_ludo(); end_mafia(); end_party()
 	loader.open("DEPLOYING")
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -2286,6 +2339,28 @@ func _run_autotest() -> void:
 			for k in 3: await get_tree().physics_frame
 			await shot.call("ops_enemy")
 			end_ops()
+		"cricket", "carrom", "blast", "cards":
+			# a party game with the CPU playing every seat; the game's own autotest(shot) if it has one
+			var others: int = {"cricket": 1, "carrom": 3, "blast": 3, "cards": 3}[autotest]
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--players="): others = int(a.substr(10)) - 1
+			await start_party(autotest, Data.by_id("hamza_khan"), others, false)
+			party_game.autoplay = true
+			if party_game.has_method("autotest"):
+				await party_game.autotest(shot)
+			else:
+				for k in 3:
+					await get_tree().create_timer(6.0).timeout
+					await shot.call("%s_%d" % [autotest, k])
+			print("AUTOTEST %s stats=%s" % [autotest, party_game.stats if party_game != null else {}])
+			end_party()
+		"cricketsim", "carromsim", "blastsim", "cardssim":
+			# the game's rules engine on its own: a full game between CPUs, and snapshot / apply round trips
+			var kind := String(autotest).trim_suffix("sim")
+			var cls: Node = _new_party(kind)
+			if cls.has_method("selftest"): await cls.selftest(self)
+			else: print("AUTOTEST %s: no selftest" % autotest)
+			cls.free()
 		"opsmaps":
 			# every Office Ops map: an overview from above, a first-person look, then bots play for a while
 			var maps: Array = OpsSim.MAPS.keys()

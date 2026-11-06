@@ -37,11 +37,12 @@ func _ready() -> void:
 
 
 func max_players() -> int:
-	return {"race": 10, "ops": 8, "ludo": 4, "mafia": 10}.get(mode, 8)
+	return {"race": 10, "ops": 8, "ludo": 4, "mafia": 10, "cricket": 2, "carrom": 4, "blast": 4, "cards": 4}.get(mode, 8)
 
 
 func title() -> String:
-	return {"race": "RUSH HOUR", "ops": "OFFICE OPS", "ludo": "LUDO", "mafia": "MAFIA"}.get(mode, "")
+	return {"race": "RUSH HOUR", "ops": "OFFICE OPS", "ludo": "LUDO", "mafia": "MAFIA", "cricket": "OFFICE CRICKET", "carrom": "CARROM",
+		"blast": "OFFICE BLAST", "cards": "RUNG"}.get(mode, "")
 
 
 # ---------------------------------------------------------------- menu
@@ -90,6 +91,7 @@ func _back_cb() -> Callable:
 	var who := C
 	if mode == "race": return func(): party.close(); G.ui.show_race_tracks(who)
 	if mode == "ludo": return func(): party.close(); G.ui.show_ludo_menu(who)
+	if mode in Main.PARTY_GAMES: return func(): party.close(); G.ui.show_game_menu(mode, who)
 	if mode == "mafia": return func(): party.close(); G.ui.show_title()
 	return func(): party.close(); G.ui.show_ops_setup(who)
 
@@ -276,6 +278,11 @@ func _render_lobby() -> void:
 			v.add_child(_opt_row("REVEAL FIRED", [true, false], "reveal", ["YES", "NO"]))
 		else:
 			v.add_child(_centered_lbl("%d PLAYERS  ·  %d MAFIA  ·  KNIFE %ds" % [maxi(int(cfg.total), players.size()), int(cfg.mafia), int(cfg.cool)]))
+	elif mode in ["carrom", "blast"]:
+		if host: v.add_child(_opt_row("EMPTY SEATS", [true, false], "fill", ["CPU PLAYERS", "LEAVE EMPTY"]))
+		else: v.add_child(_centered_lbl("EMPTY SEATS:  " + ("CPU PLAYERS" if cfg.fill else "LEFT EMPTY")))
+	elif mode in ["cricket", "cards"]:
+		v.add_child(_centered_lbl("EMPTY SEATS:  CPU PLAYERS" if mode == "cards" else "1 v 1  ·  A CPU PLAYS IF YOU'RE ALONE"))
 	elif mode == "ludo":
 		if host: v.add_child(_opt_row("EMPTY SEATS", [true, false], "fill", ["CPU PLAYERS", "LEAVE EMPTY"]))
 		else: v.add_child(_centered_lbl("EMPTY SEATS:  " + ("CPU PLAYERS" if cfg.fill else "LEFT EMPTY")))
@@ -325,6 +332,9 @@ func _seats() -> int:
 	if mode == "race": return 10
 	if mode == "mafia": return maxi(int(cfg.total), players.size())
 	if mode == "ludo": return 4 if cfg.fill else maxi(2, players.size())
+	if mode == "cricket": return 2
+	if mode == "cards": return 4
+	if mode in ["carrom", "blast"]: return 4 if cfg.fill else maxi(2, players.size())
 	var ab := _team_sizes()
 	return ab[0] + ab[1]
 
@@ -355,7 +365,7 @@ func _on_left(pid: int) -> void:
 func _gone(msg: String) -> void:
 	if in_game:
 		in_game = false
-		G.end_race(); G.end_ops(); G.end_ludo(); G.end_mafia()
+		G.end_race(); G.end_ops(); G.end_ludo(); G.end_mafia(); G.end_party()
 	show_menu(mode, C, msg)
 
 
@@ -427,10 +437,10 @@ func start_match() -> void:
 				party.send_to(pid, {t = "start", mode = "mafia", people = ids, humans = players.size(), cfg = mc, seed = seed, me = k})
 		G.start_mafia(_ludo_people(ids, players.size()), mc, seed, 0, party, false, pids)
 		return
-	if mode == "ludo":
+	if mode == "ludo" or mode in Main.PARTY_GAMES:
 		var ids := []
 		for p in players: ids.append(String(p.c))
-		var n := 4 if cfg.fill else maxi(2, players.size())
+		var n := _seats()
 		for c in pool:
 			if ids.size() >= n: break
 			ids.append(String(c.id))
@@ -439,8 +449,9 @@ func start_match() -> void:
 			var pid := int(players[k].pid)
 			if pid != 0:
 				pids[pid] = k
-				party.send_to(pid, {t = "start", mode = "ludo", people = ids, humans = players.size(), seed = seed, me = k})
-		G.start_ludo_net(_ludo_people(ids, players.size()), seed, 0, party, false, pids)
+				party.send_to(pid, {t = "start", mode = mode, people = ids, humans = players.size(), seed = seed, me = k})
+		if mode == "ludo": G.start_ludo_net(_ludo_people(ids, players.size()), seed, 0, party, false, pids)
+		else: G.start_party_net(mode, _ludo_people(ids, players.size()), seed, 0, party, false, pids)
 		return
 	if mode == "race":
 		var ids := []
@@ -486,12 +497,14 @@ func start_match() -> void:
 
 func _start_guest(d: Dictionary) -> void:
 	if in_game:
-		G.end_race(); G.end_ops(); G.end_ludo(); G.end_mafia()
+		G.end_race(); G.end_ops(); G.end_ludo(); G.end_mafia(); G.end_party()
 	in_game = true
 	if String(d.mode) == "mafia":
 		G.start_mafia(_ludo_people(d.people, int(d.humans)), d.cfg, int(d.seed), int(d.me), party, true, {})
 	elif String(d.mode) == "ludo":
 		G.start_ludo_net(_ludo_people(d.people, int(d.humans)), int(d.seed), int(d.me), party, true, {})
+	elif String(d.mode) in Main.PARTY_GAMES:
+		G.start_party_net(String(d.mode), _ludo_people(d.people, int(d.humans)), int(d.seed), int(d.me), party, true, {})
 	elif String(d.mode) == "race":
 		G.start_race_net(String(d.track), _people(d.people), int(d.humans), int(d.seed), int(d.me), party, true, {})
 	else:

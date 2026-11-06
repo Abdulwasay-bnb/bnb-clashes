@@ -384,7 +384,7 @@ func big_btn(text: String, accent: Color, cb: Callable) -> Button:
 func _process(_dt: float) -> void:
 	_process_online()
 	if nav_back == null: return
-	var menus := ["diff", "select", "stage", "moves", "info", "online", "ladder", "race_tracks", "ops_setup", "party", "ludo_menu", "mafia_menu"]
+	var menus := ["diff", "select", "stage", "moves", "info", "online", "ladder", "race_tracks", "ops_setup", "party", "ludo_menu", "mafia_menu", "party_menu", "game_menu"]
 	nav_back.visible = view in menus
 	nav_ok.visible = view in ["select", "stage"]
 	if view == "stage": nav_ok.text = "FIGHT!  ✔"
@@ -733,9 +733,9 @@ func _menu_list(items: Array) -> VBoxContainer:
 const MENU_DESC := [
 	"The fighting game: Arcade up to the CEO, versus, online rooms and training.",
 	"BNB Rush Hour: a ten-car street race. Grab pickups, throw them at rivals, unleash your power.",
-	"BNB Office Ops: team deathmatch, 1v1 up to 4v4. Pick a gun, wear a vest, hold the office.",
-	"Ludo on the boardroom table: 2 to 4 players vs CPU, pass & play, or with friends online.",
-	"Mafia: someone in the office is a killer. Do your tasks, report bodies, call meetings, chat and vote them out.",
+	"BNB Office Ops: team deathmatch on four maps. Grab guns and grenades at your loadout table.",
+	"Office Cricket: a Super Over in the car park. Bat, bowl, hit sixes, vs CPU or a friend.",
+	"Ludo, Carrom, Cards, Office Blast and Mafia: board, card and party games for 2 to 10 players.",
 	"Hit levels, frame advantage, sidesteps, juggles, throws and Surge Arts, explained.",
 	"Keyboard and gamepad layouts for both players.",
 	"Close the game.",
@@ -781,7 +781,7 @@ func show_title() -> void:
 	var tag := PanelContainer.new()
 	tag.add_theme_stylebox_override("panel", sbox(GOLD, Color(0, 0, 0, 0), 0, 0.35))
 	tag.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	tag.add_child(lbl("FIGHT  ·  RACE  ·  SHOOT  ·  PLAY  ·  ONE OFFICE", 17, F_TITLE, Color(0.04, 0.05, 0.08)))
+	tag.add_child(lbl("FIGHT  ·  RACE  ·  SHOOT  ·  BAT  ·  PLAY  ·  ONE OFFICE", 17, F_TITLE, Color(0.04, 0.05, 0.08)))
 	col.add_child(tag)
 	var wm := TextureRect.new()
 	wm.texture = load("res://assets/brand/bnb_wordmark_light.png")
@@ -791,9 +791,9 @@ func show_title() -> void:
 	wm.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	col.add_child(wm)
 	var sp := Control.new(); sp.custom_minimum_size = Vector2(0, 16 if not touch_enabled else 6); col.add_child(sp)
-	var labels := ["CLASH  ·  FIGHT", "RUSH HOUR  ·  RACE", "OFFICE OPS  ·  SHOOT", "LUDO  ·  BOARD", "MAFIA  ·  WHODUNIT", "HOW TO PLAY", "CONTROLS", "QUIT"]
-	var cbs := [show_clash_menu, func(): show_select({mode = "race"}), func(): show_select({mode = "ops"}), func(): show_select({mode = "ludo"}),
-		func(): show_select({mode = "mafia"}), show_how, show_controls, func(): G.get_tree().quit()]
+	var labels := ["CLASH  ·  FIGHT", "RUSH HOUR  ·  RACE", "OFFICE OPS  ·  SHOOT", "OFFICE CRICKET", "PARTY GAMES", "HOW TO PLAY", "CONTROLS", "QUIT"]
+	var cbs := [show_clash_menu, func(): show_select({mode = "race"}), func(): show_select({mode = "ops"}), func(): show_select({mode = "cricket"}),
+		show_party_menu, show_how, show_controls, func(): G.get_tree().quit()]
 	var items: Array = []
 	for i in labels.size():
 		items.append(["%02d   %s" % [i + 1, labels[i]], cbs[i], 25, MENU_DESC[i]])
@@ -907,7 +907,8 @@ func show_select(c: Dictionary) -> void:
 	var t := lbl("SELECT YOUR FIGHTER", 30, F_TITLE, INK, 6)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bv.add_child(t)
-	var sub := lbl({"cpu": "VS CPU  ·  " + ["EASY", "NORMAL", "HARD", "BOSS"][c.get("lv", 1)], "2p": "VERSUS  ·  LOCAL", "training": "TRAINING", "arcade": "ARCADE  ·  CLIMB TO THE CEO", "race": "RUSH HOUR  ·  PICK YOUR DRIVER", "ops": "OFFICE OPS  ·  PICK YOUR OPERATOR", "ludo": "LUDO  ·  PICK YOUR PLAYER", "mafia": "MAFIA  ·  WHO ARE YOU TONIGHT?", "online": "ONLINE  ·  " + ("WI-FI" if G.net.via == "lan" else "ROOM " + G.net.code)}[c.mode], 14, F_BODY, GOLD)
+	var sub := lbl({"cpu": "VS CPU  ·  " + ["EASY", "NORMAL", "HARD", "BOSS"][c.get("lv", 1)], "2p": "VERSUS  ·  LOCAL", "training": "TRAINING", "arcade": "ARCADE  ·  CLIMB TO THE CEO", "race": "RUSH HOUR  ·  PICK YOUR DRIVER", "ops": "OFFICE OPS  ·  PICK YOUR OPERATOR", "ludo": "LUDO  ·  PICK YOUR PLAYER", "mafia": "MAFIA  ·  WHO ARE YOU TONIGHT?",
+		"cricket": "OFFICE CRICKET  ·  PICK YOUR PLAYER", "carrom": "CARROM  ·  PICK YOUR PLAYER", "blast": "OFFICE BLAST  ·  PICK YOUR PLAYER", "cards": "RUNG  ·  PICK YOUR PLAYER", "online": "ONLINE  ·  " + ("WI-FI" if G.net.via == "lan" else "ROOM " + G.net.code)}[c.mode], 14, F_BODY, GOLD)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bv.add_child(sub)
 	# per-side info: watermark, name plate, radar, signature
@@ -1048,7 +1049,7 @@ func _render_select() -> void:
 	for s in 2:
 		var u: Dictionary = side_ui[s]
 		var waiting: bool = (sel.cfg.mode != "2p" and sel.cfg.mode != "online" and s == 1 and not sel.locked[0]) \
-			or (sel.cfg.mode in ["race", "ops", "ludo", "mafia"] and s == 1) \
+			or (sel.cfg.mode in ["race", "ops", "ludo", "mafia", "cricket", "carrom", "blast", "cards"] and s == 1) \
 			or (sel.cfg.mode == "online" and s != G.local_side and not sel.get("seen", false))
 		u.box.visible = not waiting
 		if waiting:
@@ -1136,11 +1137,14 @@ func _select_confirm(s: int) -> void:
 		_render_select()
 		_online_both_picked()
 		return
-	if sel.cfg.mode in ["ludo", "mafia"]:
+	if sel.cfg.mode in ["ludo", "mafia", "cricket", "carrom", "blast", "cards"]:
 		var lc: Dictionary = Data.ROSTER[sel.cur[0]]
 		var md: String = sel.cfg.mode
 		_render_select()
-		get_tree().create_timer(0.5).timeout.connect(func(): show_ludo_menu(lc) if md == "ludo" else show_mafia_menu(lc))
+		get_tree().create_timer(0.5).timeout.connect(func():
+			if md == "ludo": show_ludo_menu(lc)
+			elif md == "mafia": show_mafia_menu(lc)
+			else: show_game_menu(md, lc))
 		return
 	if sel.cfg.mode == "ops":
 		var oc: Dictionary = Data.ROSTER[sel.cur[0]]
@@ -2044,6 +2048,84 @@ func show_clash_menu() -> void:
 	_focus_first(m)
 
 
+# ---------------------------------------------------------------- party games
+const PARTY_DESC := [
+	"Ludo on the boardroom table: 2 to 4 players vs CPU, pass & play, or with friends online.",
+	"Carrom: flick the striker, pocket your coins and the queen. 2 or 4 players.",
+	"Rung (court piece): four players in two teams, trumps and tricks round the office table.",
+	"Office Blast: drop timed bombs, break the desks, trap your rivals. Up to 4 players.",
+	"Mafia: someone in the office is a killer. Do your tasks, report bodies, call meetings, chat and vote them out.",
+	"Back to the main menu.",
+]
+
+
+func show_party_menu() -> void:
+	clear_screen(); screen.visible = true; view = "party_menu"
+	var bg := full(hgrad(Color(0.02, 0.03, 0.06, 0.95), Color(0.02, 0.03, 0.06, 0.0)))
+	bg.anchor_right = 0.75
+	screen.add_child(bg)
+	var col := VBoxContainer.new()
+	screen.add_child(col)
+	col.position = Vector2(110, 120) if not touch_enabled else Vector2(90, 80)
+	col.add_child(lbl("PARTY GAMES", 64, F_TITLE, GOLD, 12))
+	var labels := ["LUDO", "CARROM", "CARDS  ·  RUNG", "OFFICE BLAST", "MAFIA", "BACK"]
+	var cbs := [func(): show_select({mode = "ludo"}), func(): show_select({mode = "carrom"}), func(): show_select({mode = "cards"}),
+		func(): show_select({mode = "blast"}), func(): show_select({mode = "mafia"}), show_title]
+	var items := []
+	for k in labels.size():
+		items.append([labels[k], cbs[k], 26 if k < labels.size() - 1 else 20, PARTY_DESC[k]])
+	var m := _menu_list(items)
+	m.set_meta("back", show_title)
+	col.add_child(m)
+	desc_lbl = lbl(PARTY_DESC[0], 20, F_MED, Color(0.79, 0.83, 0.88))
+	desc_lbl.custom_minimum_size = Vector2(460, 60)
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	col.add_child(desc_lbl)
+	_focus_first(m)
+
+
+## Menu for cricket / carrom / blast / cards: vs CPU, pass & play (turn-based ones), play with friends.
+func show_game_menu(kind: String, C: Dictionary) -> void:
+	clear_screen(); screen.visible = true; view = "game_menu"
+	G.set_preview(0, C)
+	screen.add_child(full(hgrad(Color(0.03, 0.01, 0.06, 0.95), Color(0.03, 0.01, 0.06, 0.2))))
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 6)
+	screen.add_child(col)
+	col.position = Vector2(90, 90) if not touch_enabled else Vector2(70, 100)
+	var title: String = {"cricket": "OFFICE CRICKET", "carrom": "CARROM", "blast": "OFFICE BLAST", "cards": "RUNG"}[kind]
+	col.add_child(lbl(title, 64, F_TITLE, GOLD, 10))
+	col.add_child(lbl({"cricket": "%s  ·  SUPER OVER", "carrom": "%s  ·  FIRST TO POCKET THEM ALL", "blast": "%s  ·  LAST ONE STANDING",
+		"cards": "%s  ·  TEAMS OF TWO, SEVEN TRICKS TO WIN"}[kind] % C.name, 20, F_BODY, P2C))
+	var back := show_party_menu if kind != "cricket" else show_title
+	var items := []
+	match kind:
+		"cricket":
+			items = [["VS CPU", func(): G.start_party("cricket", C, 1, false), 26, "Six balls each: you bat, then you bowl (or the other way round)."],
+				["PASS & PLAY", func(): G.start_party("cricket", C, 1, true), 24, "Two people on this device, taking turns to bat and bowl."]]
+		"carrom":
+			items = [["VS 1 CPU", func(): G.start_party("carrom", C, 1, false), 26, "Two players, opposite sides of the board."],
+				["VS 3 CPU", func(): G.start_party("carrom", C, 3, false), 26, "Four players: you and the player opposite are a team."],
+				["PASS & PLAY  ·  2", func(): G.start_party("carrom", C, 1, true), 24, "Two people on this device, taking turns."],
+				["PASS & PLAY  ·  4", func(): G.start_party("carrom", C, 3, true), 24, "Four people on this device, taking turns."]]
+		"blast":
+			items = [["VS 1 CPU", func(): G.start_party("blast", C, 1, false), 26, "A one-on-one bomb duel."],
+				["VS 3 CPU", func(): G.start_party("blast", C, 3, false), 26, "Four in the arena: last one standing wins the round."]]
+		"cards":
+			items = [["VS 3 CPU", func(): G.start_party("cards", C, 3, false), 26, "You and your CPU partner against two CPUs."],
+				["PASS & PLAY", func(): G.start_party("cards", C, 3, true), 24, "Four people on this device: hand it round, hide your cards from the others."]]
+	items.append(["PLAY WITH FRIENDS", func(): G.lobby.show_menu(kind, C), 24, "Online room or Wi-Fi: CPU players fill the empty seats."])
+	items.append(["BACK", back, 20, "Back."])
+	var m := _menu_list(items)
+	m.set_meta("back", back)
+	col.add_child(m)
+	desc_lbl = lbl(String(items[0][3]), 20, F_MED, Color(0.79, 0.83, 0.88))
+	desc_lbl.custom_minimum_size = Vector2(460, 60)
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	col.add_child(desc_lbl)
+	_focus_first(m)
+
+
 # ---------------------------------------------------------------- BNB Office Ops
 var ops_cfg := {mine = 4, them = 4, gun = "smg", skill = 1.0, map = "office"}
 
@@ -2107,9 +2189,9 @@ func show_ludo_menu(C: Dictionary) -> void:
 		["PASS & PLAY  ·  2", func(): G.start_ludo(C, 1, true), 24, "Two people on this device, taking turns."],
 		["PASS & PLAY  ·  4", func(): G.start_ludo(C, 3, true), 24, "Four people on this device, taking turns."],
 		["PLAY WITH FRIENDS", func(): G.lobby.show_menu("ludo", C), 24, "Online room or Wi-Fi: up to 4 players, CPU players fill the empty seats."],
-		["BACK", show_title, 20, "Back to the main menu."]]
+		["BACK", show_party_menu, 20, "Back to the party games."]]
 	var m := _menu_list(items)
-	m.set_meta("back", show_title)
+	m.set_meta("back", show_party_menu)
 	col.add_child(m)
 	desc_lbl = lbl("A 6 brings a pawn out. Land on a rival to send it home. Stars and start squares are safe.", 20, F_MED, Color(0.79, 0.83, 0.88))
 	desc_lbl.custom_minimum_size = Vector2(520, 50)
