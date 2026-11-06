@@ -738,7 +738,7 @@ func _acc_parts(kind: String) -> Array:
 		# ---- G.O.A.T. form: an anime goat head built round the measured skull (it encloses the human head)
 		"goat_head", "goat_horns", "goat_nose", "goat_eyes", "goat_pupils":
 			return _goat_parts(kind)
-		"kig_hood", "suit_body", "tail", "banana_tip", "banana_body", "banana_ridges", "banana_end", "phone_body", "phone_screen", "app0", "app1", "app2", "app3", "phone_cam", "phone_back", "cig_body", "cig_filter", "cig_band", "cig_ash", "cig_ember", "cig_smoke", "waistcoat", "gamcha", "gamcha_check", "suit_arms", "suit_legs", "suit_paws", "lion_mane", "ears_round", "tail_tuft", "bull_horns", "bull_snout", "nose_ring", "ears_side", "wool_head", "wool_body", "ram_horns", "snake_hood", "snake_eyes", "snake_fangs", "snake_tail", "banana_peel", "banana_stem", "bun_top", "sesame", "lettuce", "cheese", "patty", "bun_bottom", "smoke_body", "smoke_head", "cricket_helmet", "helmet_grille", "batting_gloves", "cricket_bat", "thigh_pad", "beret", "palette", "dab0", "dab1", "dab2", "dab3", "dab4", "dab5", "paint_brush":
+		"kig_hood", "suit_body", "vape_body", "vape_tank", "vape_screen", "vape_button", "vape_tip", "vape_cloud", "vape_trim", "tail", "banana_tip", "banana_body", "banana_ridges", "banana_end", "phone_body", "phone_screen", "app0", "app1", "app2", "app3", "phone_cam", "phone_back", "cig_body", "cig_filter", "cig_band", "cig_ash", "cig_ember", "cig_smoke", "waistcoat", "gamcha", "gamcha_check", "suit_arms", "suit_legs", "suit_paws", "lion_mane", "ears_round", "tail_tuft", "bull_horns", "bull_snout", "nose_ring", "ears_side", "wool_head", "wool_body", "ram_horns", "snake_hood", "snake_eyes", "snake_fangs", "snake_tail", "banana_peel", "banana_stem", "bun_top", "sesame", "lettuce", "cheese", "patty", "bun_bottom", "smoke_body", "smoke_head", "cricket_helmet", "helmet_grille", "batting_gloves", "cricket_bat", "thigh_pad", "beret", "palette", "dab0", "dab1", "dab2", "dab3", "dab4", "dab5", "paint_brush":
 			return _mascot_parts(kind)
 		"fur_arms":     # shaggy fur over the forearms and the backs of the hands
 			return [["leftLowerArm", ToonRig.cyl(0.05, 0.042, 0.25), Vector3(0.12, 0, 0), Z90, Vector3.ONE],
@@ -939,6 +939,36 @@ func _mascot_parts(kind: String) -> Array:
 			return [["chest", ToonRig.box(0.16, 0.16, 0.02), Vector3(-0.12, 0.06, -0.16), Vector3.ZERO, Vector3.ONE],
 				S.call("chest", Vector3(-0.09, 0.09, -0.172), 0.03, 0.03, 0.01), S.call("chest", Vector3(-0.15, 0.09, -0.172), 0.03, 0.03, 0.01),
 				S.call("chest", Vector3(-0.09, 0.03, -0.172), 0.03, 0.03, 0.01)]
+		# ---- vape: a box-mod vape around the body, glowing tank and screen, drip tip on the hood, big clouds
+		"vape_body":
+			return [["chest", ToonRig.box(0.46, 0.74, 0.3), Vector3(0, -0.16, 0.01), Vector3.ZERO, Vector3.ONE],
+				S.call("chest", Vector3(0, 0.21, 0.01), 0.23, 0.04, 0.15), S.call("chest", Vector3(0, -0.53, 0.01), 0.23, 0.04, 0.15)]   # rounded ends
+		"vape_trim":    # metal edges down the sides
+			return [["chest", ToonRig.box(0.02, 0.74, 0.31), Vector3(0.23, -0.16, 0.01), Vector3.ZERO, Vector3.ONE],
+				["chest", ToonRig.box(0.02, 0.74, 0.31), Vector3(-0.23, -0.16, 0.01), Vector3.ZERO, Vector3.ONE]]
+		"vape_tank":    # the e-liquid window across the top of the front
+			return [["chest", ToonRig.box(0.34, 0.16, 0.012), Vector3(0, 0.08, 0.163), Vector3.ZERO, Vector3.ONE]]
+		"vape_screen":  # little OLED readout
+			return [["chest", ToonRig.box(0.16, 0.07, 0.01), Vector3(0, -0.13, 0.164), Vector3.ZERO, Vector3.ONE]]
+		"vape_button":  # fire button and the two adjust buttons
+			return [[ "chest", ToonRig.cyl(0.04, 0.04, 0.02), Vector3(0, -0.28, 0.165), Vector3(PI / 2, 0, 0), Vector3.ONE],
+				["chest", ToonRig.box(0.05, 0.025, 0.012), Vector3(-0.045, -0.37, 0.164), Vector3.ZERO, Vector3.ONE],
+				["chest", ToonRig.box(0.05, 0.025, 0.012), Vector3(0.045, -0.37, 0.164), Vector3.ZERO, Vector3.ONE]]
+		"vape_tip":     # drip tip on top of the hood
+			return [[H, ToonRig.cyl(r * 0.55, r * 0.7, 0.05), Vector3(0, top + 0.01, c.z - 0.03), Vector3.ZERO, Vector3.ONE],
+				[H, ToonRig.cyl(0.03, 0.04, 0.09), Vector3(0, top + 0.08, c.z - 0.03), Vector3.ZERO, Vector3.ONE]]
+		"vape_cloud":   # big billowing vapour clouds over the head and round the shoulders
+			var out := []
+			for k in 9:
+				var a := TAU * k / 9.0
+				var rr := 0.06 + (k % 3) * 0.015
+				out.append(S.call(H, Vector3(cos(a) * 0.11, top + 0.17 + sin(a * 2.0) * 0.03 + (k % 2) * 0.04, c.z - 0.03 + sin(a) * 0.09), rr, rr * 0.8, rr))
+			for k in 3:
+				out.append(S.call(H, Vector3((k - 1) * 0.07, top + 0.27 + (k % 2) * 0.03, c.z - 0.04), 0.07, 0.055, 0.07))
+			for sx in [-1.0, 1.0]:
+				out.append(S.call("upperChest", Vector3(sx * 0.27, 0.16, -0.03), 0.08, 0.06, 0.08))
+				out.append(S.call("upperChest", Vector3(sx * 0.32, 0.1, 0.03), 0.06, 0.05, 0.06))
+			return out
 		# ---- cigarette: white paper tube, orange filter at the bottom, glowing tip on the head
 		"cig_body":
 			return [["chest", ToonRig.cyl(0.215, 0.215, 0.62), Vector3(0, 0.0, 0.01), Vector3.ZERO, Vector3.ONE]]
@@ -1180,7 +1210,7 @@ func _make_accessories(list: Array) -> void:
 	for a in list:
 		var kind: String = a[0]
 		var col: Color = a[1]
-		var flat := kind in ["visor", "glasses", "mustache", "beard", "kameez", "shalwar", "sleeves", "hijab", "dupatta", "lanyard", "goat_eyes", "goat_pupils", "goat_nose", "phone_screen", "app0", "app1", "app2", "app3", "gamcha_check", "banana_ridges", "phone_cam"]
+		var flat := kind in ["visor", "glasses", "mustache", "beard", "kameez", "shalwar", "sleeves", "hijab", "dupatta", "lanyard", "goat_eyes", "goat_pupils", "goat_nose", "phone_screen", "app0", "app1", "app2", "app3", "gamcha_check", "banana_ridges", "phone_cam", "vape_tank", "vape_screen"]
 		if kind != "visor":
 			col = col * 0.72   # keep within the texture range of the models so accessories don't bloom
 			col.a = 1.0
@@ -1194,7 +1224,7 @@ func _make_accessories(list: Array) -> void:
 			m.set_shader_parameter("hair_sheen", 1.0 if kind.begins_with("hair_") else 0.6)
 			m.set_shader_parameter("sheen_color", col.lightened(0.6).lerp(Color(0.8, 0.86, 1.0), 0.6))
 			m.set_shader_parameter("shade", col.lightened(0.15).lerp(Color(0.5, 0.48, 0.7), 0.45))
-		if kind in ["visor", "cig_ember", "phone_screen"]:
+		if kind in ["visor", "cig_ember", "phone_screen", "vape_tank", "vape_screen"]:
 			m.set_shader_parameter("emission_strength", 1.1 if kind == "visor" else 0.6)
 		elif not flat:
 			m.next_pass = outline
