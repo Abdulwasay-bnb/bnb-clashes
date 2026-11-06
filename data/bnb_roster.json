@@ -8,7 +8,7 @@
    "base": "tao",
    "style": "Kung Fu  \u2014  Mixed: calm one minute, all-in the next",
    "quote": "Why fight alone? I deployed twelve agents.",
-   "prop": "agents",
+   "prop": "bull",
    "outfit_kind": "all_black",
    "extras": [
     "beard"
@@ -22,6 +22,29 @@
    "pose": "",
    "intro": "intro_magic_area",
    "win": "win_rally",
+   "move_names": {
+    "1": "Hoof Jab",
+    "2": "Bull Cross",
+    "3": "Hoof Snap Kick",
+    "4": "Stampede Roundhouse",
+    "1,1": "Hoof Chain",
+    "1,1,1": "Horn Hook",
+    "df1": "Snort Jab",
+    "df2": "Horn Uppercut",
+    "d1": "Low Hoof",
+    "d3": "Tail Sweep",
+    "b1": "Spinning Horn Backfist",
+    "b4": "Bucking Tornado",
+    "f12": "Bull Headbutt",
+    "ws1": "Rising Elbow",
+    "ws2": "Rising Horn Uppercut",
+    "ff2": "Bull Charge",
+    "12": "Horn Toss",
+    "run2": "Bull Rush Tackle",
+    "run1": "Charging Elbow",
+    "j1": "Diving Horns",
+    "j2": "Diving Horns"
+   },
    "hair_style": "hair_curl",
    "hair_color": [
     0.09,
@@ -42,22 +65,38 @@
     0.12
    ],
    "intro_prop": "",
-   "power_anim": "pw_twohand",
+   "power_anim": "f_battlecry",
    "fx": [
     [
-     "ring",
-     "agents",
+     "shock",
+     "",
      0.0,
-     12
+     [
+      0.95,
+      0.25,
+      0.15
+     ]
     ],
     [
-     "text",
-     "DEPLOYED",
+     "summon",
+     "bull",
+     0.05,
+     2.6
+    ],
+    [
+     "burst",
+     "horseshoe",
      0.55,
+     8
+    ],
+    [
+     "stamp",
+     "STAMPEDE!",
+     0.6,
      [
-      0.13,
-      0.78,
-      0.92
+      0.95,
+      0.25,
+      0.15
      ]
     ]
    ],
@@ -69,7 +108,7 @@
     0.302,
     1.0
    ],
-   "surge": "AGENT SWARM",
+   "surge": "RAGING BULL",
    "hair": "black all hair back styled little curled",
    "glasses": false,
    "beard": true,
@@ -98,6 +137,7 @@
    "pose": "idle_shy",
    "intro": "intro_neck",
    "win": "win_victory_idle",
+   "move_names": {},
    "hair_style": "hair_wolf",
    "hair_color": [
     0.09,
@@ -174,6 +214,7 @@
    "pose": "idle_cheerful",
    "intro": "in_kiss",
    "win": "win_excited",
+   "move_names": {},
    "hair_style": "hair_silky",
    "hair_color": [
     0.2,
@@ -250,6 +291,7 @@
    "pose": "idle_cheerful",
    "intro": "in_dance",
    "win": "win_salsa",
+   "move_names": {},
    "hair_style": "",
    "hair_color": [
     0.09,
@@ -328,6 +370,7 @@
    "pose": "",
    "intro": "in_stretch",
    "win": "win_bboy",
+   "move_names": {},
    "hair_style": "hair_wolf",
    "hair_color": [
     0.09,
@@ -404,6 +447,7 @@
    "pose": "idle_relaxed",
    "intro": "in_shrug",
    "win": "in_shrug",
+   "move_names": {},
    "hair_style": "hair_messy",
    "hair_color": [
     0.09,
@@ -492,6 +536,7 @@
    "pose": "",
    "intro": "in_thinking",
    "win": "win_boxing",
+   "move_names": {},
    "hair_style": "hair_short",
    "hair_color": [
     0.09,
@@ -574,6 +619,7 @@
    "pose": "",
    "intro": "in_point",
    "win": "in_point",
+   "move_names": {},
    "hair_style": "hair_bun",
    "hair_color": [
     0.09,
@@ -660,6 +706,7 @@
    "pose": "idle_cheerful",
    "intro": "in_bow_informal",
    "win": "win_celebrate",
+   "move_names": {},
    "hair_style": "hair_long",
    "hair_color": [
     0.09,
@@ -748,6 +795,7 @@
    "pose": "",
    "intro": "in_tablet",
    "win": "win_cheer",
+   "move_names": {},
    "hair_style": "hair_wolf",
    "hair_color": [
     0.09,
@@ -826,6 +874,7 @@
    "pose": "",
    "intro": "in_phone",
    "win": "in_ceo",
+   "move_names": {},
    "hair_style": "hair_side",
    "hair_color": [
     0.09,
@@ -908,6 +957,7 @@
    "pose": "idle_cheerful",
    "intro": "in_wave",
    "win": "in_dance",
+   "move_names": {},
    "hair_style": "hair_braid",
    "hair_color": [
     0.2,
@@ -986,6 +1036,7 @@
    "pose": "",
    "intro": "in_drinking",
    "win": "win_chicken",
+   "move_names": {},
    "hair_style": "hair_army",
    "hair_color": [
     0.09,
@@ -1070,6 +1121,7 @@
    "pose": "",
    "intro": "in_drinking",
    "win": "in_laughing",
+   "move_names": {},
    "hair_style": "hair_short",
    "hair_color": [
     0.09,
@@ -1154,6 +1206,7 @@
    "pose": "",
    "intro": "intro_warmup",
    "win": "win_rally",
+   "move_names": {},
    "hair_style": "hair_wolf",
    "hair_color": [
     0.09,
@@ -1236,6 +1289,7 @@
    "pose": "",
    "intro": "in_tablet",
    "win": "in_clap",
+   "move_names": {},
    "hair_style": "",
    "hair_color": [
     0.09,
@@ -1320,6 +1374,7 @@
    "pose": "idle_goofy",
    "intro": "in_laughing",
    "win": "win_robot",
+   "move_names": {},
    "hair_style": "hair_spiky",
    "hair_color": [
     0.2,
@@ -1392,6 +1447,7 @@
    "pose": "idle_shy",
    "intro": "in_wave",
    "win": "in_kiss",
+   "move_names": {},
    "hair_style": "",
    "hair_color": [
     0.09,
@@ -1480,6 +1536,7 @@
    "pose": "idle_shy",
    "intro": "idle_shy",
    "win": "intro_flex",
+   "move_names": {},
    "hair_style": "hair_army",
    "hair_color": [
     0.09,
@@ -1558,6 +1615,7 @@
    "pose": "idle_nervous",
    "intro": "idle_nervous",
    "win": "win_jump",
+   "move_names": {},
    "hair_style": "hair_short",
    "hair_color": [
     0.09,
@@ -1634,6 +1692,7 @@
    "pose": "",
    "intro": "in_shrug",
    "win": "win_fist_pump2",
+   "move_names": {},
    "hair_style": "hair_short",
    "hair_color": [
     0.09,
@@ -1710,6 +1769,7 @@
    "pose": "",
    "intro": "intro_bow",
    "win": "intro_bow",
+   "move_names": {},
    "hair_style": "hair_short",
    "hair_color": [
     0.09,
@@ -1796,6 +1856,7 @@
    "pose": "idle_impatient",
    "intro": "in_drinking",
    "win": "in_battlecry",
+   "move_names": {},
    "hair_style": "hair_short",
    "hair_color": [
     0.09,
@@ -1880,6 +1941,7 @@
    "pose": "",
    "intro": "in_tablet",
    "win": "win_thriller",
+   "move_names": {},
    "hair_style": "hair_back_full",
    "hair_color": [
     0.09,
@@ -1962,6 +2024,7 @@
    "pose": "idle_cheerful",
    "intro": "in_clap",
    "win": "win_clap",
+   "move_names": {},
    "hair_style": "hair_ponytail",
    "hair_color": [
     0.09,
@@ -2046,6 +2109,7 @@
    "pose": "idle_bounce",
    "intro": "intro_hard_landing",
    "win": "win_victory_idle",
+   "move_names": {},
    "hair_style": "hair_army",
    "hair_color": [
     0.09,

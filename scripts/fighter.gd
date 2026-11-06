@@ -470,7 +470,7 @@ const THROW_SETS := {
 }
 ## Everyone's own grapple (by person), falling back to their fighting style's.
 const PERSON_THROW := {"hamza_khan": "choke", "tuaha_aamir": "choke", "muhammad_sufyan": "grabslam", "nabeel_ahmad": "grabslam",
-	"muhammad_nauman_nawaz": "slam", "usman_najeeb": "grabslam", "kashaf_ud_duja": "slam", "abdul_wasay": "shoulder", "faisal_ahmed": "shoulder",
+	"muhammad_nauman_nawaz": "slam", "usman_najeeb": "grabslam", "kashaf_ud_duja": "slam", "abdul_wasay": "grabslam", "faisal_ahmed": "shoulder",
 	"zia_khan": "shoulder", "muhammad_mubarak": "shoulder", "amina_mughal": "flying", "muzdalfa_naeem": "flying", "umar_farooq": "over",
 	"aqsa_altaf": "flying", "mahveen_khan": "flying", "muhammad_saad": "over", "samreen_fatima": "flying", "syeda_ghazia": "over",
 	"daniyal_zubair": "takedown", "faizan_ali": "takedown", "sarfraz_yousaf": "takedown", "kiran_fazal": "knees", "sabir_ud_din": "knees",
@@ -556,6 +556,12 @@ const FINAL_STYLES := {
 	"ember": {segs = [["f_punch_elbow", 1.7, 3.2]], fin = ["g_grab_slam", 1.4, 4.0, 3.5, "lift"], taunt = ["f_flex", 1.8, 3.4]},
 	"mara": {segs = [["fin_combo_punch", 0.4, 1.5], ["fin_mma_kick", 0.2, 1.1]], fin = ["f_backflip_upper", 1.1, 2.45, 2.17, "launch"], taunt = ["f_battlecry", 0.0, 2.0]},
 }
+## Finishers made for one person (their costume / theme), over their style's.
+const PERSON_FINAL := {
+	# the bull: headbutts and body blows, horns-down toss overhead and slam, then a snorting point
+	"abdul_wasay": {segs = [["atk_headbutt", 0.0, 1.1], ["f_body_blow", 0.1, 1.1], ["atk_headbutt", 0.0, 1.1]],
+		fin = ["g_grab_slam", 1.4, 4.0, 3.5, "lift"], taunt = ["taunt_angry", 0.0, 2.0]},
+}
 const FINAL_SPEED := 1.15
 const FINAL_SUMMON := 70
 static var _final_plans := {}
@@ -564,7 +570,7 @@ static var _final_plans := {}
 static func final_plan(C: Dictionary) -> Dictionary:
 	var key := String(C.id)
 	if _final_plans.has(key): return _final_plans[key]
-	var style: Dictionary = FINAL_STYLES.get(C.arch, FINAL_STYLES.mara)
+	var style: Dictionary = PERSON_FINAL.get(key, FINAL_STYLES.get(C.arch, FINAL_STYLES.mara))
 	var segs := []
 	var f := FINAL_SUMMON
 	var pa := own_clip(C, "power_anim", "pw_twohand")

@@ -73,6 +73,10 @@ static func load_all() -> void:
 		# their own grapple
 		if (C.moves as Dictionary).has("12") and Fighter.PERSON_THROW.has(String(p.id)):
 			(C.moves["12"] as Move).throw_type = Fighter.PERSON_THROW[String(p.id)]
+		# their own names for moves (the Mixamo clip is picked from the name, so names can change the animation too)
+		var mn: Dictionary = p.get("move_names", {})
+		for k in mn:
+			if (C.moves as Dictionary).has(k): (C.moves[k] as Move).name = String(mn[k])
 		C.boss = p.boss
 		C.person = p
 		Models.register(p)

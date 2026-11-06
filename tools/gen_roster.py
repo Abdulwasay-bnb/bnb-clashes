@@ -95,7 +95,7 @@ def main():
             "style": STYLE_NAMES[style] + "  —  " + (d.get("personality") or ", ".join(skills[:3]) or "Bit & Bytes"),
             "quote": d.get("quote") or (r.get("catchphrase (optional)") or "").strip() or "Let's ship it.",
             "prop": d.get("prop", ""), "outfit_kind": d.get("outfit", "casual"), "extras": extras, "skin": d.get("skin", []),
-            "idle": d.get("idle", ""), "pose": d.get("pose", ""), "intro": d.get("intro", ""), "win": d.get("win", ""),
+            "idle": d.get("idle", ""), "pose": d.get("pose", ""), "intro": d.get("intro", ""), "win": d.get("win", ""), "move_names": d.get("move_names", {}),
             "hair_style": d.get("hair_style", ""), "hair_color": d.get("hair_color", []), "head": d.get("head", [1, 1, 1]),
             "face": d.get("face", {}), "eyes": d.get("eyes", []), "intro_prop": d.get("intro_prop", ""),
             "power_anim": d.get("power_anim", ""), "fx": d.get("fx", []),

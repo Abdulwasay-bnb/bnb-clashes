@@ -1515,7 +1515,10 @@ func _run_autotest() -> void:
 			print("AUTOTEST racepower cutin=%s" % [not race.cutin.is_empty()])
 			end_race()
 		"powers2":
-			for who in ["abdul_wasay", "kashaf_ud_duja"]:
+			var whos: Array = ["abdul_wasay", "kashaf_ud_duja"]
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--ids="): whos = a.substr(6).split(",")
+			for who in whos:
 				await start_match({mode = "training"}, [Data.by_id(who), Data.by_id("hamza_khan")])
 				dummy = 0
 				for k in 60: await get_tree().physics_frame
@@ -1525,7 +1528,7 @@ func _run_autotest() -> void:
 				var hp0: float = F[1].hp
 				for k in 120:
 					await get_tree().physics_frame
-					if k == 30: await shot.call("pw2_%s_blue" % who)
+					if k in [30, 50, 70]: await shot.call("pw2_%s_blue%d" % [who, k])
 				test_p1 = Callable()
 				print("AUTOTEST powers2 %s blue: used=%s dmg=%d (blue again allowed=%s)" % [who, F[0].blue_used, hp0 - F[1].hp, F[0].power_ok("13")])
 				for k in 120: await get_tree().physics_frame

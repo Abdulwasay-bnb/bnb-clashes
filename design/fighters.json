@@ -3,8 +3,8 @@
   "style": "tao",
   "personality": "Mixed: calm one minute, all-in the next",
   "role": "Full-Stack AI Engineer",
-  "power": "AGENT SWARM",
-  "prop": "agents",
+  "power": "RAGING BULL",
+  "prop": "bull",
   "quote": "Why fight alone? I deployed twelve agents.",
   "accent": "#7b4dff",
   "outfit": "all_black",
@@ -35,26 +35,65 @@
   ],
   "intro": "intro_magic_area",
   "intro_prop": "",
-  "power_anim": "pw_twohand",
+  "power_anim": "f_battlecry",
   "fx": [
    [
-    "ring",
-    "agents",
+    "shock",
+    "",
     0.0,
-    12
+    [
+     0.95,
+     0.25,
+     0.15
+    ]
    ],
    [
-    "text",
-    "DEPLOYED",
+    "summon",
+    "bull",
+    0.05,
+    2.6
+   ],
+   [
+    "burst",
+    "horseshoe",
     0.55,
+    8
+   ],
+   [
+    "stamp",
+    "STAMPEDE!",
+    0.6,
     [
-     0.13,
-     0.78,
-     0.92
+     0.95,
+     0.25,
+     0.15
     ]
    ]
   ],
-  "win": "win_rally"
+  "win": "win_rally",
+  "move_names": {
+   "1": "Hoof Jab",
+   "2": "Bull Cross",
+   "3": "Hoof Snap Kick",
+   "4": "Stampede Roundhouse",
+   "1,1": "Hoof Chain",
+   "1,1,1": "Horn Hook",
+   "df1": "Snort Jab",
+   "df2": "Horn Uppercut",
+   "d1": "Low Hoof",
+   "d3": "Tail Sweep",
+   "b1": "Spinning Horn Backfist",
+   "b4": "Bucking Tornado",
+   "f12": "Bull Headbutt",
+   "ws1": "Rising Elbow",
+   "ws2": "Rising Horn Uppercut",
+   "ff2": "Bull Charge",
+   "12": "Horn Toss",
+   "run2": "Bull Rush Tackle",
+   "run1": "Charging Elbow",
+   "j1": "Diving Horns",
+   "j2": "Diving Horns"
+  }
  },
  "Abdul Wasay Waqas": {
   "style": "vex",

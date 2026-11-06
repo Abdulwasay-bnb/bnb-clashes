@@ -31,6 +31,11 @@ static func _sph(r: float) -> SphereMesh:
 	return s
 
 
+static func _tor(r: float, th: float) -> TorusMesh:
+	var t := TorusMesh.new(); t.inner_radius = r - th; t.outer_radius = r + th; t.rings = 24; t.ring_segments = 8
+	return t
+
+
 static func _cyl(r1: float, r2: float, h: float) -> CylinderMesh:
 	var c := CylinderMesh.new(); c.top_radius = r1; c.bottom_radius = r2; c.height = h; c.radial_segments = 12
 	return c
@@ -95,6 +100,24 @@ static func build(kind: String, accent: Color) -> Node3D:
 					_mesh(n, _cyl(0.024, 0.02, 0.3), w, Vector3(sx * 0.09, 0.14, lz))                                # legs
 			_mesh(n, _cyl(0.0, 0.03, 0.1), w, Vector3(0, 0.49, -0.45), Vector3(PI, 0, 0))                  # beard
 			_mesh(n, _sph(0.04), w, Vector3(0, 0.46, 0.3))                                                  # tail
+		"bull":
+			# a glowing red spirit bull, built facing -Z (the direction props travel), head down to charge
+			var w := _mat(Color(0.75, 0.12, 0.08), 0.7, 0.92)
+			var horn_m := _mat(Color(1.0, 0.92, 0.75), 0.6)
+			_mesh(n, _sph(0.22), w, Vector3(0, 0.38, 0.02), Vector3.ZERO, Vector3(0.9, 0.8, 1.5))            # body
+			_mesh(n, _sph(0.2), w, Vector3(0, 0.46, -0.18), Vector3.ZERO, Vector3(0.95, 0.85, 0.8))          # hump
+			_mesh(n, _sph(0.11), w, Vector3(0, 0.38, -0.42), Vector3(0.5, 0, 0), Vector3(0.85, 0.8, 1.2))     # head, lowered
+			_mesh(n, _sph(0.06), _mat(Color(0.95, 0.6, 0.55), 0.8), Vector3(0, 0.32, -0.53))                  # snout
+			_mesh(n, _tor(0.03, 0.007), _mat(Color(1.0, 0.8, 0.3), 1.2), Vector3(0, 0.28, -0.56), Vector3(0.3, 0, 0))  # nose ring
+			for sx in [-1.0, 1.0]:
+				_mesh(n, _cyl(0.022, 0.03, 0.14), horn_m, Vector3(sx * 0.12, 0.46, -0.4), Vector3(0, 0, sx * -1.3))   # horns out...
+				_mesh(n, _cyl(0.0, 0.022, 0.12), horn_m, Vector3(sx * 0.19, 0.51, -0.43), Vector3(-0.6, 0, sx * -0.2))  # ...and forward
+				for lz in [-0.22, 0.22]:
+					_mesh(n, _cyl(0.035, 0.03, 0.3), w, Vector3(sx * 0.11, 0.14, lz))                                  # legs
+			_mesh(n, _cyl(0.012, 0.012, 0.25), w, Vector3(0, 0.4, 0.36), Vector3(-0.8, 0, 0))                 # tail
+		"horseshoe":
+			var m := _mat(Color(0.85, 0.85, 0.9), 1.2)
+			_mesh(n, _tor(0.08, 0.016), m, Vector3.ZERO, Vector3(PI / 2, 0, 0))
 		"agents":
 			# one AI agent: a glowing core with an orbiting ring
 			_mesh(n, _sph(0.05), _mat(CY, 2.4))
@@ -181,7 +204,7 @@ static func build(kind: String, accent: Color) -> Node3D:
 ## How many props and how they travel, per kind: [count, spin, arc height, scale].
 static var STYLE := {
 	"banana": [5, 9.0, 0.5, 1.4], "chai": [3, 6.0, 0.7, 1.6], "cigarette": [4, 12.0, 0.2, 1.8], "ball": [1, 20.0, 0.1, 1.8],
-	"snake": [1, 0.0, 0.0, 2.6], "goat": [1, 0.0, 0.0, 1.7], "agents": [10, 0.0, 0.5, 1.3], "cards": [7, 14.0, 0.3, 1.4], "notes": [8, 8.0, 0.6, 1.2],
+	"snake": [1, 0.0, 0.0, 2.6], "goat": [1, 0.0, 0.0, 1.7], "bull": [1, 0.0, 0.0, 1.7], "horseshoe": [5, 10.0, 0.4, 1.4], "agents": [10, 0.0, 0.5, 1.3], "cards": [7, 14.0, 0.3, 1.4], "notes": [8, 8.0, 0.6, 1.2],
 	"letters": [6, 7.0, 0.4, 1.4], "contract": [3, 5.0, 0.5, 1.5], "phone": [3, 4.0, 0.3, 1.6], "briefcase": [1, 10.0, 0.5, 1.6],
 	"snack": [4, 8.0, 0.6, 1.4], "gem": [3, 6.0, 0.2, 1.4], "paint": [8, 0.0, 0.5, 1.3], "pixels": [10, 6.0, 0.4, 1.2],
 	"smoke": [3, 1.0, 0.2, 2.2], "clock": [4, 6.0, 0.4, 1.4], "code": [4, 0.0, 0.3, 1.0], "py": [3, 0.0, 0.3, 1.0],
@@ -329,7 +352,7 @@ static func _effect(G: Node, att, def, kind: String, what: String, param, left: 
 			var behind: Vector3 = att.pos + (att.pos - def.pos).normalized() * 1.2
 			var tw := p.create_tween()
 			match what:
-				"goat":   # charges along the floor
+				"goat", "bull":   # charges along the floor
 					p.position = behind
 					p.look_at_from_position(behind, Vector3(def.pos.x, behind.y, def.pos.z), Vector3.UP)
 					tw.tween_method(func(u: float):
