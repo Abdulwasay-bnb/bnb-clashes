@@ -1737,6 +1737,36 @@ func _run_autotest() -> void:
 				for k in 3: await get_tree().process_frame
 				await shot.call("stances_%s_%s" % [id, view[0]])
 			print("AUTOTEST stances %s" % [clips])
+		"lookbook":
+			# default costume of some people (--ids=a,b): front, back and head close-up (--clip= pose clip)
+			ui.hide_screen(); set_process(false)
+			var ids: Array = ["muhammad_nauman_nawaz", "nabeel_ahmad", "muhammad_mubarak", "faizan_ali", "hamza_khan", "abdul_wasay", "sarfraz_yousaf"]
+			var clip := ""
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--ids="): ids = a.substr(6).split(",")
+				if a.begins_with("--clip="): clip = a.substr(7)
+			for id in ids:
+				var C := Data.by_id(id)
+				var rig := make_rig(C, 0)
+				add_child(rig)
+				for k in 4:
+					if clip != "" and ClipLib.has(clip): rig.set_clip(clip, 0.5 * ClipLib.get_clip(clip).length)
+					rig.apply_pose(C.pose.guard)
+				for view in [["front", 0.35], ["back", PI + 0.5]]:
+					rig.rotation.y = view[1]
+					camera.position = Vector3(0, 1.0, 3.0); camera.look_at(Vector3(0, 0.9, 0))
+					for k in 3: await get_tree().process_frame
+					await shot.call("look_%s_%s" % [id, view[0]])
+				rig.rotation.y = 0.2
+				var hp: Vector3 = rig.head.global_position
+				camera.position = hp + Vector3(0.1, 0.12, 0.85); camera.look_at(hp)
+				for k in 3: await get_tree().process_frame
+				await shot.call("look_%s_head" % id)
+				rig.rotation.y = PI + 0.3
+				for k in 3: await get_tree().process_frame
+				await shot.call("look_%s_headback" % id)
+				rig.queue_free()
+			print("AUTOTEST lookbook %d" % ids.size())
 		"persona":
 			# everyone in their signature (default) look, full body, three-quarter view
 			ui.hide_screen(); set_process(false)
@@ -2086,10 +2116,21 @@ func _run_autotest() -> void:
 			var f := FileAccess.open("user://test_certificate.pdf", FileAccess.WRITE); f.store_buffer(pdf); f.close()
 			print("AUTOTEST certificate %dx%d pdf=%d bytes" % [img.get_width(), img.get_height(), pdf.size()])
 		"intro":
-			await start_match({mode = "cpu", lv = 1, stage = "cafeteria"}, [Data.by_id("ali"), Data.by_id("hamza_khan")])
+			# intro emotes, then the winner's emote (--pair=a,b: a wins)
+			var ids: Array = ["ali", "hamza_khan"]
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--pair="): ids = a.substr(7).split(",")
+			await start_match({mode = "cpu", lv = 1, stage = "cafeteria"}, [Data.by_id(ids[0]), Data.by_id(ids[1])])
+			ai[0] = null
 			for k in 3:
 				await get_tree().create_timer(0.9).timeout
 				await shot.call("intro%d" % k)
+			await get_tree().create_timer(1.2).timeout
+			F[1].hp = 1; time_left = 1
+			for k in 3:
+				await get_tree().create_timer(1.0).timeout
+				await shot.call("win%d" % k)
+			print("AUTOTEST intro phase=", phase, " states=", F[0].state, ",", F[1].state)
 		"wear":
 			# voices to listen to + a fighter after a rough match
 			for id in ["hamza_khan", "ali", "kashaf_ud_duja", "sarfraz_yousaf", "tuaha_aamir"]:

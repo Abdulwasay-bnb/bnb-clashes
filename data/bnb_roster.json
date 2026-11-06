@@ -21,6 +21,7 @@
    "idle": "idle_fight_c",
    "pose": "",
    "intro": "intro_magic_area",
+   "win": "win_rally",
    "hair_style": "hair_curl",
    "hair_color": [
     0.09,
@@ -96,6 +97,7 @@
    "idle": "",
    "pose": "idle_shy",
    "intro": "intro_neck",
+   "win": "win_victory_idle",
    "hair_style": "hair_wolf",
    "hair_color": [
     0.09,
@@ -170,8 +172,9 @@
    ],
    "idle": "",
    "pose": "idle_cheerful",
-   "intro": "in_excited",
-   "hair_style": "hair_bob",
+   "intro": "in_kiss",
+   "win": "win_excited",
+   "hair_style": "hair_silky",
    "hair_color": [
     0.2,
     0.13,
@@ -245,7 +248,8 @@
    ],
    "idle": "",
    "pose": "idle_cheerful",
-   "intro": "in_excited",
+   "intro": "in_dance",
+   "win": "win_salsa",
    "hair_style": "",
    "hair_color": [
     0.09,
@@ -323,6 +327,7 @@
    "idle": "",
    "pose": "",
    "intro": "in_stretch",
+   "win": "win_bboy",
    "hair_style": "hair_wolf",
    "hair_color": [
     0.09,
@@ -398,6 +403,7 @@
    "idle": "idle_relaxed",
    "pose": "idle_relaxed",
    "intro": "in_shrug",
+   "win": "in_shrug",
    "hair_style": "hair_messy",
    "hair_color": [
     0.09,
@@ -472,7 +478,7 @@
    "base": "tao",
    "style": "Kung Fu  \u2014  Calm commander, sees everything",
    "quote": "I don't fix bugs. I approve their removal.",
-   "prop": "keys",
+   "prop": "bubble",
    "outfit_kind": "formal",
    "extras": [
     "beard"
@@ -485,6 +491,7 @@
    "idle": "idle_martial",
    "pose": "",
    "intro": "in_thinking",
+   "win": "win_boxing",
    "hair_style": "hair_short",
    "hair_color": [
     0.09,
@@ -508,19 +515,25 @@
    "power_anim": "pw_magic",
    "fx": [
     [
-     "cage",
-     "terminal",
+     "rain",
+     "bubble",
      0.0,
+     10
+    ],
+    [
+     "volley",
+     "letters",
+     0.2,
      6
     ],
     [
      "stamp",
-     "ACCESS GRANTED",
+     "ANY UPDATE?",
      0.6,
      [
       0.2,
-      1.0,
-      0.45
+      0.75,
+      0.95
      ]
     ]
    ],
@@ -532,7 +545,7 @@
     0.702,
     0.753
    ],
-   "surge": "ROOT ACCESS",
+   "surge": "THE FOLLOW-UP",
    "hair": "silky black",
    "glasses": false,
    "beard": true,
@@ -560,6 +573,7 @@
    "idle": "idle_fight_c",
    "pose": "",
    "intro": "in_point",
+   "win": "in_point",
    "hair_style": "hair_bun",
    "hair_color": [
     0.09,
@@ -645,6 +659,7 @@
    "idle": "",
    "pose": "idle_cheerful",
    "intro": "in_bow_informal",
+   "win": "win_celebrate",
    "hair_style": "hair_long",
    "hair_color": [
     0.09,
@@ -732,6 +747,7 @@
    "idle": "",
    "pose": "",
    "intro": "in_tablet",
+   "win": "win_cheer",
    "hair_style": "hair_wolf",
    "hair_color": [
     0.09,
@@ -809,6 +825,7 @@
    "idle": "",
    "pose": "",
    "intro": "in_phone",
+   "win": "in_ceo",
    "hair_style": "hair_side",
    "hair_color": [
     0.09,
@@ -890,6 +907,7 @@
    "idle": "",
    "pose": "idle_cheerful",
    "intro": "in_wave",
+   "win": "in_dance",
    "hair_style": "hair_braid",
    "hair_color": [
     0.2,
@@ -967,6 +985,7 @@
    "idle": "",
    "pose": "",
    "intro": "in_drinking",
+   "win": "win_chicken",
    "hair_style": "hair_army",
    "hair_color": [
     0.09,
@@ -1049,7 +1068,8 @@
    ],
    "idle": "",
    "pose": "",
-   "intro": "in_point",
+   "intro": "in_drinking",
+   "win": "in_laughing",
    "hair_style": "hair_short",
    "hair_color": [
     0.09,
@@ -1133,6 +1153,7 @@
    "idle": "idle_fight_c",
    "pose": "",
    "intro": "intro_warmup",
+   "win": "win_rally",
    "hair_style": "hair_wolf",
    "hair_color": [
     0.09,
@@ -1214,6 +1235,7 @@
    "idle": "",
    "pose": "",
    "intro": "in_tablet",
+   "win": "in_clap",
    "hair_style": "",
    "hair_color": [
     0.09,
@@ -1297,6 +1319,7 @@
    "idle": "idle_goofy",
    "pose": "idle_goofy",
    "intro": "in_laughing",
+   "win": "win_robot",
    "hair_style": "hair_spiky",
    "hair_color": [
     0.2,
@@ -1368,6 +1391,7 @@
    "idle": "",
    "pose": "idle_shy",
    "intro": "in_wave",
+   "win": "in_kiss",
    "hair_style": "",
    "hair_color": [
     0.09,
@@ -1455,6 +1479,7 @@
    "idle": "",
    "pose": "idle_shy",
    "intro": "idle_shy",
+   "win": "intro_flex",
    "hair_style": "hair_army",
    "hair_color": [
     0.09,
@@ -1532,6 +1557,7 @@
    "idle": "",
    "pose": "idle_nervous",
    "intro": "idle_nervous",
+   "win": "win_jump",
    "hair_style": "hair_short",
    "hair_color": [
     0.09,
@@ -1607,6 +1633,7 @@
    "idle": "",
    "pose": "",
    "intro": "in_shrug",
+   "win": "win_fist_pump2",
    "hair_style": "hair_short",
    "hair_color": [
     0.09,
@@ -1682,6 +1709,7 @@
    "idle": "idle_martial",
    "pose": "",
    "intro": "intro_bow",
+   "win": "intro_bow",
    "hair_style": "hair_short",
    "hair_color": [
     0.09,
@@ -1767,6 +1795,7 @@
    "idle": "",
    "pose": "idle_impatient",
    "intro": "in_drinking",
+   "win": "in_battlecry",
    "hair_style": "hair_short",
    "hair_color": [
     0.09,
@@ -1850,6 +1879,7 @@
    "idle": "idle_martial",
    "pose": "",
    "intro": "in_tablet",
+   "win": "win_thriller",
    "hair_style": "hair_back_full",
    "hair_color": [
     0.09,
@@ -1931,6 +1961,7 @@
    "idle": "",
    "pose": "idle_cheerful",
    "intro": "in_clap",
+   "win": "win_clap",
    "hair_style": "hair_ponytail",
    "hair_color": [
     0.09,
@@ -2014,6 +2045,7 @@
    "idle": "",
    "pose": "idle_bounce",
    "intro": "intro_hard_landing",
+   "win": "win_victory_idle",
    "hair_style": "hair_army",
    "hair_color": [
     0.09,

@@ -828,7 +828,7 @@ static func idle_clip(id: String) -> String:
 const INTRO := {"vex": "intro_salute", "bastion": "intro_flex", "sora": "intro_bow", "ember": "intro_neck",
 	"mara": "intro_warmup", "lio": "intro_warmup", "tao": "intro_bow", "kael": "intro_bow"}
 const WIN := {"vex": "win_boxing", "bastion": "win_cheer", "sora": "win_celebrate", "ember": "win_cheer",
-	"mara": "win_boxing", "lio": "win_celebrate", "tao": "win_fistpump", "kael": "win_fistpump"}
+	"mara": "win_boxing", "lio": "win_celebrate", "tao": "win_fist_pump2", "kael": "win_rally"}
 ## Paired throw clips [attacker, victim] for grapplers; everyone else uses the shared pair.
 const THROWS := {"ember": ["throw_hell_a", "thrown_hell_b"], "bastion": ["throw_takedown_a", "thrown_takedown_b"]}
 
@@ -948,8 +948,8 @@ func clip_request() -> Array:
 			if not ClipLib.has(rc): rc = "hit_heavy"
 			return [rc, minf(float(thrower.sf - final_t) / 60.0 + 0.2, _len(rc) * 0.8)]
 		"win":
-			var n: String = WIN.get(C.arch, "")
-			return [n, minf(sf / 60.0, _len(n))]
+			var n: String = own_clip(C, "win", WIN.get(C.arch, ""))
+			return [n, fmod(sf / 60.0, _len(n)) if _len(n) > 1.5 else minf(sf / 60.0, _len(n))]
 	return ["", 0.0]
 
 
@@ -968,7 +968,9 @@ func _update_held_prop() -> void:
 		if not show:
 			held_prop.queue_free(); held_prop = null
 		else:
-			held_prop.global_transform = rig.hand_xform(true).translated_local(Vector3(0, 0.07, 0))
+			# the drinking / eating clip raises the left hand to the mouth: hold the cup or banana there
+			var ic: String = own_clip(C, "intro", "")
+			held_prop.global_transform = rig.hand_xform(ic != "in_drinking").translated_local(Vector3(0, 0.07, 0))
 
 
 func render(t: float) -> void:

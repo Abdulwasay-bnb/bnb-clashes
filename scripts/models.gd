@@ -173,6 +173,14 @@ static func register(p: Dictionary) -> void:
 				if ey.size() == 3:
 					ptint["EyeIris"] = {c = Color(ey[0], ey[1], ey[2]) * 2.2, sat = 1.0, bright = 1.0}
 				costumes.push_front({name = po.name, tint = ptint, acc = pparts})
+			# full-body mascot suits go first of all for the people who have one
+			if MASCOT.has(String(p.id)):
+				var mo := _mascot_outfit(String(p.id), female)
+				var mtint: Dictionary = mo.tint
+				mtint.merge(skin(skin_c))
+				if ey.size() == 3:
+					mtint["EyeIris"] = {c = Color(ey[0], ey[1], ey[2]) * 2.2, sat = 1.0, bright = 1.0}
+				costumes.push_front({name = mo.name, tint = mtint, acc = mo.acc})
 	LIST[p.id] = {file = {"android": SEED, "female": GIRL}.get(String(p.model), MALE), costumes = costumes}
 
 
@@ -241,7 +249,9 @@ const PERSONA := {
 	"aqsa_altaf": ["Ruby Red", [Color(0.7, 0.06, 0.16), "scales", Color(0.9, 0.18, 0.3), Color(0.5, 0.02, 0.1), 1.0], Color(0.35, 0.04, 0.08), Color(0.2, 0.05, 0.07),
 		[["hijab", Color(0.75, 0.08, 0.2)], ["kameez", Color(0.7, 0.08, 0.18)], ["shalwar", Color(0.3, 0.05, 0.08)], ["sleeves", Color(0.7, 0.08, 0.18)], ["chain", GOLD]]],
 	"daniyal_zubair": ["Paint Splash", [Color(0.95, 0.95, 0.95), "camo", Color(1.0, 0.45, 0.15), Color(0.2, 0.75, 0.95), 1.4], Color(0.25, 0.3, 0.45), Color(0.95, 0.4, 0.2),
-		[["apron", Color(0.85, 0.8, 0.7)], ["cap_back", Color(0.95, 0.4, 0.2)]]],
+		[["apron", Color(0.85, 0.8, 0.7)], ["beret", Color(0.85, 0.15, 0.2)], ["palette", Color(0.82, 0.62, 0.38)],
+			["dab0", Color(0.95, 0.2, 0.2)], ["dab1", Color(1.0, 0.85, 0.1)], ["dab2", Color(0.2, 0.6, 1.0)],
+			["dab3", Color(0.25, 0.8, 0.3)], ["dab4", Color(0.95, 0.95, 0.95)], ["dab5", Color(0.7, 0.3, 0.9)], ["paint_brush", Color(0.55, 0.35, 0.18)]]],
 	"faizan_ali": ["Chill Mode", [Color(0.78, 0.8, 0.84), "gradient", Color(0.5, 0.75, 0.95), Color(0, 0, 0, 0), 1.0], Color(0.4, 0.42, 0.46), Color(0.95, 0.95, 0.95),
 		[["shades", Color(0.08, 0.08, 0.1)], ["hood", Color(0.7, 0.72, 0.76)], ["scarf", Color(0.5, 0.75, 0.95)]]],
 	"faisal_ahmed": ["Root Admin", [Color(0.06, 0.08, 0.06), "grid", Color(0.15, 0.85, 0.35), Color(0.6, 1.0, 0.7), 1.4], Color(0.06, 0.07, 0.06), Color(0.05, 0.05, 0.05),
@@ -261,7 +271,8 @@ const PERSONA := {
 	"muhammad_nauman_nawaz": ["Banana Republic", [Color(1.0, 0.88, 0.2), "dots", Color(0.45, 0.3, 0.1), Color(0, 0, 0, 0), 1.3], Color(0.35, 0.5, 0.25), Color(0.95, 0.85, 0.3),
 		[["bandana", Color(1.0, 0.88, 0.2)], ["shades", Color(0.08, 0.08, 0.08)]]],
 	"sabir_ud_din": ["Howzat XI", [Color(0.97, 0.97, 0.95), "bands", Color(0.1, 0.55, 0.3), Color(1.0, 0.8, 0.3), 1.0], Color(0.97, 0.97, 0.95), Color(0.95, 0.95, 0.95),
-		[["pads", Color(0.97, 0.97, 0.95)], ["cap_back", Color(0.1, 0.5, 0.28)], ["watch", Color(0.1, 0.1, 0.12)]]],
+		[["pads", Color(0.97, 0.97, 0.95)], ["cricket_helmet", Color(0.1, 0.4, 0.22)], ["helmet_grille", Color(0.75, 0.75, 0.78)],
+			["batting_gloves", Color(0.97, 0.97, 0.95)], ["thigh_pad", Color(0.97, 0.97, 0.95)], ["cricket_bat", Color(0.92, 0.8, 0.55)]]],
 	"samreen_fatima": ["Pixel Art", [Color(0.0, 0.6, 0.55), "grid", Color(1.0, 0.3, 0.75), Color(1.0, 0.95, 0.4), 1.6], Color(0.12, 0.2, 0.3), Color(0.95, 0.95, 0.95),
 		[["hijab", Color(0.0, 0.7, 0.62)], ["kameez", Color(0.05, 0.55, 0.5)], ["shalwar", Color(0.12, 0.2, 0.3)], ["sleeves", Color(0.05, 0.55, 0.5)], ["backpack", Color(1.0, 0.3, 0.75)]]],
 	"sarfraz_yousaf": ["Stand-up Comic", [Color(0.95, 0.75, 0.2), "plaid", Color(0.85, 0.2, 0.2), Color(0.1, 0.1, 0.1), 1.2], Color(0.15, 0.15, 0.2), Color(0.85, 0.2, 0.2),
@@ -287,6 +298,40 @@ const PERSONA := {
 	"hamza_khan": ["Boardroom Boss", [Color(0.06, 0.05, 0.08), "pinstripes", GOLD, Color(0, 0, 0, 0), 0.5], Color(0.06, 0.05, 0.08), Color(0.05, 0.04, 0.04),
 		[["cape", Color(0.45, 0.2, 0.75)], ["shades", Color(0.05, 0.05, 0.05)], ["chain", GOLD], ["watch", GOLD]]],
 }
+
+
+## Full-body mascot suits (kigurumi: the face shows through the hood): [name, suit, pattern [kind, a, b, scale], paws, parts].
+const MASCOT := {
+	"muhammad_nauman_nawaz": ["Banana Suit", Color(1.0, 0.85, 0.15), ["dots", Color(0.45, 0.3, 0.1), Color(1.0, 0.9, 0.35), 2.2], Color(0.35, 0.25, 0.1),
+		[["banana_peel", Color(1.0, 0.88, 0.25)], ["banana_stem", Color(0.4, 0.3, 0.12)]]],
+	"nabeel_ahmad": ["Big Burger", Color(0.5, 0.27, 0.12), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.85, 0.55, 0.25),
+		[["bun_top", Color(0.88, 0.55, 0.22)], ["sesame", Color(1.0, 0.95, 0.8)], ["lettuce", Color(0.35, 0.75, 0.2)], ["cheese", Color(1.0, 0.75, 0.1)],
+			["patty", Color(0.35, 0.18, 0.08)], ["bun_bottom", Color(0.85, 0.52, 0.2)]]],
+	"muhammad_mubarak": ["King Cobra", Color(0.18, 0.5, 0.2), ["scales", Color(0.35, 0.75, 0.3), Color(0.08, 0.25, 0.08), 2.0], Color(0.9, 0.85, 0.45),
+		[["snake_hood", Color(0.2, 0.55, 0.22)], ["snake_eyes", Color(1.0, 0.85, 0.1)], ["snake_fangs", Color(1.0, 1.0, 0.95)], ["snake_tail", Color(0.2, 0.5, 0.2)]]],
+	"faizan_ali": ["Smoke Form", Color(0.55, 0.57, 0.62), ["gradient", Color(0.8, 0.82, 0.86), Color(0, 0, 0, 0), 1.0], Color(0.7, 0.72, 0.76),
+		[["smoke_head", Color(0.72, 0.74, 0.78)], ["smoke_body", Color(0.66, 0.68, 0.72)]]],
+	"hamza_khan": ["Lion King", Color(0.85, 0.62, 0.3), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.95, 0.85, 0.65),
+		[["lion_mane", Color(0.62, 0.32, 0.1)], ["ears_round", Color(0.85, 0.62, 0.3)], ["tail_stick", Color(0.85, 0.62, 0.3)], ["tail_tuft", Color(0.55, 0.28, 0.08)]]],
+	"abdul_wasay": ["Raging Bull", Color(0.45, 0.25, 0.14), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.15, 0.1, 0.08),
+		[["bull_horns", Color(0.95, 0.9, 0.78)], ["bull_snout", Color(0.75, 0.55, 0.48)], ["nose_ring", GOLD], ["ears_side", Color(0.45, 0.25, 0.14)],
+			["tail_stick", Color(0.45, 0.25, 0.14)], ["tail_tuft", Color(0.1, 0.07, 0.05)]]],
+	"sarfraz_yousaf": ["Woolly Sheep", Color(0.95, 0.93, 0.88), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.15, 0.13, 0.13),
+		[["wool_head", Color(0.97, 0.95, 0.9)], ["wool_body", Color(0.97, 0.95, 0.9)], ["ears_side", Color(0.2, 0.17, 0.17)], ["ram_horns", Color(0.75, 0.62, 0.45)]]],
+}
+
+
+static func _mascot_outfit(id: String, female: bool) -> Dictionary:
+	var d: Array = MASCOT[id]
+	var suit: Color = d[1]
+	var pt: Array = d[2]
+	var t := {c = suit, sat = 0.0, bright = 0.62}
+	if String(pt[0]) != "":
+		t.pat = {kind = pt[0], a = pt[1], b = pt[2], scale = pt[3]}
+	var tint := {"Hair": "hide", "Tie": "hide", "Tops": t, "Bottoms": {c = suit, sat = 0.0, bright = 0.6}, "Shoes": {c = d[3], sat = 0.0, bright = 0.6}}
+	var acc: Array = [["kig_hood", suit], ["suit_body", suit], ["suit_arms", suit], ["suit_legs", suit], ["suit_paws", d[3]]]
+	acc.append_array((d[4] as Array).duplicate(true))
+	return {name = d[0], tint = tint, acc = acc}
 
 
 static func _persona_outfit(id: String, hair: Dictionary, female: bool, kind: String) -> Dictionary:

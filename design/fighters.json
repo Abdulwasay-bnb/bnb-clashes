@@ -53,7 +53,8 @@
      0.92
     ]
    ]
-  ]
+  ],
+  "win": "win_rally"
  },
  "Abdul Wasay Waqas": {
   "style": "vex",
@@ -109,7 +110,8 @@
      1.0
     ]
    ]
-  ]
+  ],
+  "win": "win_victory_idle"
  },
  "Amina Mughal": {
   "style": "mara",
@@ -126,8 +128,8 @@
    0.62
   ],
   "pose": "idle_cheerful",
-  "intro": "in_excited",
-  "hair_style": "hair_bob",
+  "intro": "in_kiss",
+  "hair_style": "hair_silky",
   "hair_color": [
    0.2,
    0.13,
@@ -165,7 +167,8 @@
      0.7
     ]
    ]
-  ]
+  ],
+  "win": "win_excited"
  },
  "Aqsa Altaf": {
   "style": "sora",
@@ -182,7 +185,7 @@
    0.62
   ],
   "pose": "idle_cheerful",
-  "intro": "in_excited",
+  "intro": "in_dance",
   "hair_style": "",
   "hair_color": [
    0.09,
@@ -221,7 +224,8 @@
     0.15,
     5
    ]
-  ]
+  ],
+  "win": "win_salsa"
  },
  "Daniyal Zubair": {
   "style": "lio",
@@ -274,7 +278,8 @@
      0.1
     ]
    ]
-  ]
+  ],
+  "win": "win_bboy"
  },
  "Faizan Ali": {
   "style": "lio",
@@ -344,14 +349,15 @@
      0.7
     ]
    ]
-  ]
+  ],
+  "win": "in_shrug"
  },
  "Faisal Ahmed": {
   "style": "tao",
   "personality": "Calm commander, sees everything",
   "role": "Head of Engineering",
-  "power": "ROOT ACCESS",
-  "prop": "keys",
+  "power": "THE FOLLOW-UP",
+  "prop": "bubble",
   "quote": "I don't fix bugs. I approve their removal.",
   "accent": "#2bb3c0",
   "outfit": "formal",
@@ -385,22 +391,29 @@
   "power_anim": "pw_magic",
   "fx": [
    [
-    "cage",
-    "terminal",
+    "rain",
+    "bubble",
     0.0,
+    10
+   ],
+   [
+    "volley",
+    "letters",
+    0.2,
     6
    ],
    [
     "stamp",
-    "ACCESS GRANTED",
+    "ANY UPDATE?",
     0.6,
     [
      0.2,
-     1.0,
-     0.45
+     0.75,
+     0.95
     ]
    ]
-  ]
+  ],
+  "win": "win_boxing"
  },
  "Kashaf ud Duja": {
   "style": "ember",
@@ -462,7 +475,8 @@
      0.3
     ]
    ]
-  ]
+  ],
+  "win": "win_clap"
  },
  "Kiran Fazal": {
   "style": "kael",
@@ -528,7 +542,8 @@
      0.82
     ]
    ]
-  ]
+  ],
+  "win": "in_point"
  },
  "Mahveen Khan": {
   "style": "sora",
@@ -594,7 +609,8 @@
      0.2
     ]
    ]
-  ]
+  ],
+  "win": "win_celebrate"
  },
  "Muhammad Mubarak": {
   "style": "tao",
@@ -656,7 +672,8 @@
      0.35
     ]
    ]
-  ]
+  ],
+  "win": "win_thriller"
  },
  "Muhammad Saad": {
   "style": "sora",
@@ -711,7 +728,8 @@
      1.0
     ]
    ]
-  ]
+  ],
+  "win": "win_cheer"
  },
  "Muhammad Sufyan": {
   "style": "bastion",
@@ -772,7 +790,8 @@
      0.25
     ]
    ]
-  ]
+  ],
+  "win": "in_ceo"
  },
  "Muzdalfa Naeem": {
   "style": "mara",
@@ -828,7 +847,8 @@
      1.0
     ]
    ]
-  ]
+  ],
+  "win": "in_dance"
  },
  "Nabeel Ahmad": {
   "style": "bastion",
@@ -889,7 +909,8 @@
      0.36
     ]
    ]
-  ]
+  ],
+  "win": "win_chicken"
  },
  "Muhammad Nauman Nawaz": {
   "style": "ember",
@@ -924,7 +945,7 @@
    0.14,
    0.09
   ],
-  "intro": "in_point",
+  "intro": "in_drinking",
   "intro_prop": "banana",
   "power_anim": "pw_throw",
   "fx": [
@@ -950,7 +971,8 @@
      0.25
     ]
    ]
-  ]
+  ],
+  "win": "in_laughing"
  },
  "Sabir ud Din": {
   "style": "kael",
@@ -1012,7 +1034,8 @@
      0.4
     ]
    ]
-  ]
+  ],
+  "win": "win_rally"
  },
  "Samreen Fatima": {
   "style": "sora",
@@ -1073,7 +1096,8 @@
      0.66
     ]
    ]
-  ]
+  ],
+  "win": "in_clap"
  },
  "Sarfraz Yousaf": {
   "style": "lio",
@@ -1126,7 +1150,8 @@
     0.3,
     6
    ]
-  ]
+  ],
+  "win": "win_robot"
  },
  "Syeda Ghazia": {
   "style": "sora",
@@ -1192,7 +1217,8 @@
     0.5,
     3
    ]
-  ]
+  ],
+  "win": "in_kiss"
  },
  "Tuaha Aamir": {
   "style": "bastion",
@@ -1248,7 +1274,8 @@
      0.95
     ]
    ]
-  ]
+  ],
+  "win": "intro_flex"
  },
  "Umar Farooq": {
   "style": "mara",
@@ -1304,7 +1331,8 @@
      0.24
     ]
    ]
-  ]
+  ],
+  "win": "win_jump"
  },
  "Usman Najeeb": {
   "style": "ember",
@@ -1359,7 +1387,8 @@
      0.62
     ]
    ]
-  ]
+  ],
+  "win": "win_fist_pump2"
  },
  "Zia Khan": {
   "style": "tao",
@@ -1425,7 +1454,8 @@
      0.3
     ]
    ]
-  ]
+  ],
+  "win": "intro_bow"
  },
  "Ali": {
   "style": "kael",
@@ -1487,7 +1517,8 @@
      0.23
     ]
    ]
-  ]
+  ],
+  "win": "in_battlecry"
  },
  "Hamza Khan": {
   "style": "bastion",
@@ -1563,6 +1594,7 @@
      0.85
     ]
    ]
-  ]
+  ],
+  "win": "win_victory_idle"
  }
 }
