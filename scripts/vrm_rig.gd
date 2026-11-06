@@ -635,15 +635,11 @@ func _acc_parts(kind: String) -> Array:
 		"kameez":
 			# a short skirt piece on the hips plus one long panel per thigh (a kameez has side slits),
 			# so the hem moves with the legs instead of the knees poking through it
-			# the hem is a front and a back cloth panel on each thigh (side slits open), lying over the leg
-			# when it lifts rather than a stiff tube swinging up round it
-			var out := [["hips", ToonRig.cyl(0.17, 0.2, 0.18), Vector3(0, -0.035, 0.0), Vector3.ZERO, Vector3(1.0, 1.0, 0.9)]]
-			for leg in [["leftUpperLeg", 1.0], ["rightUpperLeg", -1.0]]:
-				var sx: float = leg[1]
-				out.append([leg[0], ToonRig.box(0.2, 0.36, 0.016), Vector3(sx * 0.018, -0.155, 0.128), Vector3(-0.1, 0, 0), Vector3.ONE])     # front
-				out.append([leg[0], ToonRig.box(0.2, 0.36, 0.016), Vector3(sx * 0.018, -0.155, -0.14), Vector3(0.1, 0, 0), Vector3.ONE])     # back
-				out.append([leg[0], ToonRig.box(0.016, 0.16, 0.25), Vector3(sx * 0.115, -0.06, -0.005), Vector3(0, 0, sx * 0.08), Vector3.ONE])  # side, above the slit
-			return out
+			# a closed A-line kameez from the waist to the knee, plus a slim layer of the same cloth fitted
+			# on each thigh: complete when standing, and a lifted leg carries the cloth close instead of a wide tube
+			return [["hips", ToonRig.cyl(0.165, 0.235, 0.44), Vector3(0, -0.17, -0.005), Vector3.ZERO, Vector3(1.0, 1.0, 0.88)],
+				["leftUpperLeg", ToonRig.cyl(0.128, 0.135, 0.36), Vector3(0.01, -0.15, -0.01), Vector3.ZERO, Vector3.ONE],
+				["rightUpperLeg", ToonRig.cyl(0.128, 0.135, 0.36), Vector3(-0.01, -0.15, -0.01), Vector3.ZERO, Vector3.ONE]]
 		"shalwar":   # wide enough for thighs and calves, set a little back, with the knee covered
 			return [["leftUpperLeg", ToonRig.cyl(0.125, 0.1, 0.47), Vector3(0, -0.21, -0.012), Vector3.ZERO, Vector3.ONE],
 				["rightUpperLeg", ToonRig.cyl(0.125, 0.1, 0.47), Vector3(0, -0.21, -0.012), Vector3.ZERO, Vector3.ONE],
