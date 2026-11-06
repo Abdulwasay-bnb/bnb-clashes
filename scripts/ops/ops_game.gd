@@ -7,6 +7,8 @@ signal finished
 
 const TEAM_COL := [Color(0.62, 0.38, 1.0), Color(0.13, 0.78, 0.92)]
 const TEAM_NAME := ["TEAM BIT", "TEAM BYTE"]
+const ENEMY_RED := Color(1.0, 0.12, 0.1)
+const MATE_BLUE := Color(0.25, 0.65, 1.0)
 
 var G
 var sim: OpsSim
@@ -518,6 +520,10 @@ func _soldier_visual(s: OpsSim.Soldier) -> Dictionary:
 	tag.font = font; tag.font_size = 30; tag.outline_size = 8
 	tag.modulate = TEAM_COL[s.team]; tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED; tag.no_depth_test = s.team == sim.soldiers[me].team
 	world.add_child(tag)
+	# enemies glow red, teammates glow in a calm blue: no friendly confusion
+	var mine: bool = s.team == sim.soldiers[me].team
+	if rig.has_method("set_team_glow"): rig.set_team_glow(ENEMY_RED if not mine else MATE_BLUE, 1.1 if not mine else 0.55)
+	if not mine: tag.modulate = ENEMY_RED.lightened(0.2)
 	if s.id == me:
 		rig.visible = false; gun.visible = false; tag.visible = false
 	return {rig = rig, gun = gun, gun_kind = s.holding(), tag = tag, dead_t = 0.0}

@@ -1387,6 +1387,18 @@ func set_glow(v: float) -> void:
 		m.set_shader_parameter("rim_amount", 0.25 + (v - 0.9) * 0.4 if strong else 0.18)
 
 
+## Team glow (Office Ops): a strong rim light and a thicker outline in the team colour, so friend and foe
+## read at a glance even far away or in the dark.
+func set_team_glow(col: Color, amount := 0.7) -> void:
+	for m in mats:
+		m.set_shader_parameter("rim_color", col * 1.6)
+		m.set_shader_parameter("rim_amount", amount)
+		if m.next_pass is ShaderMaterial:
+			var o := m.next_pass as ShaderMaterial
+			o.set_shader_parameter("color", Color(col.r, col.g, col.b, 1.0))
+			o.set_shader_parameter("thickness", 0.011 if amount > 0.8 else 0.008)
+
+
 func set_face(name: String, force := false) -> void:
 	if name == face and not force:
 		return
