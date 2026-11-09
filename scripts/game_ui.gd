@@ -752,6 +752,38 @@ const GAME_INFO := {
 		what = "Ten levels from Monday Morning to the CEO's penthouse. Stomp stapler bots, collect BNB coins and beat four bosses before the deadline.",
 		how = ["A / D move  ·  hold SHIFT to run", "SPACE jump (hold to jump higher)  ·  stomp enemies", "Hit sticky notes from below: coffee = extra hit", "Energy drink: J throws paper planes  ·  100 coins = 1 life", "3 lives — lose them all and it's back to level 1"],
 		chips = ["1 PLAYER", "10 LEVELS", "4 BOSSES", "🏆 CERTIFICATE"]},
+	"tumble": {title = "TUMBLE TUESDAY", tag = "OBSTACLE-COURSE KNOCKOUT", col = Color(1.0, 0.45, 0.75), icon = "👑",
+		what = "Twelve wobbly tumblers, round after round of office chaos: race the course, survive the shrinking floor, win team games. One takes the crown.",
+		how = ["WASD / stick move  ·  mouse or right stick turns the camera", "SPACE jump  ·  SHIFT dive  ·  hold E to grab", "Finish in the qualifying spots or you're out", "Last round: first to the crown wins the show"],
+		chips = ["UP TO 12", "MANY MAPS", "VS CPU", "ONLINE"]},
+	"card_rung": {title = "RUNG", tag = "COURT PIECE · TEAMS OF TWO", col = Color(0.3, 0.8, 0.55), icon = "♠",
+		what = "Pakistan's favourite trick-taker: call the rung (trumps) after five cards and take 7 of the 13 tricks with your partner.",
+		how = ["Pick the rung with 1–4", "Follow the led suit if you can", "Highest rung wins, else highest of the suit", "7 tricks win the hand · all 13 is a KOT"],
+		chips = ["4 PLAYERS", "TEAMS", "ONLINE"]},
+	"card_thulla": {title = "THULLA", tag = "BHABHI · GETAWAY", col = Color(0.95, 0.4, 0.4), icon = "♥",
+		what = "Get rid of every card. Follow suit — but if you can't, hit them with a THULLA and the highest card of the suit picks up the whole pile. The last one holding cards is the Bhabhi.",
+		how = ["The ace of spades starts", "Follow the suit if you can", "Can't follow? Throw any card: THULLA!", "Empty your hand to get away"],
+		chips = ["3–6 PLAYERS", "PASS & PLAY", "ONLINE"]},
+	"card_seep": {title = "SEEP", tag = "CAPTURE · SWEEP · 100 POINTS", col = Color(0.95, 0.75, 0.25), icon = "♦",
+		what = "A Punjabi fishing game: capture table cards that add up to your card, build houses, and clear the table for a 50-point SEEP.",
+		how = ["Match or add up table cards to capture them", "Build houses of 9 to 13 for later", "Clear the whole table: SEEP (+50)", "Spades, aces and the 10 of diamonds score"],
+		chips = ["2 OR 4 PLAYERS", "TEAMS", "ONLINE"]},
+	"card_dehla": {title = "DEHLA PAKAD", tag = "COLLECT THE TENS", col = Color(0.45, 0.65, 1.0), icon = "♣",
+		what = "Rung's cousin: trumps and tricks with your partner, but what counts is the 10s. Take three of the four dehlas to win the hand.",
+		how = ["Trump chosen as in Rung", "Follow suit; trumps beat the rest", "Win tricks holding a 10 to capture it", "3 tens win · 2-2 goes to most tricks"],
+		chips = ["4 PLAYERS", "TEAMS", "ONLINE"]},
+	"card_kadi": {title = "KADI PATTA", tag = "MENDIKOT · HIDDEN TRUMP", col = Color(0.75, 0.5, 1.0), icon = "♠",
+		what = "Collect the 10s, but nobody names the trump: the first time someone can't follow suit, the suit they throw becomes the kadi for the rest of the hand.",
+		how = ["Follow suit if you can", "First player who can't sets the trump", "Capture 10s by winning their tricks", "Most 10s wins · all four is a MENDIKOT"],
+		chips = ["4 OR 6 PLAYERS", "TEAMS", "ONLINE"]},
+	"card_teenpatti": {title = "TEEN PATTI", tag = "THREE CARDS · PLAY CHIPS", col = Color(1.0, 0.8, 0.3), icon = "🃏",
+		what = "Three cards each. Bet blind or look and bet seen, raise, fold or call a show. Office chips only — no real money, ever.",
+		how = ["Trail > pure sequence > sequence > colour > pair > high", "Blind players bet half of what seen players bet", "SHOW compares hands with the last player", "Last player in takes the pot"],
+		chips = ["3–6 PLAYERS", "PLAY CHIPS", "ONLINE"]},
+	"card_satte": {title = "SATTE PE SATTA", tag = "SEVEN ON SEVEN", col = Color(0.4, 0.85, 0.75), icon = "7",
+		what = "A friendly race to empty your hand: build each suit up and down from its 7. Easy for everyone to learn.",
+		how = ["The 7 of hearts starts", "Play a 7 or the next card up or down a suit", "No move? Pass", "First to empty their hand wins"],
+		chips = ["3–8 PLAYERS", "PASS & PLAY", "ONLINE"]},
 	"party": {title = "PARTY GAMES", tag = "BOARD · CARDS · CHAOS", col = Color(1.0, 0.81, 0.35), icon = "🎲",
 		what = "Ludo on the boardroom table, Carrom, Rung with your team, bomb-dropping Office Blast and the Mafia whodunit.",
 		how = ["Play vs CPU, pass the phone round, or online with friends", "Online: ENTER to chat, hold V to talk", "CPU players fill any empty seats"],
@@ -764,10 +796,10 @@ const GAME_INFO := {
 		what = "Flick the striker to pocket your nine coins before the other side. Pocket the red queen too — but you must cover her.",
 		how = ["A / D slide the striker along your line", "Mouse or ← → aim (dotted guide shows the path)", "Hold SPACE / click to charge, release to shoot", "Pocket your own coin to shoot again; striker in = foul"],
 		chips = ["2 OR 4 PLAYERS", "TEAMS", "PASS & PLAY", "ONLINE"]},
-	"cards": {title = "RUNG", tag = "COURT PIECE · TEAMS OF TWO", col = Color(0.3, 0.8, 0.55), icon = "♠",
-		what = "Pakistan's favourite trick-taking game round the break-room table. You and the partner opposite against the other two.",
-		how = ["After 5 cards, pick the rung (trumps) with 1–4", "Follow the suit that was led if you can", "Highest rung wins the trick, else highest of the suit", "7 tricks win the hand  ·  all 13 is a KOT  ·  first to 5"],
-		chips = ["4 PLAYERS", "VS CPU", "PASS & PLAY", "ONLINE"]},
+	"cards": {title = "CARD ROOM", tag = "SEVEN CARD GAMES", col = Color(0.3, 0.8, 0.55), icon = "♠",
+		what = "Seven card games round the break-room table: Rung, Thulla, Seep, Dehla Pakad, Kadi Patta, Teen Patti (play chips) and Satte Pe Satta.",
+		how = ["Pick a game, then how many players", "Mouse / tap a card to play it", "CPU players fill the empty seats", "Pass & play hides your hand between turns"],
+		chips = ["7 GAMES", "2–8 PLAYERS", "PASS & PLAY", "ONLINE"]},
 	"blast": {title = "OFFICE BLAST", tag = "BOMBS IN THE OPEN PLAN", col = Color(1.0, 0.45, 0.2), icon = "💣",
 		what = "Drop timed coffee-mug bombs to blow up the boxes and cubicles, grab power-ups and trap your rivals in the blast. Last one standing.",
 		how = ["WASD / arrows move  ·  SPACE drop a bomb", "Blasts go four ways and break the first box they hit", "Power-ups: more bombs, bigger blasts, speed, kick", "Win 3 rounds to win the match"],
@@ -850,6 +882,7 @@ const MENU_DESC := [
 	"BNB Office Ops: team deathmatch on four maps. Grab guns and grenades at your loadout table.",
 	"Office Cricket: a Super Over in the car park. Bat, bowl, hit sixes, vs CPU or a friend.",
 	"Deadline Dash: a side-scrolling platformer. 10 levels, bosses, 3 lives. Beat the CEO's deadline.",
+	"Tumble Tuesday: a wobbly obstacle-course knockout for up to 12. Survive the rounds, grab the crown.",
 	"Ludo, Carrom, Cards, Office Blast and Mafia: board, card and party games for 2 to 10 players.",
 	"Hit levels, frame advantage, sidesteps, juggles, throws and Surge Arts, explained.",
 	"Keyboard and gamepad layouts for both players.",
@@ -906,15 +939,15 @@ func show_title() -> void:
 	wm.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	col.add_child(wm)
 	var sp := Control.new(); sp.custom_minimum_size = Vector2(0, 16 if not touch_enabled else 6); col.add_child(sp)
-	var labels := ["CLASH  ·  FIGHT", "RUSH HOUR  ·  RACE", "OFFICE OPS  ·  SHOOT", "OFFICE CRICKET", "DEADLINE DASH", "PARTY GAMES", "HOW TO PLAY", "CONTROLS", "QUIT"]
+	var labels := ["CLASH  ·  FIGHT", "RUSH HOUR  ·  RACE", "OFFICE OPS  ·  SHOOT", "OFFICE CRICKET", "DEADLINE DASH", "TUMBLE TUESDAY", "PARTY GAMES", "HOW TO PLAY", "CONTROLS", "QUIT"]
 	var cbs := [show_clash_menu, func(): show_select({mode = "race"}), func(): show_select({mode = "ops"}), func(): show_select({mode = "cricket"}),
-		func(): show_select({mode = "dash"}), show_party_menu, show_how, show_controls, func(): G.get_tree().quit()]
+		func(): show_select({mode = "dash"}), func(): show_select({mode = "tumble"}), show_party_menu, show_how, show_controls, func(): G.get_tree().quit()]
 	var items: Array = []
 	for i in labels.size():
 		items.append(["%02d   %s" % [i + 1, labels[i]], cbs[i], 25, MENU_DESC[i]])
 	var m := _menu_list(items)
 	col.add_child(m)
-	var card_keys := ["clash", "rush", "ops", "cricket", "dash", "party", "", "", ""]
+	var card_keys := ["clash", "rush", "ops", "cricket", "dash", "tumble", "party", "", "", ""]
 	var featured: Array = []
 	var kids := m.get_children()
 	for k in kids.size():
@@ -1036,7 +1069,7 @@ func show_select(c: Dictionary) -> void:
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bv.add_child(t)
 	var sub := lbl({"cpu": "VS CPU  ·  " + ["EASY", "NORMAL", "HARD", "BOSS"][c.get("lv", 1)], "2p": "VERSUS  ·  LOCAL", "training": "TRAINING", "arcade": "ARCADE  ·  CLIMB TO THE CEO", "race": "RUSH HOUR  ·  PICK YOUR DRIVER", "ops": "OFFICE OPS  ·  PICK YOUR OPERATOR", "ludo": "LUDO  ·  PICK YOUR PLAYER", "mafia": "MAFIA  ·  WHO ARE YOU TONIGHT?",
-		"cricket": "OFFICE CRICKET  ·  PICK YOUR PLAYER", "carrom": "CARROM  ·  PICK YOUR PLAYER", "blast": "OFFICE BLAST  ·  PICK YOUR PLAYER", "cards": "RUNG  ·  PICK YOUR PLAYER", "dash": "DEADLINE DASH  ·  PICK YOUR HERO", "online": "ONLINE  ·  " + ("WI-FI" if G.net.via == "lan" else "ROOM " + G.net.code)}[c.mode], 14, F_BODY, GOLD)
+		"cricket": "OFFICE CRICKET  ·  PICK YOUR PLAYER", "carrom": "CARROM  ·  PICK YOUR PLAYER", "blast": "OFFICE BLAST  ·  PICK YOUR PLAYER", "cards": "RUNG  ·  PICK YOUR PLAYER", "dash": "DEADLINE DASH  ·  PICK YOUR HERO", "tumble": "TUMBLE TUESDAY  ·  PICK YOUR TUMBLER", "online": "ONLINE  ·  " + ("WI-FI" if G.net.via == "lan" else "ROOM " + G.net.code)}[c.mode], 14, F_BODY, GOLD)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bv.add_child(sub)
 	# per-side info: watermark, name plate, radar, signature
@@ -1177,7 +1210,7 @@ func _render_select() -> void:
 	for s in 2:
 		var u: Dictionary = side_ui[s]
 		var waiting: bool = (sel.cfg.mode != "2p" and sel.cfg.mode != "online" and s == 1 and not sel.locked[0]) \
-			or (sel.cfg.mode in ["race", "ops", "ludo", "mafia", "cricket", "carrom", "blast", "cards", "dash"] and s == 1) \
+			or (sel.cfg.mode in ["race", "ops", "ludo", "mafia", "cricket", "carrom", "blast", "cards", "dash", "tumble"] and s == 1) \
 			or (sel.cfg.mode == "online" and s != G.local_side and not sel.get("seen", false))
 		u.box.visible = not waiting
 		if waiting:
@@ -1270,7 +1303,7 @@ func _select_confirm(s: int) -> void:
 		_render_select()
 		get_tree().create_timer(0.5).timeout.connect(func(): G.start_dash(dc))
 		return
-	if sel.cfg.mode in ["ludo", "mafia", "cricket", "carrom", "blast", "cards"]:
+	if sel.cfg.mode in ["ludo", "mafia", "cricket", "carrom", "blast", "cards", "tumble"]:
 		var lc: Dictionary = Data.ROSTER[sel.cur[0]]
 		var md: String = sel.cfg.mode
 		_render_select()
@@ -2196,7 +2229,7 @@ func show_clash_menu() -> void:
 const PARTY_DESC := [
 	"Ludo on the boardroom table: 2 to 4 players vs CPU, pass & play, or with friends online.",
 	"Carrom: flick the striker, pocket your coins and the queen. 2 or 4 players.",
-	"Rung (court piece): four players in two teams, trumps and tricks round the office table.",
+	"The card room: Rung, Thulla, Seep, Dehla Pakad, Kadi Patta, Teen Patti and Satte Pe Satta.",
 	"Office Blast: drop timed bombs, break the desks, trap your rivals. Up to 4 players.",
 	"Mafia: someone in the office is a killer. Do your tasks, report bodies, call meetings, chat and vote them out.",
 	"Back to the main menu.",
@@ -2212,7 +2245,7 @@ func show_party_menu() -> void:
 	screen.add_child(col)
 	col.position = Vector2(110, 120) if not touch_enabled else Vector2(90, 80)
 	col.add_child(lbl("PARTY GAMES", 64, F_TITLE, GOLD, 12))
-	var labels := ["LUDO", "CARROM", "CARDS  ·  RUNG", "OFFICE BLAST", "MAFIA", "BACK"]
+	var labels := ["LUDO", "CARROM", "CARD ROOM", "OFFICE BLAST", "MAFIA", "BACK"]
 	var cbs := [func(): show_select({mode = "ludo"}), func(): show_select({mode = "carrom"}), func(): show_select({mode = "cards"}),
 		func(): show_select({mode = "blast"}), func(): show_select({mode = "mafia"}), show_title]
 	var items := []
@@ -2243,11 +2276,13 @@ func show_game_menu(kind: String, C: Dictionary) -> void:
 	col.add_theme_constant_override("separation", 6)
 	screen.add_child(col)
 	col.position = Vector2(90, 90) if not touch_enabled else Vector2(70, 100)
-	var title: String = {"cricket": "OFFICE CRICKET", "carrom": "CARROM", "blast": "OFFICE BLAST", "cards": "RUNG"}[kind]
+	if kind == "cards":
+		show_card_room(C); return
+	var title: String = {"cricket": "OFFICE CRICKET", "carrom": "CARROM", "blast": "OFFICE BLAST", "cards": "RUNG", "tumble": "TUMBLE TUESDAY"}[kind]
 	col.add_child(lbl(title, 64, F_TITLE, GOLD, 10))
 	col.add_child(lbl({"cricket": "%s  ·  SUPER OVER", "carrom": "%s  ·  FIRST TO POCKET THEM ALL", "blast": "%s  ·  LAST ONE STANDING",
-		"cards": "%s  ·  TEAMS OF TWO, SEVEN TRICKS TO WIN"}[kind] % C.name, 20, F_BODY, P2C))
-	var back := show_party_menu if kind != "cricket" else show_title
+		"cards": "%s  ·  TEAMS OF TWO, SEVEN TRICKS TO WIN", "tumble": "%s  ·  12 TUMBLERS, ONE CROWN"}[kind] % C.name, 20, F_BODY, P2C))
+	var back := show_party_menu if not kind in ["cricket", "tumble"] else show_title
 	var items := []
 	match kind:
 		"cricket":
@@ -2261,9 +2296,8 @@ func show_game_menu(kind: String, C: Dictionary) -> void:
 		"blast":
 			items = [["VS 1 CPU", func(): G.start_party("blast", C, 1, false), 26, "A one-on-one bomb duel."],
 				["VS 3 CPU", func(): G.start_party("blast", C, 3, false), 26, "Four in the arena: last one standing wins the round."]]
-		"cards":
-			items = [["VS 3 CPU", func(): G.start_party("cards", C, 3, false), 26, "You and your CPU partner against two CPUs."],
-				["PASS & PLAY", func(): G.start_party("cards", C, 3, true), 24, "Four people on this device: hand it round, hide your cards from the others."]]
+		"tumble":
+			items = [["PLAY  ·  VS 11 CPU", func(): G.start_party("tumble", C, 11, false), 26, "A full show: race, survive and team rounds until one tumbler takes the crown."]]
 	items.append(["PLAY WITH FRIENDS", func(): G.lobby.show_menu(kind, C), 24, "Online room or Wi-Fi: CPU players fill the empty seats."])
 	items.append(["BACK", back, 20, "Back."])
 	var m := _menu_list(items)
@@ -2274,6 +2308,69 @@ func show_game_menu(kind: String, C: Dictionary) -> void:
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 	col.add_child(desc_lbl)
 	_focus_first(m)
+
+
+## The card room: pick a game, then how many players (CPU fill the other seats).
+var card_players := {}
+
+
+func show_card_room(C: Dictionary) -> void:
+	clear_screen(); screen.visible = true; view = "game_menu"
+	G.set_preview(0, C)
+	screen.add_child(full(hgrad(Color(0.03, 0.01, 0.06, 0.95), Color(0.03, 0.01, 0.06, 0.2))))
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 4)
+	screen.add_child(col)
+	col.position = Vector2(90, 70) if not touch_enabled else Vector2(70, 60)
+	col.add_child(lbl("CARD ROOM", 60, F_TITLE, GOLD, 10))
+	col.add_child(lbl("%s  ·  PICK A GAME" % C.name, 20, F_BODY, P2C))
+	var items := []
+	for v in Main.CARD_GAMES:
+		var vid: String = v
+		var info: Dictionary = Main.CARD_GAMES[vid]
+		var desc: String = String(GAME_INFO.get("card_" + vid, {}).get("what", ""))
+		items.append([String(info.name), func(): show_card_options(vid, C), 26, desc])
+	items.append(["BACK", show_party_menu, 20, "Back to the party games."])
+	var m := _menu_list(items)
+	m.set_meta("back", show_party_menu)
+	col.add_child(m)
+	var keys: Array = Main.CARD_GAMES.keys()
+	var kids := m.get_children()
+	for k in kids.size():
+		var key: String = ("card_" + String(keys[k])) if k < keys.size() else ""
+		(kids[k] as Control).focus_entered.connect(func(): show_game_card(key))
+		(kids[k] as Control).mouse_entered.connect(func(): (kids[k] as Control).grab_focus())
+	_focus_first(m)
+
+
+func show_card_options(vid: String, C: Dictionary) -> void:
+	clear_screen(); screen.visible = true; view = "game_menu"
+	G.set_preview(0, C)
+	screen.add_child(full(hgrad(Color(0.03, 0.01, 0.06, 0.95), Color(0.03, 0.01, 0.06, 0.2))))
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 6)
+	screen.add_child(col)
+	col.position = Vector2(90, 90) if not touch_enabled else Vector2(70, 100)
+	var info: Dictionary = Main.CARD_GAMES[vid]
+	col.add_child(lbl(String(info.name), 60, F_TITLE, GOLD, 10))
+	var back := func(): show_card_room(C)
+	var items := []
+	for n in info.players:
+		var np: int = n
+		items.append(["VS %d CPU  ·  %d PLAYERS" % [np - 1, np], func(): G.start_party("cards", C, np - 1, false, vid), 24, "You and %d CPU players." % (np - 1)])
+	var np2: int = info.players[0] if info.players.size() == 1 else (4 if 4 in info.players else int(info.players[0]))
+	if vid != "teenpatti":   # everyone would see everyone's cards
+		items.append(["PASS & PLAY  ·  %d" % np2, func(): G.start_party("cards", C, np2 - 1, true, vid), 22, "%d people on this device, hiding their cards between turns." % np2])
+	items.append(["PLAY WITH FRIENDS", func(): G.ui.card_variant = vid; G.lobby.show_menu("cards", C), 22, "Online room or Wi-Fi: CPU players fill the empty seats."])
+	items.append(["BACK", back, 20, "Back to the card room."])
+	var m := _menu_list(items)
+	m.set_meta("back", back)
+	col.add_child(m)
+	show_game_card("card_" + vid)
+	_focus_first(m)
+
+
+var card_variant := "rung"   # the card game chosen before opening the friends lobby
 
 
 # ---------------------------------------------------------------- BNB Office Ops

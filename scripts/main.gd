@@ -695,7 +695,14 @@ func end_ludo() -> void:
 ## Each is a Node class with the same contract as LudoGame: start(g, people, seed, slot, pass_play),
 ## start_net(g, people, seed, slot, party, is_guest, pids), stop(), signal finished, var autoplay, var stats.
 ## people = [{C, human, slot}] (slot -2 = played on this device in pass & play, -1 = CPU, >= 0 = lobby seat).
-const PARTY_GAMES := ["cricket", "carrom", "blast", "cards"]
+const PARTY_GAMES := ["cricket", "carrom", "blast", "cards", "tumble"]
+## Card room: every card game and how many players it takes (the CardsGame plays the one in `variant`).
+const CARD_GAMES := {
+	"rung": {name = "RUNG", players = [4]}, "thulla": {name = "THULLA", players = [3, 4, 5, 6]},
+	"seep": {name = "SEEP", players = [2, 4]}, "dehla": {name = "DEHLA PAKAD", players = [4]},
+	"kadi": {name = "KADI PATTA", players = [4, 6]}, "teenpatti": {name = "TEEN PATTI", players = [3, 4, 5, 6]},
+	"satte": {name = "SATTE PE SATTA", players = [3, 4, 5, 6, 7, 8]},
+}
 var party_game: Node = null
 var party_kind := ""
 
@@ -703,6 +710,7 @@ var party_kind := ""
 func _new_party(kind: String) -> Node:
 	match kind:
 		"dash": return load("res://scripts/dash/dash_game.gd").new()
+		"tumble": return load("res://scripts/tumble/tumble_game.gd").new()
 		"cricket": return CricketGame.new()
 		"carrom": return CarromGame.new()
 		"blast": return BlastGame.new()
@@ -726,16 +734,17 @@ func _begin_party(kind: String, title: String, init: Callable) -> void:
 
 
 ## Solo / pass & play: you plus CPU players (or other people on this device).
-func start_party(kind: String, C: Dictionary, others: int, pass_play := false) -> void:
+## variant: which card game (CARD_GAMES key) for "cards"; set on the game before start.
+func start_party(kind: String, C: Dictionary, others: int, pass_play := false, variant := "") -> void:
 	var pool := Data.ROSTER.filter(func(c): return c.id != C.id)
 	pool.shuffle()
 	var people := [{C = C, human = true, slot = -2 if pass_play else 0}]
-	for k in others: people.append({C = pool[k], human = pass_play, slot = -2 if pass_play else -1})
-	await _begin_party(kind, "SETTING UP", func(n): n.start(self, people, randi(), 0, pass_play))
+	for k in others: people.append({C = pool[k % pool.size()], human = pass_play, slot = -2 if pass_play else -1})
+	await _begin_party(kind, "SETTING UP", func(n): n.set("variant", variant); n.start(self, people, randi(), 0, pass_play))
 
 
-func start_party_net(kind: String, people: Array, seed: int, slot: int, party: Party, is_guest: bool, pids: Dictionary) -> void:
-	await _begin_party(kind, "SETTING UP", func(n): n.start_net(self, people, seed, slot, party, is_guest, pids))
+func start_party_net(kind: String, people: Array, seed: int, slot: int, party: Party, is_guest: bool, pids: Dictionary, variant := "") -> void:
+	await _begin_party(kind, "SETTING UP", func(n): n.set("variant", variant); n.start_net(self, people, seed, slot, party, is_guest, pids))
 	_attach_comms(party_game, party)
 
 
@@ -2476,12 +2485,15 @@ func _run_autotest() -> void:
 			for k in 3: await get_tree().physics_frame
 			await shot.call("ops_enemy")
 			end_ops()
-		"cricket", "carrom", "blast", "cards":
+		"cricket", "carrom", "blast", "cards", "tumble":
 			# a party game with the CPU playing every seat; the game's own autotest(shot) if it has one
-			var others: int = {"cricket": 1, "carrom": 3, "blast": 3, "cards": 3}[autotest]
+			# (--players=N, --variant=X for the card room)
+			var others: int = {"cricket": 1, "carrom": 3, "blast": 3, "cards": 3, "tumble": 11}[autotest]
+			var vr := "rung" if autotest == "cards" else ""
 			for a in OS.get_cmdline_user_args():
 				if a.begins_with("--players="): others = int(a.substr(10)) - 1
-			await start_party(autotest, Data.by_id("hamza_khan"), others, false)
+				if a.begins_with("--variant="): vr = a.substr(10)
+			await start_party(autotest, Data.by_id("hamza_khan"), others, false, vr)
 			party_game.autoplay = true
 			if party_game.has_method("autotest"):
 				await party_game.autotest(shot)
@@ -2508,7 +2520,7 @@ func _run_autotest() -> void:
 			if dn.has_method("selftest"): await dn.selftest(self)
 			else: print("AUTOTEST dashsim: no selftest")
 			dn.free()
-		"cricketsim", "carromsim", "blastsim", "cardssim":
+		"cricketsim", "carromsim", "blastsim", "cardssim", "tumblesim":
 			# the game's rules engine on its own: a full game between CPUs, and snapshot / apply round trips
 			var kind := String(autotest).trim_suffix("sim")
 			var cls: Node = _new_party(kind)

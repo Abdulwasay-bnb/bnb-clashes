@@ -11,7 +11,7 @@ var mode := ""                 # race / ops
 var C: Dictionary              # this player's character
 var gun := "smg"
 var players: Array = []        # [{pid, c, gun}] — pid 0 is the host
-var cfg := {track = "city", map = "office", mine = 4, them = 4, skill = 1.0, fill = true, total = 8, mafia = 2, cool = 30.0, reveal = true}
+var cfg := {track = "city", map = "office", variant = "rung", seats = 4, mine = 4, them = 4, skill = 1.0, fill = true, total = 8, mafia = 2, cool = 30.0, reveal = true}
 var status: Label
 var list_box: VBoxContainer
 var found_box: VBoxContainer
@@ -37,12 +37,14 @@ func _ready() -> void:
 
 
 func max_players() -> int:
-	return {"race": 10, "ops": 8, "ludo": 4, "mafia": 10, "cricket": 2, "carrom": 4, "blast": 4, "cards": 4}.get(mode, 8)
+	if mode == "cards": return 8
+	return {"race": 10, "ops": 8, "ludo": 4, "mafia": 10, "cricket": 2, "carrom": 4, "blast": 4, "tumble": 12}.get(mode, 8)
 
 
 func title() -> String:
+	if mode == "cards": return String(Main.CARD_GAMES.get(String(cfg.variant), Main.CARD_GAMES.rung).name)
 	return {"race": "RUSH HOUR", "ops": "OFFICE OPS", "ludo": "LUDO", "mafia": "MAFIA", "cricket": "OFFICE CRICKET", "carrom": "CARROM",
-		"blast": "OFFICE BLAST", "cards": "RUNG"}.get(mode, "")
+		"blast": "OFFICE BLAST", "tumble": "TUMBLE TUESDAY"}.get(mode, "")
 
 
 # ---------------------------------------------------------------- menu
@@ -52,6 +54,7 @@ func show_menu(m: String, who: Dictionary, msg := "") -> void:
 	in_game = false
 	mode = m; C = who; view = "menu"
 	gun = String(ui.ops_cfg.gun)
+	if m == "cards": cfg.variant = ui.card_variant
 	ui.clear_screen(); ui.screen.visible = true; ui.view = "party"
 	G.set_preview(0, C)
 	ui.screen.add_child(ui.full(ui.hgrad(Color(0.03, 0.01, 0.06, 0.95), Color(0.03, 0.01, 0.06, 0.2))))
@@ -281,8 +284,20 @@ func _render_lobby() -> void:
 	elif mode in ["carrom", "blast"]:
 		if host: v.add_child(_opt_row("EMPTY SEATS", [true, false], "fill", ["CPU PLAYERS", "LEAVE EMPTY"]))
 		else: v.add_child(_centered_lbl("EMPTY SEATS:  " + ("CPU PLAYERS" if cfg.fill else "LEFT EMPTY")))
-	elif mode in ["cricket", "cards"]:
-		v.add_child(_centered_lbl("EMPTY SEATS:  CPU PLAYERS" if mode == "cards" else "1 v 1  ·  A CPU PLAYS IF YOU'RE ALONE"))
+	elif mode == "cards":
+		if host:
+			var vids: Array = Main.CARD_GAMES.keys()
+			v.add_child(_opt_row("GAME", vids.slice(0, 4), "variant", vids.slice(0, 4).map(func(x): return String(Main.CARD_GAMES[x].name))))
+			v.add_child(_opt_row("", vids.slice(4), "variant", vids.slice(4).map(func(x): return String(Main.CARD_GAMES[x].name))))
+			var counts: Array = Main.CARD_GAMES[String(cfg.variant)].players
+			if not int(cfg.seats) in counts: cfg.seats = counts[0] if counts.size() == 1 else (4 if 4 in counts else counts[0])
+			if counts.size() > 1: v.add_child(_opt_row("PLAYERS", counts, "seats", counts.map(func(x): return str(x))))
+		else:
+			v.add_child(_centered_lbl("%s  ·  %d PLAYERS  ·  CPU FILL EMPTY SEATS" % [title(), int(cfg.seats)]))
+	elif mode == "tumble":
+		v.add_child(_centered_lbl("UP TO 12 TUMBLERS  ·  CPU FILL THE EMPTY SPOTS"))
+	elif mode == "cricket":
+		v.add_child(_centered_lbl("1 v 1  ·  A CPU PLAYS IF YOU'RE ALONE"))
 	elif mode == "ludo":
 		if host: v.add_child(_opt_row("EMPTY SEATS", [true, false], "fill", ["CPU PLAYERS", "LEAVE EMPTY"]))
 		else: v.add_child(_centered_lbl("EMPTY SEATS:  " + ("CPU PLAYERS" if cfg.fill else "LEFT EMPTY")))
@@ -333,7 +348,8 @@ func _seats() -> int:
 	if mode == "mafia": return maxi(int(cfg.total), players.size())
 	if mode == "ludo": return 4 if cfg.fill else maxi(2, players.size())
 	if mode == "cricket": return 2
-	if mode == "cards": return 4
+	if mode == "cards": return maxi(int(cfg.seats), players.size())
+	if mode == "tumble": return 12
 	if mode in ["carrom", "blast"]: return 4 if cfg.fill else maxi(2, players.size())
 	var ab := _team_sizes()
 	return ab[0] + ab[1]
@@ -449,9 +465,9 @@ func start_match() -> void:
 			var pid := int(players[k].pid)
 			if pid != 0:
 				pids[pid] = k
-				party.send_to(pid, {t = "start", mode = mode, people = ids, humans = players.size(), seed = seed, me = k})
+				party.send_to(pid, {t = "start", mode = mode, people = ids, humans = players.size(), seed = seed, me = k, variant = cfg.variant})
 		if mode == "ludo": G.start_ludo_net(_ludo_people(ids, players.size()), seed, 0, party, false, pids)
-		else: G.start_party_net(mode, _ludo_people(ids, players.size()), seed, 0, party, false, pids)
+		else: G.start_party_net(mode, _ludo_people(ids, players.size()), seed, 0, party, false, pids, String(cfg.variant))
 		return
 	if mode == "race":
 		var ids := []
@@ -504,7 +520,7 @@ func _start_guest(d: Dictionary) -> void:
 	elif String(d.mode) == "ludo":
 		G.start_ludo_net(_ludo_people(d.people, int(d.humans)), int(d.seed), int(d.me), party, true, {})
 	elif String(d.mode) in Main.PARTY_GAMES:
-		G.start_party_net(String(d.mode), _ludo_people(d.people, int(d.humans)), int(d.seed), int(d.me), party, true, {})
+		G.start_party_net(String(d.mode), _ludo_people(d.people, int(d.humans)), int(d.seed), int(d.me), party, true, {}, String(d.get("variant", "")))
 	elif String(d.mode) == "race":
 		G.start_race_net(String(d.track), _people(d.people), int(d.humans), int(d.seed), int(d.me), party, true, {})
 	else:
