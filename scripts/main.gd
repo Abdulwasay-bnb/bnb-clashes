@@ -499,6 +499,7 @@ func start_match(c: Dictionary, p: Array) -> void:
 	ui.show_hud(self)
 	start_round()
 	loader.close()
+	if mode in ["cpu", "arcade", "2p", "training"]: _tutorial("clash", null)
 
 
 func start_round() -> void:
@@ -620,6 +621,7 @@ func start_race(track_id: String, C: Dictionary) -> void:
 	race.start(self, track_id, C)
 	race.finished.connect(end_race)
 	loader.close()
+	_tutorial("race", race)
 
 
 ## Online / Wi-Fi race (see PartyLobby).
@@ -636,6 +638,7 @@ func start_race_net(track_id: String, people: Array, humans: int, seed: int, me:
 	race.start_net(self, track_id, people, humans, seed, me, party, is_guest, pids)
 	race.finished.connect(end_race)
 	loader.close()
+	_tutorial("race", race, "", true)
 
 
 # ------------------------------------------------------------------ BNB Ludo
@@ -682,6 +685,7 @@ func _begin_ludo(init: Callable) -> void:
 	init.call(ludo)
 	ludo.finished.connect(end_ludo)
 	loader.close()
+	_tutorial("ludo", ludo, "", ludo.net != null)
 
 
 func end_ludo() -> void:
@@ -731,6 +735,7 @@ func _begin_party(kind: String, title: String, init: Callable) -> void:
 	init.call(party_game)
 	party_game.finished.connect(end_party)
 	loader.close()
+	_tutorial(kind, party_game, String(party_game.get("variant")) if party_game.get("variant") != null and kind == "cards" else "", party_game.get("net") != null)
 
 
 ## Solo / pass & play: you plus CPU players (or other people on this device).
@@ -781,6 +786,7 @@ func start_mafia(people: Array, cfg: Dictionary, seed: int, me: int, party: Part
 	if party != null: _attach_comms(mafia, party, false, func() -> bool: return mafia != null and mafia.meeting_phase != "")
 	mafia.finished.connect(end_mafia)
 	loader.close()
+	_tutorial("mafia", mafia, "", party != null)
 
 
 func end_mafia() -> void:
@@ -807,6 +813,7 @@ func start_ops_net(a: Array, b: Array, humans: Dictionary, guns: Dictionary, ski
 	add_child(ops)
 	ops.start_net(self, a, b, humans, guns, skill, seed, me, party, is_guest, pids, map)
 	_attach_comms(ops, party)
+	_tutorial("ops", ops, "", true)
 	ops.finished.connect(end_ops)
 	loader.close()
 
@@ -828,6 +835,7 @@ func start_ops(C: Dictionary, cfg: Dictionary) -> void:
 	ops.start(self, a, b, String(cfg.gun), float(cfg.skill), String(cfg.get("map", "office")))
 	ops.finished.connect(end_ops)
 	loader.close()
+	_tutorial("ops", ops)
 
 
 func end_ops() -> void:
@@ -1307,9 +1315,71 @@ func reset_training() -> void:
 
 
 # ------------------------------------------------------------------ per-frame visuals
+# ------------------------------------------------------------------ tutorials
+const Tutorial = preload("res://scripts/tutorial.gd")
+var tut_kind := ""          # the game that's running (for HOW TO PLAY on its pause screen)
+var tut_game: Object = null
+var tut_variant := ""
+var tut_node: Node = null
+var tut_strip: CanvasLayer = null
+
+
+## A game has just opened: remember it, and run its tutorial the first time (while tutorials are ON).
+func _tutorial(kind: String, game: Object, variant := "", online := false) -> void:
+	tut_kind = kind; tut_game = game; tut_variant = variant
+	if "--autotest" in " ".join(OS.get_cmdline_user_args()) and not "--tutorial" in OS.get_cmdline_user_args(): return
+	var key := kind + ("_" + variant if variant != "" else "")
+	if not Tutorial.should_show(key): return
+	# let the loading screen fade out first (pausing the game would freeze it on top), and the game draw a frame
+	for k in 30:
+		await get_tree().process_frame
+		if not loader.visible and k > 3: break
+	if tut_game != game: return   # the player already left
+	show_tutorial(key, not online)
+
+
+func show_tutorial(key := "", pause := true) -> void:
+	if tut_node != null and is_instance_valid(tut_node): return
+	if key == "": key = tut_kind + ("_" + tut_variant if tut_variant != "" else "")
+	var steps: Array = Tutorial.steps_for(tut_kind, tut_game if is_instance_valid(tut_game) else null, tut_variant)
+	if steps.is_empty(): return
+	tut_node = Tutorial.new()
+	add_child(tut_node)
+	tut_node.open(self, key, steps, pause)
+
+
+## While the current game is paused: HOW TO PLAY and the TUTORIALS ON / OFF switch, under its pause menu.
+func _tut_strip_tick() -> void:
+	var g: Object = null
+	for n in [race, ops, ludo, mafia, party_game]:
+		if n != null and is_instance_valid(n): g = n
+	var show := false
+	if g != null: show = bool(g.get("paused")) and tut_kind != ""
+	elif not F.is_empty() and paused and tut_kind == "clash": show = true
+	if tut_node != null and is_instance_valid(tut_node): show = false
+	if show and tut_strip == null:
+		tut_strip = CanvasLayer.new(); tut_strip.layer = 30
+		add_child(tut_strip)
+		var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 14)
+		row.add_child(ui.big_btn("HOW TO PLAY", Color(1.0, 0.81, 0.35), func(): show_tutorial("", false)))
+		var tb: Button = ui.big_btn("TUTORIALS: " + ("ON" if Tutorial.enabled() else "OFF"), Color(0.35, 0.38, 0.5), func(): pass)
+		tb.pressed.connect(func():
+			Tutorial.set_enabled(not Tutorial.enabled())
+			tb.text = "TUTORIALS: " + ("ON" if Tutorial.enabled() else "OFF"))
+		row.add_child(tb)
+		for b in row.get_children(): (b as Button).add_theme_font_size_override("font_size", 20)
+		tut_strip.add_child(row)
+		row.reset_size()
+		var vs := get_viewport().get_visible_rect().size
+		row.position = Vector2((vs.x - row.size.x) / 2.0, vs.y - row.size.y - 34)
+	elif not show and tut_strip != null:
+		tut_strip.queue_free(); tut_strip = null
+
+
 func _process(dt: float) -> void:
 	t_now += dt
 	if ui == null: return   # still on the startup loader
+	_tut_strip_tick()
 	if net.connected and Time.get_ticks_msec() - net_ping.sent > 1500:
 		net_ping.sent = Time.get_ticks_msec()
 		net.send({t = "ping", ms = net_ping.sent})
@@ -2273,6 +2343,36 @@ func _run_autotest() -> void:
 					await get_tree().process_frame
 					if cg.sim.phase == "aim" and cg.sim.turn != turn: break
 			end_party()
+		"tutorials":
+			# run with --tutorial: first-time tutorials appear, step, close; the pause strip shows; seen ones don't repeat
+			Tutorial.set_enabled(true)
+			await start_party("carrom", Data.by_id("hamza_khan"), 1, false)
+			await get_tree().create_timer(1.0).timeout
+			print("AUTOTEST tutorials carrom shown=%s tree_paused=%s" % [tut_node != null and is_instance_valid(tut_node), get_tree().paused])
+			await shot.call("tut_carrom_1")
+			tut_node._next(); await get_tree().create_timer(0.3).timeout
+			await shot.call("tut_carrom_2")
+			tut_node._close(); await get_tree().create_timer(0.3).timeout
+			print("AUTOTEST tutorials closed tree_paused=%s seen=%s" % [get_tree().paused, not Tutorial.should_show("carrom")])
+			party_game.paused = true; await get_tree().create_timer(0.4).timeout
+			print("AUTOTEST tutorials pause strip=%s" % [tut_strip != null])
+			await shot.call("tut_pause")
+			party_game.paused = false
+			end_party()
+			await start_party("carrom", Data.by_id("hamza_khan"), 1, false)
+			await get_tree().create_timer(1.0).timeout
+			print("AUTOTEST tutorials carrom again shown=%s (should be false)" % [tut_node != null and is_instance_valid(tut_node)])
+			end_party()
+			await start_dash(Data.by_id("ali"))
+			await get_tree().create_timer(2.5).timeout
+			await shot.call("tut_dash")
+			if tut_node != null and is_instance_valid(tut_node): tut_node._close()
+			end_party()
+			await start_ops(Data.by_id("ali"), {mine = 2, them = 2, gun = "smg", skill = 1.0})
+			await get_tree().create_timer(1.0).timeout
+			await shot.call("tut_ops")
+			if tut_node != null and is_instance_valid(tut_node): tut_node._close()
+			end_ops()
 		"gamecards":
 			# the menu game cards: every item on the main menu and the party menu
 			ui.show_title()
