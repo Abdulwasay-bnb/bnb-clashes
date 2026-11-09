@@ -259,7 +259,8 @@ func _hero(inp: Dictionary) -> void:
 	vel.y = maxf(vel.y - g * DT, -MAX_FALL)
 	# throw paper planes (energy drink)
 	if inp.get("action", false) and power == "drink" and throw_cool == 0 and planes.size() < 3:
-		planes.append({pos = pos + Vector2(facing * 0.5, hh * 0.6), vel = Vector2(facing * 14.0, 0), t = 0})
+		# thrown low with a slight downward glide, so it takes out crawlers as well as tall bots
+		planes.append({pos = pos + Vector2(facing * 0.5, minf(hh * 0.45, 0.6)), vel = Vector2(facing * 14.0, -0.6), t = 0, low = pos.y + 0.25})
 		throw_cool = 18
 		events.append(["throw", pos, 0])
 	# move x
@@ -446,9 +447,10 @@ func _tick_planes() -> void:
 	for p in planes.duplicate():
 		p.t += 1
 		p.pos += p.vel * DT
+		if p.pos.y < float(p.get("low", -99.0)) and p.vel.y < 0.0: p.vel.y = 0.0   # then skims along at ankle height
 		var gone: bool = p.t > 90 or solid_at(p.pos.x, p.pos.y)
 		for e in enemies:
-			if e.alive and absf(e.pos.x - p.pos.x) < e.w / 2.0 + 0.2 and p.pos.y > e.pos.y and p.pos.y < e.pos.y + e.h:
+			if e.alive and absf(e.pos.x - p.pos.x) < e.w / 2.0 + 0.25 and p.pos.y > e.pos.y - 0.35 and p.pos.y < e.pos.y + e.h + 0.35:
 				_kill(e, true); gone = true
 		if not boss.is_empty() and boss.alive and boss.active and absf(boss.pos.x - p.pos.x) < boss.w / 2.0 + 0.2 and p.pos.y > boss.pos.y and p.pos.y < boss.pos.y + boss.h:
 			_hit_boss(0.34); gone = true
