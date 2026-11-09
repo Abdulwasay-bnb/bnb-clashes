@@ -32,6 +32,7 @@ var guide: MeshInstance3D
 var guide_mesh: ImmediateMesh
 var my_slot := 0
 var local_all := false
+var need_release := false   # pass & play: wait for the key / click that closed the hand-off to be let go
 var toast := ""
 var toast_t := 0.0
 var results_shown := false
@@ -214,6 +215,9 @@ func _build_world() -> void:
 		_chair(seat, ang)
 		var rig := Main.make_rig(p.C, 0)
 		world.add_child(rig)
+		if OS.has_feature("mobile"):   # phones: the seated players cast no shadows
+			for gi in rig.find_children("*", "GeometryInstance3D", true, false):
+				(gi as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		rig.position = seat + Vector3(0, 0.05, 0)
 		rig.rotation.y = ang
 		rigs.append(rig); react.append(["", 0.0])
@@ -403,6 +407,10 @@ func _control(dt: float) -> void:
 		if changed: _send_aim()
 		return
 	var want_charge: bool = k.call([KEY_SPACE]) or pad_fire or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	# the press that closed the PASS TO screen must be let go before it can start charging a shot
+	if need_release:
+		if want_charge: return
+		need_release = false
 	if want_charge:
 		if not charging: charging = true; power = 0.0; power_dir = 1.0
 		power += power_dir * dt / 1.1
@@ -418,13 +426,13 @@ func _unhandled_input(e: InputEvent) -> void:
 	if sim == null: return
 	if e is InputEventKey and e.pressed and not e.echo:
 		if e.physical_keycode in [KEY_P, KEY_ESCAPE]: toggle_pause(); return
-		if handoff and e.physical_keycode in [KEY_SPACE, KEY_ENTER]: handoff = false; return
+		if handoff and e.physical_keycode in [KEY_SPACE, KEY_ENTER]: handoff = false; need_release = true; return
 	if e is InputEventJoypadButton and e.pressed:
 		if e.button_index == JOY_BUTTON_START: toggle_pause(); return
-		if handoff and e.button_index == JOY_BUTTON_A: handoff = false; return
+		if handoff and e.button_index == JOY_BUTTON_A: handoff = false; need_release = true; return
 	if paused or results_shown: return
 	if handoff:
-		if (e is InputEventMouseButton and e.pressed) or (e is InputEventScreenTouch and e.pressed): handoff = false
+		if (e is InputEventMouseButton and e.pressed) or (e is InputEventScreenTouch and e.pressed): handoff = false; need_release = true
 		return
 	if not _my_turn() or autoplay or _touch(): return
 	# mouse: point at the board to aim; right drag or the wheel slides the striker

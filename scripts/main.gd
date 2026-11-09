@@ -2219,6 +2219,51 @@ func _run_autotest() -> void:
 				add_child(r)
 				if r is VrmRig: print("AUTOTEST skull %s %s" % [id, r.skull])
 				r.queue_free()
+		"touchmap":
+			# phone scaling: do screen <-> 3D conversions agree with where touches land?
+			await start_party("carrom", Data.by_id("hamza_khan"), 1, false)
+			await get_tree().create_timer(2.0).timeout
+			var cg = party_game
+			var p := Vector2(10, -20)
+			var sp: Vector2 = cg.cam.unproject_position(cg.W(p))
+			var back = cg._board_point(sp)
+			print("AUTOTEST touchmap scale=%s visible=%s hud=%s board %s -> screen %s -> board %s" % [get_window().content_scale_factor, get_viewport().get_visible_rect().size, cg.hud.size, p, sp, back])
+			end_party()
+		"carromtouch":
+			# pass & play on a phone: tap away the PASS TO screen, slingshot a shot, twice (two players)
+			await start_party("carrom", Data.by_id("hamza_khan"), 1, true)
+			await get_tree().create_timer(2.0).timeout
+			var cg = party_game
+			var vs := get_viewport().get_visible_rect().size
+			var touch := func(at: Vector2, down: bool) -> void:
+				var t := InputEventScreenTouch.new(); t.index = 0; t.position = at; t.pressed = down
+				Input.parse_input_event(t)
+			var drag := func(to: Vector2) -> void:
+				var d := InputEventScreenDrag.new(); d.index = 0; d.position = to
+				Input.parse_input_event(d)
+			for turn in 2:
+				for k in 300:
+					await get_tree().process_frame
+					if cg.sim.phase == "aim": break
+				print("AUTOTEST carromtouch turn %d handoff=%s my_turn=%s" % [turn, cg.handoff, cg._my_turn()])
+				await shot.call("ctouch_%d_a" % turn)
+				if cg.handoff:
+					touch.call(vs / 2.0, true); await get_tree().process_frame
+					touch.call(vs / 2.0, false); await get_tree().process_frame
+				for k in 10: await get_tree().process_frame
+				var shots0: int = cg.stats.get("shot", 0)
+				var from := Vector2(vs.x * 0.5, vs.y * 0.25)
+				touch.call(from, true); await get_tree().process_frame
+				for k in 8:
+					drag.call(from + Vector2(0, -20 * (k + 1))); await get_tree().process_frame
+				touch.call(from + Vector2(0, -160), false)
+				for k in 20: await get_tree().process_frame
+				print("AUTOTEST carromtouch turn %d after: handoff=%s shot_fired=%s phase=%s" % [turn, cg.handoff, cg.stats.get("shot", 0) > shots0, cg.sim.phase])
+				await shot.call("ctouch_%d_b" % turn)
+				for k in 600:
+					await get_tree().process_frame
+					if cg.sim.phase == "aim" and cg.sim.turn != turn: break
+			end_party()
 		"gamecards":
 			# the menu game cards: every item on the main menu and the party menu
 			ui.show_title()

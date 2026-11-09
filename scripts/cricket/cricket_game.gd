@@ -339,12 +339,22 @@ func _build_players() -> void:
 	var hat := _cyl(0.2, 0.24, 0.12, _mat(Color(0.95, 0.95, 0.92), 0.7), Vector3.ZERO)   # the umpire's white hat
 	hat.set_meta("umpire_hat", true)
 	umpire.set_meta("hat", hat)
-	for k in FIELD.size():
+	# phones: three fielders instead of six, and the extra people cast no shadows (the GPU thanks you)
+	var phone := OS.has_feature("mobile")
+	for k in (3 if phone else FIELD.size()):
 		var C: Dictionary = picks[(k + 1) % picks.size()]
 		var f = Main.make_rig(C, 0)
 		world.add_child(f)
-		f.position = FIELD[k]
-		fielders.append({rig = f, home = FIELD[k], C = C, t = randf() * 3.0})
+		f.position = FIELD[k * (2 if phone else 1)]
+		fielders.append({rig = f, home = FIELD[k * (2 if phone else 1)], C = C, t = randf() * 3.0})
+		if phone: _no_shadows(f)
+	if phone:
+		_no_shadows(keeper); _no_shadows(umpire)
+
+
+static func _no_shadows(n: Node) -> void:
+	for mi in n.find_children("*", "GeometryInstance3D", true, false):
+		(mi as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 func _nm(k: int) -> String:
