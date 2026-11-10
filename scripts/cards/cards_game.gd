@@ -8,6 +8,7 @@ extends Node
 signal finished
 
 const CardsSim = preload("res://scripts/cards/cards_sim.gd")
+const RoomView = preload("res://scripts/cards/room_view.gd")
 const TEAM_COL := [Color(0.62, 0.38, 1.0), Color(0.13, 0.78, 0.92)]
 const TEAM_NAME := ["TEAM BIT", "TEAM BYTE"]
 const RED_INK := Color(0.85, 0.1, 0.17)
@@ -35,8 +36,13 @@ var trump_lbl: Label3D
 var my_slot := 0
 var local_all := false             # pass & play: all four seats are played on this device
 var reveal_seat := -1              # pass & play: whose cards are showing (curtain otherwise)
-var autoplay := false
+var autoplay := false:
+	set(v):
+		autoplay = v
+		if room != null: room.autoplay = v
 var stats := {}
+var variant := "rung"              # which card game (Main.CARD_GAMES); everything but Rung runs in a RoomView
+var room: Node = null
 var paused := false
 var results_shown := false
 var toast := ""
@@ -61,6 +67,9 @@ var last_rev := -1
 
 func start(g, people: Array, seed: int, slot := 0, pass_play := false) -> void:
 	G = g
+	if variant != "rung" and variant != "":
+		_room().start(g, people, seed, slot, pass_play)
+		return
 	my_slot = slot; local_all = pass_play
 	font = load("res://assets/fonts/RussoOne-Regular.ttf")
 	small = load("res://assets/fonts/Rajdhani-Bold.ttf")
@@ -81,7 +90,19 @@ func start(g, people: Array, seed: int, slot := 0, pass_play := false) -> void:
 	cam_angle = _seat_angle(_view_seat())
 
 
+func _room() -> Node:
+	room = RoomView.new()
+	room.variant = variant
+	add_child(room)
+	room.finished.connect(func(): finished.emit())
+	return room
+
+
 func start_net(g, people: Array, seed: int, slot: int, party: Party, is_guest: bool, pids: Dictionary) -> void:
+	if variant != "rung" and variant != "":
+		G = g
+		_room().start_net(g, people, seed, slot, party, is_guest, pids)
+		return
 	net = party; guest = is_guest; pid_slot = pids
 	net.message.connect(_net_message)
 	if not guest: net.left.connect(_net_left)
@@ -89,6 +110,7 @@ func start_net(g, people: Array, seed: int, slot: int, party: Party, is_guest: b
 
 
 func stop() -> void:
+	if room != null: room.stop()
 	if net != null:
 		if net.message.is_connected(_net_message): net.message.disconnect(_net_message)
 		if net.left.is_connected(_net_left): net.left.disconnect(_net_left)
@@ -778,6 +800,7 @@ func toggle_pause() -> void:
 	if net != null: v.add_child(ui.lbl("The game keeps going for everyone else.", 18, small, Color(0.8, 0.82, 0.9)))
 	var resume: Button = ui.big_btn("RESUME", Color(0.13, 0.78, 0.92), toggle_pause)
 	v.add_child(resume)
+	if ui.has_method("tutorial_toggle_btn"): v.add_child(ui.tutorial_toggle_btn())
 	v.add_child(ui.big_btn("QUIT TO MENU", Color(0.55, 0.62, 0.75), func(): paused = false; _quit()))
 	_center(panel)
 	pause_panel = panel
@@ -827,16 +850,61 @@ func _show_results() -> void:
 		btns.add_child(ui.big_btn("LEAVE", Color(0.55, 0.62, 0.75), func(): finished.emit(); G.lobby.leave()))
 	else:
 		var C: Dictionary = sim.players[0].C
-		btns.add_child(ui.big_btn("PLAY AGAIN", Color(0.13, 0.78, 0.92), func(): finished.emit(); ui.show_game_menu("cards", C)))
+		btns.add_child(ui.big_btn("PLAY AGAIN", Color(0.13, 0.78, 0.92), func():
+			finished.emit()
+			if ui.has_method("show_card_options"): ui.show_card_options("rung", C)
+			else: ui.show_game_menu("cards", C)))
 		btns.add_child(ui.big_btn("MAIN MENU", Color(0.55, 0.62, 0.75), func(): finished.emit(); ui.show_title()))
 	v.add_child(btns)
 	_center(panel)
+
+
+# ---------------------------------------------------------------- tutorial
+## Steps for the shared tutorial overlay: [{title, text, keys (desktop), touch (phones)}].
+static func tutorial_steps(v: String) -> Array:
+	match v:
+		"thulla":
+			return [{title = "THULLA  ·  GET RID OF YOUR CARDS", text = "All the cards are dealt. Whoever holds the A♠ leads it. Empty your hand to escape — the last player still holding cards is the BHABHI.", keys = "click a card or ← → and ENTER", touch = "tap a card to lift it, tap again to play"},
+				{title = "FOLLOW THE SUIT", text = "Play the suit that was led if you have it. If everyone follows, the trick is thrown away and the highest card leads next.", keys = "cards you can't play are dimmed", touch = "cards you can't play are dimmed"},
+				{title = "THULLA!", text = "Can't follow? Throw any card — a THULLA. The trick stops and whoever played the highest card of the led suit picks the whole trick up. Dump your high cards this way!", keys = "", touch = ""},
+				{title = "TIP", text = "When you follow, stay just under the highest card on the table: then a thulla lands on someone else.", keys = "P pause", touch = "II pause"}]
+		"seep":
+			return [{title = "SEEP  ·  CAPTURE THE POINTS", text = "Spades are worth their value, the other aces 1, the 10♦ 6: 100 points a deal. A = 1, J = 11, Q = 12, K = 13.", keys = "", touch = ""},
+				{title = "BID AND CAPTURE", text = "The first player bids 9–13 from their first four cards. Play a card to capture table cards that add up to it — several groups at once.", keys = "click a card, then pick a move (1-9)", touch = "tap a card, then tap a move"},
+				{title = "HOUSES", text = "Build a house: your card plus table cards adding up to 9–13, when you hold another card of that value. Cement it to lock it.", keys = "", touch = ""},
+				{title = "SEEP!", text = "Clear the whole table in one go for a SEEP: +50. Throw carefully — don't leave the next player an easy sweep.", keys = "P pause", touch = "II pause"}]
+		"dehla":
+			return [{title = "DEHLA PAKAD  ·  COLLECT THE TENS", text = "Two teams, partners sitting opposite. Win tricks that hold 10s: three of the four 10s win the hand; at 2–2 the team with more tricks wins.", keys = "", touch = ""},
+				{title = "TRUMP", text = "After five cards the player next to the dealer picks the trump suit; then everyone gets 13.", keys = "1-4 or click a suit", touch = "tap a suit"},
+				{title = "TRICKS", text = "Follow the led suit if you can. The highest trump wins, otherwise the highest card of the led suit. Feed your partner a 10 when they're winning!", keys = "click a card or ← → and ENTER", touch = "tap a card, tap again to play"},
+				{title = "MENDIKOT", text = "All four 10s is a MENDIKOT: 2 points. First team to 5 points wins.", keys = "P pause", touch = "II pause"}]
+		"kadi":
+			return [{title = "KADI PATTA  ·  HIDDEN TRUMP", text = "Two teams, seats alternating. Collect the 10s: three of the four win the hand, 2–2 goes to more tricks.", keys = "", touch = ""},
+				{title = "THE KADI", text = "Nobody picks a trump. The first time someone can't follow the led suit, the suit they throw becomes the trump — the kadi — for the rest of the hand.", keys = "", touch = ""},
+				{title = "PLAY", text = "Follow suit if you can; the highest trump (once there is one) or the highest card of the led suit wins. All four 10s is a MENDIKOT.", keys = "click a card or ← → and ENTER   ·   P pause", touch = "tap a card, tap again to play   ·   II pause"}]
+		"teenpatti":
+			return [{title = "TEEN PATTI  ·  OFFICE CHIPS ONLY", text = "Everyone puts the boot in the pot and gets three cards. The chips are pretend — no real money, ever.", keys = "", touch = ""},
+				{title = "BLIND OR SEEN", text = "Bet BLIND without looking (half price), or SEE your cards and play seen. CHAAL calls the stake, RAISE doubles it, PACK folds.", keys = "S see  ·  C chaal  ·  R raise  ·  F pack", touch = "tap the buttons"},
+				{title = "SHOW", text = "With two players left, ask for a SHOW: the best hand takes the pot. Trail > pure sequence > sequence > colour > pair > high card.", keys = "W show", touch = "tap SHOW"},
+				{title = "THE MATCH", text = "Five hands (or until someone runs out of chips). Most chips wins.", keys = "P pause", touch = "II pause"}]
+		"satte":
+			return [{title = "SATTE PE SATTA  ·  SEVENS", text = "First to empty their hand wins. The 7♥ starts.", keys = "", touch = ""},
+				{title = "BUILD THE ROWS", text = "Play a 7 to open its suit, or the next card up (8, 9 …) or down (6, 5 …) on a row that's open.", keys = "click a card or ← → and ENTER", touch = "tap a card, tap again to play"},
+				{title = "PASS", text = "No card fits? You pass. Hold back the cards others need — and open rows that lead to your own.", keys = "X pass   ·   P pause", touch = "tap PASS   ·   II pause"}]
+	return [{title = "RUNG  ·  COURT PIECE", text = "Two teams of two, partners opposite. Take 7 of the 13 tricks to win the hand.", keys = "", touch = ""},
+		{title = "THE RUNG", text = "After five cards the player next to the dealer picks the trump suit — the rung.", keys = "1-4 or click a suit", touch = "tap a suit"},
+		{title = "TRICKS", text = "Follow the led suit if you can. The highest rung wins, otherwise the highest card of the suit.", keys = "click a card or ← → and ENTER", touch = "tap a card, tap again to play"},
+		{title = "KOT", text = "Take all 13 tricks for a KOT: 2 points. First team to 5 points wins.", keys = "L last trick   ·   P pause", touch = "LAST TRICK   ·   II pause"}]
 
 
 # ---------------------------------------------------------------- tests
 ## --autotest=cards: the CPU plays every seat. Shots: picking the rung, your turn, a trick on the felt,
 ## the hand summary, the match result.
 func autotest(shot: Callable) -> void:
+	if room != null:
+		await room.autotest(shot)
+		stats = room.stats
+		return
 	var tree: SceneTree = G.get_tree()
 	sim.think = 0.3
 	# re-deal so that we pick the rung, and look at the picker before the CPU picks for us
@@ -961,5 +1029,7 @@ func selftest(_main) -> void:
 	if g.players[1].hand != h.players[1].hand: fails.append("own hand lost on the wire")
 	if g.players[0].hand.any(func(c): return c >= 0): fails.append("guest knows another hand")
 	if g.legal(1) != h.legal(1): fails.append("guest legal moves differ")
-	print("AUTOTEST cardssim matches=%d avg_hands=%.1f illegal_moves=%d kots=%d wins=%s" % [matches, float(hands) / matches, illegal, kots, wins])
+	print("AUTOTEST cardssim rung matches=%d avg_hands=%.1f illegal_moves=%d kots=%d wins=%s" % [matches, float(hands) / matches, illegal, kots, wins])
+	# the rest of the card room
+	fails.append_array(preload("res://scripts/cards/room_selftest.gd").run())
 	print("AUTOTEST cardssim %s %s" % ["PASS" if fails.is_empty() else "FAIL", fails])
