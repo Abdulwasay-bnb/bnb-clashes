@@ -628,8 +628,12 @@ func _acc_parts(kind: String) -> Array:
 		"hair_ponytail", "hair_bob", "hair_bun", "hair_long", "hair_braid", "hair_silky":
 			return _hair_parts(kind)
 		# ---- garments (BNB Clashes): simple shapes on the bones, so modest outfits stay covered while fighting
-		"hijab":
-			return [["head", ToonRig.sph(0.128), Vector3(0, 0.078, -0.058), Vector3.ZERO, Vector3(1.0, 1.06, 1.0)],
+		"hijab":   # shaped to this person's head: a little larger than the black under-scarf everywhere but the face
+			var hc: Vector3 = skull.position + skull.size / 2.0
+			var hr: float = skull.size.x / 2.0
+			var hf: float = skull.position.z + skull.size.z
+			return [["head", ToonRig.sph(1.0), Vector3(hc.x, hc.y + 0.03, hc.z - 0.06), Vector3.ZERO, Vector3(hr * 1.18, skull.size.y * 0.64, hf - hc.z + 0.0)],
+				["head", ToonRig.sph(1.0), Vector3(hc.x, hc.y + 0.02, hc.z - 0.1), Vector3.ZERO, Vector3(hr * 1.16, skull.size.y * 0.63, hr * 1.1)],   # the back
 				["head", tor.call(0.105, 0.02), Vector3(0, 0.05, 0.035), Vector3(PI / 2 + 0.2, 0, 0), Vector3(1.0, 1.25, 1.0)],
 				["neck", ToonRig.cyl(0.085, 0.2, 0.2), Vector3(0, -0.02, -0.005), Vector3.ZERO, Vector3(1.0, 1.0, 0.85)]]
 		"kameez":
@@ -738,7 +742,7 @@ func _acc_parts(kind: String) -> Array:
 		# ---- G.O.A.T. form: an anime goat head built round the measured skull (it encloses the human head)
 		"goat_head", "goat_horns", "goat_nose", "goat_eyes", "goat_pupils":
 			return _goat_parts(kind)
-		"kig_hood", "suit_body", "vape_body", "vape_tank", "vape_screen", "vape_button", "vape_tip", "vape_cloud", "vape_trim", "tail", "banana_tip", "banana_body", "banana_ridges", "banana_end", "phone_body", "phone_screen", "app0", "app1", "app2", "app3", "phone_cam", "phone_back", "cig_body", "cig_filter", "cig_band", "cig_ash", "cig_ember", "cig_smoke", "waistcoat", "gamcha", "gamcha_check", "suit_arms", "suit_legs", "suit_paws", "lion_mane", "ears_round", "tail_tuft", "bull_horns", "bull_snout", "nose_ring", "ears_side", "wool_head", "wool_body", "ram_horns", "snake_hood", "snake_eyes", "snake_fangs", "snake_tail", "banana_peel", "banana_stem", "bun_top", "sesame", "lettuce", "cheese", "patty", "bun_bottom", "smoke_body", "smoke_head", "cricket_helmet", "helmet_grille", "batting_gloves", "cricket_bat", "thigh_pad", "beret", "palette", "dab0", "dab1", "dab2", "dab3", "dab4", "dab5", "paint_brush":
+		"hijab_cap", "muscles", "langoot", "langoot_band", "pehlwan_mustache", "gada", "gada_head", "kig_hood", "suit_body", "vape_body", "vape_tank", "vape_screen", "vape_button", "vape_tip", "vape_cloud", "vape_trim", "tail", "banana_tip", "banana_body", "banana_ridges", "banana_end", "phone_body", "phone_screen", "app0", "app1", "app2", "app3", "phone_cam", "phone_back", "cig_body", "cig_filter", "cig_band", "cig_ash", "cig_ember", "cig_smoke", "waistcoat", "gamcha", "gamcha_check", "suit_arms", "suit_legs", "suit_paws", "lion_mane", "ears_round", "tail_tuft", "bull_horns", "bull_snout", "nose_ring", "ears_side", "wool_head", "wool_body", "ram_horns", "snake_hood", "snake_eyes", "snake_fangs", "snake_tail", "banana_peel", "banana_stem", "bun_top", "sesame", "lettuce", "cheese", "patty", "bun_bottom", "smoke_body", "smoke_head", "cricket_helmet", "helmet_grille", "batting_gloves", "cricket_bat", "thigh_pad", "beret", "palette", "dab0", "dab1", "dab2", "dab3", "dab4", "dab5", "paint_brush":
 			return _mascot_parts(kind)
 		"fur_arms":     # shaggy fur over the forearms and the backs of the hands
 			return [["leftLowerArm", ToonRig.cyl(0.05, 0.042, 0.25), Vector3(0.12, 0, 0), Z90, Vector3.ONE],
@@ -871,6 +875,46 @@ func _mascot_parts(kind: String) -> Array:
 	var rng := RandomNumberGenerator.new(); rng.seed = hash(kind)
 	match kind:
 		# ---- the suit itself
+		# ---- pehlwan (Punjabi wrestler)
+		"muscles":      # pecs, six-pack, traps, lats, delts, biceps, forearms, thighs and calves, in skin tone
+			var out := []
+			for sx in [-1.0, 1.0]:
+				out.append(S.call("upperChest", Vector3(sx * 0.068, 0.0, 0.105), 0.08, 0.058, 0.045))      # pecs
+				out.append(S.call("upperChest", Vector3(sx * 0.075, 0.13, -0.025), 0.065, 0.045, 0.055))   # traps
+				out.append(S.call("chest", Vector3(sx * 0.12, 0.03, -0.035), 0.05, 0.1, 0.065))            # lats
+				for row in 3:                                                                              # six-pack
+					out.append(S.call("chest", Vector3(sx * 0.03, 0.06 - row * 0.055, 0.112), 0.028, 0.023, 0.016))
+			for arm in [["leftUpperArm", 1.0], ["rightUpperArm", -1.0]]:
+				var ax: float = arm[1]
+				out.append(S.call(arm[0], Vector3(ax * 0.035, 0.005, 0), 0.07, 0.07, 0.068))     # deltoid
+				out.append(S.call(arm[0], Vector3(ax * 0.15, 0.025, 0.005), 0.085, 0.058, 0.055))   # biceps
+				out.append(S.call(arm[0], Vector3(ax * 0.15, -0.02, -0.01), 0.075, 0.048, 0.05))    # triceps
+			for arm in [["leftLowerArm", 1.0], ["rightLowerArm", -1.0]]:
+				out.append(S.call(arm[0], Vector3(arm[1] * 0.08, 0.0, 0.0), 0.085, 0.05, 0.05))     # forearm
+			for leg in ["leftUpperLeg", "rightUpperLeg"]:
+				out.append(S.call(leg, Vector3(0, -0.17, 0.02), 0.1, 0.2, 0.1))                    # thigh
+			for leg in ["leftLowerLeg", "rightLowerLeg"]:
+				out.append(S.call(leg, Vector3(0, -0.1, -0.035), 0.072, 0.12, 0.07))               # calf
+			return out
+		"langoot":       # the red wrestler's wrap: band round the hips, a front and a back flap
+			return [["hips", ToonRig.cyl(0.175, 0.165, 0.13), Vector3(0, -0.02, 0.0), Vector3.ZERO, Vector3(1.0, 1.0, 0.92)],
+				["hips", ToonRig.box(0.15, 0.24, 0.025), Vector3(0, -0.15, 0.15), Vector3(-0.12, 0, 0), Vector3.ONE],
+				["hips", ToonRig.box(0.17, 0.2, 0.025), Vector3(0, -0.13, -0.155), Vector3(0.12, 0, 0), Vector3.ONE]]
+		"langoot_band":
+			return [["hips", tor.call(0.178, 0.014), Vector3(0, 0.045, 0.0), Vector3.ZERO, Vector3(1.0, 1.0, 0.92)]]
+		"pehlwan_mustache":   # a big curled moustache
+			var out := []
+			for sx in [-1.0, 1.0]:
+				out.append(S.call(H, Vector3(sx * 0.03, c.y - 0.038, front + 0.002), 0.032, 0.008, 0.01, Vector3(0, 0, sx * -0.25)))
+				out.append(S.call(H, Vector3(sx * 0.062, c.y - 0.028, front - 0.006), 0.012, 0.016, 0.009, Vector3(0, 0, sx * 0.7)))   # curled tips
+			return out
+		"gada":          # the mace handle, resting on the right shoulder
+			return [["upperChest", ToonRig.cyl(0.022, 0.026, 0.62), Vector3(-0.16, 0.2, -0.06), Vector3(0.35, 0, 0.55), Vector3.ONE]]
+		"gada_head":
+			return [S.call("upperChest", Vector3(-0.32, 0.43, -0.16), 0.12, 0.12, 0.12),
+				["upperChest", tor.call(0.12, 0.012), Vector3(-0.32, 0.43, -0.16), Vector3(0.35, 0, 0.55), Vector3.ONE]]
+		"hijab_cap":    # the black under-scarf beneath a hijab: hugs the scalp so no skin shows at the hairline
+			return [S.call(H, Vector3(c.x, c.y + 0.04, c.z - 0.03), r * 1.1, skull.size.y * 0.56, front - c.z + 0.008)]
 		"kig_hood":     # covers the top, sides and back of the head; the face shows through the round opening
 			var zr: float = front - c.z - 0.005
 			return [S.call(H, Vector3(c.x, c.y + 0.03, c.z - 0.055), r * 1.26, skull.size.y * 0.64, zr),
@@ -1204,6 +1248,8 @@ func _goat_parts(kind: String) -> Array:
 
 
 func _make_accessories(list: Array) -> void:
+	if list.any(func(a): return a[0] == "hijab"):   # every hijab is worn over a black under-scarf
+		list = list.duplicate(); list.append(["hijab_cap", Color(0.04, 0.04, 0.05)])
 	var outline := ShaderMaterial.new()
 	outline.shader = OUTLINE
 	outline.set_shader_parameter("thickness", 0.006)

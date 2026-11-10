@@ -181,6 +181,19 @@ static func register(p: Dictionary) -> void:
 				if ey.size() == 3:
 					mtint["EyeIris"] = {c = Color(ey[0], ey[1], ey[2]) * 2.2, sat = 1.0, bright = 1.0}
 				costumes.push_front({name = mo.name, tint = mtint, acc = mo.acc})
+			# Nabeel's pehlwan: a Punjabi wrestler, bare-chested and muscled, in a red langoot with a gada
+			if String(p.id) == "nabeel_ahmad" and costumes.size() > 1:
+				var base: Dictionary = costumes[1]   # his own look: keeps his hair, beard and glasses
+				var pt: Dictionary = (base.tint as Dictionary).duplicate(true)
+				# bare skin on the shirt, trousers and shoes: the colour real skin renders as (skin texture x skin tint)
+				var flesh := Color(skin_c.r * 1.0, skin_c.g * 0.84, skin_c.b * 0.76)
+				var bare := {c = Color.WHITE, sat = 1.0, bright = 1.0, pat = {kind = "solid", a = flesh}}
+				pt.merge({"Tops": bare, "Bottoms": bare.duplicate(true), "Shoes": bare.duplicate(true)}, true)
+				var keep: Array = (base.acc as Array).filter(func(x): return String(x[0]).begins_with("hair_") or x[0] in ["beard", "glasses"])
+				var muscle: Color = Color(skin_c.r * 1.0, skin_c.g * 0.84, skin_c.b * 0.76) / 0.72   # accessories are drawn at 72%
+				keep.append_array([["muscles", muscle], ["langoot", Color(0.78, 0.08, 0.1)], ["langoot_band", GOLD], ["armbands", GOLD],
+					["pehlwan_mustache", Color(0.06, 0.05, 0.05)], ["gada", Color(0.45, 0.28, 0.12)], ["gada_head", GOLD]])
+				costumes.push_front({name = "Pehlwan", tint = pt, acc = keep})
 	LIST[p.id] = {file = {"android": SEED, "female": GIRL}.get(String(p.model), MALE), costumes = costumes}
 
 
