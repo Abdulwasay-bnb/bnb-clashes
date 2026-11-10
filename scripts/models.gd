@@ -181,6 +181,26 @@ static func register(p: Dictionary) -> void:
 				if ey.size() == 3:
 					mtint["EyeIris"] = {c = Color(ey[0], ey[1], ey[2]) * 2.2, sat = 1.0, bright = 1.0}
 				costumes.push_front({name = mo.name, tint = mtint, acc = mo.acc})
+			# creature hybrids (their first look): creature skin, a creature head round theirs, no human hair
+			if HYBRID.has(String(p.id)):
+				var hy: Dictionary = HYBRID[String(p.id)]
+				var ht := {"Hair": "hide", "Tie": "hide", "Body_00_SKIN": hy.skin, "Face_00_SKIN": hy.get("face", hy.skin),
+					"Tops": hy.tops, "Bottoms": hy.bottoms, "Shoes": hy.shoes}
+				costumes.push_front({name = hy.name, tint = ht, acc = (hy.parts as Array).duplicate(true)})
+			# Zia: Principal Software Engineer (keeps his own hair, beard and glasses)
+			if String(p.id) == "zia_khan" and not costumes.is_empty():
+				var zb: Dictionary = costumes[0]
+				var zt: Dictionary = (zb.tint as Dictionary).duplicate(true)
+				zt.merge({"Tops": {c = Color.WHITE, sat = 1.0, bright = 0.9, pat = {kind = "solid", a = Color(0.13, 0.14, 0.17)}},
+					"Bottoms": {c = Color(0.16, 0.2, 0.32), sat = 0.0, bright = 0.55}, "Shoes": {c = Color(0.95, 0.95, 0.95), sat = 0.0, bright = 0.85}}, true)
+				var zk: Array = (zb.acc as Array).filter(func(x): return String(x[0]).begins_with("hair_") or x[0] in ["beard", "glasses", "mustache"])
+				zk.append_array([["hood", Color(0.16, 0.17, 0.2)], ["sleeves", Color(0.13, 0.14, 0.17)], ["lanyard", Color(0.15, 0.85, 0.35)],
+					["zia_badge", Color(0.95, 0.96, 0.98)], ["zia_badge_txt", Color(0.1, 0.12, 0.15)], ["zia_tee", Color(0.2, 1.0, 0.45)],
+					["zia_pin", Color(0.97, 0.95, 0.9)], ["zia_chana", Color(0.06, 0.05, 0.05)], ["zia_pin_x", Color(0.95, 0.15, 0.15)],
+					["zia_phones", Color(0.1, 0.1, 0.12)], ["zia_plate", Color(0.95, 0.95, 0.97)], ["zia_rice", Color(0.98, 0.9, 0.7)],
+					["zia_carrot", Color(1.0, 0.5, 0.12)], ["zia_raisin", Color(0.25, 0.12, 0.08)], ["zia_mug", Color(0.95, 0.95, 0.97)],
+					["zia_mug_txt", Color(0.1, 0.5, 0.25)], ["watch", GOLD]])
+				costumes.push_front({name = "Principal Engineer", tint = zt, acc = zk})
 			# Nabeel's pehlwan: a Punjabi wrestler, bare-chested and muscled, in a red langoot with a gada
 			if String(p.id) == "nabeel_ahmad" and costumes.size() > 1:
 				var base: Dictionary = costumes[1]   # his own look: keeps his hair, beard and glasses
@@ -316,30 +336,58 @@ const PERSONA := {
 
 ## Full-body mascot suits (kigurumi: the face shows through the hood): [name, suit, pattern [kind, a, b, scale], paws, parts].
 const MASCOT := {
-	"muhammad_nauman_nawaz": ["Banana Suit", Color(1.0, 0.86, 0.18), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.3, 0.2, 0.08),
-		[["banana_tip", Color(1.0, 0.86, 0.18)], ["banana_body", Color(1.0, 0.86, 0.18)], ["banana_ridges", Color(0.85, 0.65, 0.1)],
-			["banana_end", Color(0.32, 0.22, 0.08)]], {skip = ["suit_body"], legs = Color(0.3, 0.22, 0.1)}],
-	"muhammad_saad": ["Mobile Phone", Color(0.1, 0.1, 0.12), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.1, 0.1, 0.12),
-		[["phone_body", Color(0.12, 0.12, 0.14)], ["phone_screen", Color(0.2, 0.45, 0.95)], ["app0", Color(0.95, 0.3, 0.35)], ["app1", Color(0.3, 0.85, 0.4)],
-			["app2", Color(1.0, 0.8, 0.2)], ["app3", Color(0.95, 0.95, 0.98)], ["phone_cam", Color(0.03, 0.03, 0.04)], ["phone_back", Color(0.55, 0.56, 0.6)]], {skip = ["suit_body"], legs = Color(0.18, 0.2, 0.28)}],
+	"muhammad_saad": ["Mobile Phone", Color(0.3, 0.26, 0.6), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.16, 0.16, 0.22),
+		[["phone2_case", Color(0.36, 0.3, 0.72)], ["phone2_bezel", Color(0.06, 0.06, 0.08)], ["phone2_screen", Color(0.25, 0.55, 1.0)], ["phone2_apps", Color(1.0, 0.85, 0.35)],
+			["phone2_buttons", Color(0.75, 0.75, 0.82)], ["phone2_back", Color(0.22, 0.2, 0.42)], ["phone2_lens", Color(0.1, 0.1, 0.12)], ["phone2_logo", Color(0.9, 0.9, 1.0)],
+			["phone2_notch", Color(0.04, 0.04, 0.05)]], {skip = ["suit_body"], legs = Color(0.2, 0.22, 0.32)}],
 	"usman_najeeb": ["Cigarette", Color(0.95, 0.95, 0.93), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.08, 0.08, 0.08),
-		[["cig_body", Color(0.97, 0.97, 0.95)], ["cig_filter", Color(0.9, 0.55, 0.2)], ["cig_band", GOLD], ["cig_ash", Color(0.45, 0.45, 0.47)],
-			["cig_ember", Color(1.0, 0.35, 0.08)], ["cig_smoke", Color(0.75, 0.76, 0.8)]], {skip = ["suit_body"], legs = Color(0.08, 0.08, 0.09)}],
+		[["cig2_paper", Color(0.97, 0.97, 0.95)], ["cig2_filter", Color(0.9, 0.58, 0.25)], ["cig2_dots", Color(0.6, 0.35, 0.12)], ["cig2_band", GOLD],
+			["cig2_seam", Color(0.78, 0.78, 0.76)], ["cig2_label", Color(0.75, 0.15, 0.15)], ["cig2_ash", Color(0.45, 0.45, 0.47)],
+			["cig2_ember", Color(1.0, 0.4, 0.1)], ["cig2_smoke", Color(0.78, 0.8, 0.85)]], {skip = ["suit_body"], legs = Color(0.1, 0.1, 0.12)}],
 	"nabeel_ahmad": ["Big Burger", Color(0.5, 0.27, 0.12), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.85, 0.55, 0.25),
 		[["bun_top", Color(0.88, 0.55, 0.22)], ["sesame", Color(1.0, 0.95, 0.8)], ["lettuce", Color(0.35, 0.75, 0.2)], ["cheese", Color(1.0, 0.75, 0.1)],
 			["patty", Color(0.35, 0.18, 0.08)], ["bun_bottom", Color(0.85, 0.52, 0.2)]]],
-	"muhammad_mubarak": ["King Cobra", Color(0.18, 0.5, 0.2), ["scales", Color(0.35, 0.75, 0.3), Color(0.08, 0.25, 0.08), 2.0], Color(0.9, 0.85, 0.45),
-		[["snake_hood", Color(0.2, 0.55, 0.22)], ["snake_eyes", Color(1.0, 0.85, 0.1)], ["snake_fangs", Color(1.0, 1.0, 0.95)], ["snake_tail", Color(0.2, 0.5, 0.2)]]],
 	"faizan_ali": ["Cloud Chaser", Color(0.16, 0.17, 0.2), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.12, 0.12, 0.14),
-		[["vape_body", Color(0.22, 0.3, 0.55)], ["vape_trim", Color(0.75, 0.77, 0.82)], ["vape_tank", Color(0.35, 0.85, 1.0)], ["vape_screen", Color(0.4, 1.0, 0.6)],
-			["vape_button", Color(0.8, 0.82, 0.86)], ["vape_tip", Color(0.1, 0.1, 0.12)], ["vape_cloud", Color(0.92, 0.94, 0.98)]], {skip = ["suit_body"], legs = Color(0.25, 0.3, 0.45)}],
+		[["vape2_body", Color(0.3, 0.38, 0.62)], ["vape2_trim", Color(0.8, 0.82, 0.88)], ["vape2_tank", Color(0.35, 0.85, 1.0)], ["vape2_screen", Color(0.4, 1.0, 0.6)],
+			["vape2_slots", Color(0.08, 0.08, 0.1)], ["vape2_label", Color(0.9, 0.92, 1.0)], ["vape2_hat", Color(0.78, 0.8, 0.86)], ["vape2_tip", Color(0.08, 0.08, 0.1)],
+			["vape2_cloud", Color(0.93, 0.95, 0.99)]], {skip = ["suit_body"], legs = Color(0.25, 0.3, 0.45)}],
 	"hamza_khan": ["Lion King", Color(0.85, 0.62, 0.3), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.95, 0.85, 0.65),
 		[["lion_mane", Color(0.62, 0.32, 0.1)], ["ears_round", Color(0.85, 0.62, 0.3)], ["tail", Color(0.85, 0.62, 0.3)], ["tail_tuft", Color(0.55, 0.28, 0.08)]]],
 	"abdul_wasay": ["Raging Bull", Color(0.45, 0.25, 0.14), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.15, 0.1, 0.08),
 		[["bull_horns", Color(0.95, 0.9, 0.78)], ["bull_snout", Color(0.75, 0.55, 0.48)], ["nose_ring", GOLD], ["ears_side", Color(0.45, 0.25, 0.14)],
 			["tail", Color(0.45, 0.25, 0.14)], ["tail_tuft", Color(0.1, 0.07, 0.05)]]],
-	"sarfraz_yousaf": ["Woolly Sheep", Color(0.95, 0.93, 0.88), ["", Color(0, 0, 0), Color(0, 0, 0, 0), 1.0], Color(0.15, 0.13, 0.13),
-		[["wool_head", Color(0.97, 0.95, 0.9)], ["wool_body", Color(0.97, 0.95, 0.9)], ["ears_side", Color(0.2, 0.17, 0.17)], ["ram_horns", Color(0.75, 0.62, 0.45)]]],
+}
+
+
+## Creature hybrids: creature skin (pattern + sheen) instead of human skin, and a creature head built round theirs.
+const HYBRID := {
+	"muhammad_mubarak": {name = "King Cobra",
+		skin = {c = Color(0.32, 0.62, 0.3), sat = 0.0, bright = 0.85, sheen = 0.6, pat = {kind = "scales", a = Color(0.2, 0.45, 0.18), b = Color(0.48, 0.78, 0.36), scale = 2.2}},
+		tops = {c = Color(0.3, 0.6, 0.28), sat = 0.0, bright = 0.75, pat = {kind = "scales", a = Color(0.42, 0.75, 0.33), b = Color(0.14, 0.32, 0.12), scale = 1.8}},
+		bottoms = {c = Color(0.07, 0.09, 0.07), sat = 0.0, bright = 0.45},
+		shoes = {c = Color(0.3, 0.55, 0.28), sat = 0.0, bright = 0.6},
+		parts = [["snake_skull", Color(0.3, 0.6, 0.28)], ["snake_jaw", Color(0.86, 0.84, 0.55)], ["snake_brow", Color(0.16, 0.38, 0.16)],
+			["snake_eyes2", Color(1.0, 0.82, 0.1)], ["snake_pupils", Color(0.04, 0.04, 0.04)], ["snake_fangs2", Color(1.0, 1.0, 0.95)],
+			["snake_tongue", Color(0.85, 0.12, 0.2)], ["snake_hood2", Color(0.26, 0.52, 0.24)], ["snake_belly", Color(0.88, 0.85, 0.55)],
+			["snake_tail2", Color(0.28, 0.56, 0.26)], ["chain", Color(1.0, 0.8, 0.3)]]},
+	"muhammad_nauman_nawaz": {name = "Banana Boy",
+		skin = {c = Color(1.0, 0.86, 0.3), sat = 0.0, bright = 0.95, pat = {kind = "dots", a = Color(0.5, 0.33, 0.1), b = Color(0, 0, 0, 0), scale = 1.2}},
+		face = {c = Color(1.0, 0.87, 0.35), sat = 0.0, bright = 1.0},
+		tops = {c = Color.WHITE, sat = 1.0, bright = 1.0, pat = {kind = "solid", a = Color(1.0, 0.85, 0.28)}},
+		bottoms = {c = Color(1.0, 0.85, 0.25), sat = 0.0, bright = 0.85},
+		shoes = {c = Color(0.35, 0.24, 0.1), sat = 0.0, bright = 0.6},
+		parts = [["banana_crown", Color(1.0, 0.86, 0.25)], ["banana_stalk", Color(0.38, 0.27, 0.1)], ["banana_spots", Color(0.45, 0.3, 0.1)],
+			["banana_petals", Color(1.0, 0.88, 0.35)], ["banana_skirt", Color(1.0, 0.86, 0.3)], ["banana_tips", Color(0.38, 0.27, 0.1)],
+			["shades", Color(0.08, 0.08, 0.08)]]},
+	"sarfraz_yousaf": {name = "Baa-rfraz",
+		skin = {c = Color(0.95, 0.93, 0.88), sat = 0.0, bright = 0.85, sheen = 1.0, pat = {kind = "camo", a = Color(0.86, 0.84, 0.78), b = Color(1.0, 1.0, 0.96), scale = 2.0}},
+		tops = {c = Color.WHITE, sat = 1.0, bright = 1.0, sheen = 1.0, pat = {kind = "solid", a = Color(0.95, 0.94, 0.9)}},
+		bottoms = {c = Color(0.24, 0.22, 0.21), sat = 0.0, bright = 0.5},
+		shoes = {c = Color(0.1, 0.09, 0.09), sat = 0.0, bright = 0.4},
+		parts = [["sheep_head", Color(0.3, 0.26, 0.24)], ["sheep_wool", Color(0.97, 0.96, 0.92)], ["sheep_ears", Color(0.28, 0.24, 0.22)],
+			["sheep_horns", Color(0.78, 0.64, 0.46)], ["sheep_eyes", Color(0.96, 0.93, 0.78)], ["sheep_pupils", Color(0.05, 0.05, 0.05)],
+			["sheep_nose", Color(0.6, 0.42, 0.42)], ["sheep_hooves", Color(0.12, 0.1, 0.1)], ["sheep_tail", Color(0.97, 0.96, 0.92)],
+			["sheep_fleece", Color(0.97, 0.96, 0.92)], ["bowtie", Color(0.9, 0.15, 0.2)]]},
 }
 
 

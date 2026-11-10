@@ -742,6 +742,8 @@ func _acc_parts(kind: String) -> Array:
 		# ---- G.O.A.T. form: an anime goat head built round the measured skull (it encloses the human head)
 		"goat_head", "goat_horns", "goat_nose", "goat_eyes", "goat_pupils":
 			return _goat_parts(kind)
+		"snake_skull", "snake_jaw", "snake_hood2", "snake_eyes2", "snake_pupils", "snake_fangs2", "snake_tongue", "snake_belly", "snake_tail2", "snake_brow", "sheep_head", "sheep_wool", "sheep_ears", "sheep_horns", "sheep_eyes", "sheep_pupils", "sheep_nose", "sheep_hooves", "sheep_tail", "sheep_fleece", "banana_crown", "banana_stalk", "banana_petals", "banana_skirt", "banana_spots", "banana_tips", "phone2_case", "phone2_screen", "phone2_bezel", "phone2_apps", "phone2_back", "phone2_lens", "phone2_logo", "phone2_notch", "phone2_hood", "phone2_buttons", "vape2_body", "vape2_trim", "vape2_tank", "vape2_screen", "vape2_slots", "vape2_label", "vape2_hat", "vape2_tip", "vape2_cloud", "cig2_paper", "cig2_filter", "cig2_dots", "cig2_band", "cig2_seam", "cig2_label", "cig2_ash", "cig2_ember", "cig2_smoke", "zia_tee", "zia_pin", "zia_pin_x", "zia_badge", "zia_badge_txt", "zia_chana", "zia_phones", "zia_plate", "zia_rice", "zia_carrot", "zia_raisin", "zia_mug", "zia_mug_txt":
+			return _creature_parts(kind)
 		"hijab_cap", "muscles", "langoot", "langoot_band", "pehlwan_mustache", "gada", "gada_head", "kig_hood", "suit_body", "vape_body", "vape_tank", "vape_screen", "vape_button", "vape_tip", "vape_cloud", "vape_trim", "tail", "banana_tip", "banana_body", "banana_ridges", "banana_end", "phone_body", "phone_screen", "app0", "app1", "app2", "app3", "phone_cam", "phone_back", "cig_body", "cig_filter", "cig_band", "cig_ash", "cig_ember", "cig_smoke", "waistcoat", "gamcha", "gamcha_check", "suit_arms", "suit_legs", "suit_paws", "lion_mane", "ears_round", "tail_tuft", "bull_horns", "bull_snout", "nose_ring", "ears_side", "wool_head", "wool_body", "ram_horns", "snake_hood", "snake_eyes", "snake_fangs", "snake_tail", "banana_peel", "banana_stem", "bun_top", "sesame", "lettuce", "cheese", "patty", "bun_bottom", "smoke_body", "smoke_head", "cricket_helmet", "helmet_grille", "batting_gloves", "cricket_bat", "thigh_pad", "beret", "palette", "dab0", "dab1", "dab2", "dab3", "dab4", "dab5", "paint_brush":
 			return _mascot_parts(kind)
 		"fur_arms":     # shaggy fur over the forearms and the backs of the hands
@@ -1193,6 +1195,352 @@ func _mascot_parts(kind: String) -> Array:
 	return []
 
 
+## Text as a mesh (for decals that must say something: Zia's shirt, badges, phone and vape labels).
+static func _txt(t: String, size := 0.05, depth := 0.0) -> TextMesh:
+	var m := TextMesh.new()
+	m.text = t; m.font = load("res://assets/fonts/RussoOne-Regular.ttf"); m.font_size = 64
+	m.pixel_size = size / 64.0; m.depth = depth
+	return m
+
+
+## A box with rounded front-view corners: two crossing boxes and four edge cylinders (no sharp crate look).
+func _rbox(bone: String, ctr: Vector3, sz: Vector3, rad: float) -> Array:
+	var out := [[bone, ToonRig.box(sz.x, sz.y - rad * 2.0, sz.z), ctr, Vector3.ZERO, Vector3.ONE],
+		[bone, ToonRig.box(sz.x - rad * 2.0, sz.y, sz.z), ctr, Vector3.ZERO, Vector3.ONE]]
+	for sx in [-1.0, 1.0]:
+		for sy in [-1.0, 1.0]:
+			out.append([bone, ToonRig.cyl(rad, rad, sz.z), ctr + Vector3(sx * (sz.x / 2.0 - rad), sy * (sz.y / 2.0 - rad), 0), Vector3(PI / 2, 0, 0), Vector3.ONE])
+	return out
+
+
+## Centre of one ring of the banana crown (k = 0 at the scalp, 6 near the tip, 7 = where the stalk starts).
+func _banana_layer(k: int) -> Vector3:
+	var c: Vector3 = skull.position + skull.size / 2.0
+	var top: float = skull.position.y + skull.size.y
+	var p := Vector3(0, top - 0.035, c.z - 0.015)
+	for i in k:
+		var t := i / 6.0
+		p += Vector3(0, 0.032, 0.006 + t * 0.012)
+	return p
+
+
+## Creature hybrids (snake, sheep, banana), the rebuilt phone / vape / cigarette suits and Zia's principal-engineer gear.
+func _creature_parts(kind: String) -> Array:
+	var H := "head"
+	var c: Vector3 = skull.position + skull.size / 2.0
+	var r: float = skull.size.x / 2.0
+	var front: float = skull.position.z + skull.size.z
+	var top: float = skull.position.y + skull.size.y
+	var bottom: float = skull.position.y
+	var S := func(bone: String, pos: Vector3, sx: float, sy: float, sz: float, rot := Vector3.ZERO) -> Array:
+		return [bone, ToonRig.sph(1.0), pos, rot, Vector3(sx, sy, sz)]
+	var tor := func(rr: float, th: float) -> TorusMesh:
+		var t := TorusMesh.new(); t.inner_radius = rr - th; t.outer_radius = rr + th; t.rings = 28; t.ring_segments = 10
+		return t
+	var cap := func(rad: float, h: float) -> CapsuleMesh:
+		var m := CapsuleMesh.new(); m.radius = rad; m.height = h; m.radial_segments = 24; m.rings = 8
+		return m
+	var rng := RandomNumberGenerator.new(); rng.seed = hash(kind)
+	var Z90 := Vector3(0, 0, PI / 2)
+	# snake head geometry: a broad flat skull, a long snout reaching forward, eyes high on the sides
+	var scc := c + Vector3(0, 0.0, -0.01)
+	var scr := Vector3(r * 1.18, skull.size.y * 0.5, r * 1.2)
+	var snc := Vector3(0, c.y - 0.012, front + 0.035)
+	var sex := r * 0.72
+	var sey := c.y + 0.038
+	var sez := front - 0.012
+	# sheep head: a woolly crown on a long dark face
+	var hcc := c + Vector3(0, 0.0, -0.01)
+	var hmc := Vector3(0, c.y - 0.03, front + 0.03)
+	var hex := r * 0.78
+	var hey := c.y + 0.035
+	var hez := hcc.z + r * 1.15 * 0.63 + 0.004   # on the skull's surface beside the muzzle
+	match kind:
+		# ---------------------------------------------------------------- snake-man (Mubarak)
+		"snake_skull":
+			return [S.call(H, scc, scr.x, scr.y, scr.z),
+				S.call(H, Vector3(c.x, c.y + 0.01, c.z - 0.06), r * 1.16, skull.size.y * 0.5, r * 1.12),   # covers the back of the head
+				S.call(H, snc, r * 0.82, r * 0.42, r * 0.95, Vector3(0.12, 0, 0)),
+				S.call(H, Vector3(0, bottom + 0.01, c.z), r * 0.9, 0.06, r * 0.95)]   # the neck below the jaw
+		"snake_jaw":   # pale lower jaw / chin
+			return [S.call(H, Vector3(0, c.y - 0.055, front + 0.012), r * 0.74, r * 0.22, r * 0.88, Vector3(0.1, 0, 0))]
+		"snake_brow":  # heavy scaled brows over the eyes
+			return [S.call(H, Vector3(sex * 0.95, sey + 0.022, sez - 0.004), 0.034, 0.012, 0.03, Vector3(0, 0.4, -0.25)),
+				S.call(H, Vector3(-sex * 0.95, sey + 0.022, sez - 0.004), 0.034, 0.012, 0.03, Vector3(0, -0.4, 0.25))]
+		"snake_eyes2":
+			return [S.call(H, Vector3(sex, sey, sez), 0.025, 0.02, 0.016, Vector3(0, 0.45, 0)),
+				S.call(H, Vector3(-sex, sey, sez), 0.025, 0.02, 0.016, Vector3(0, -0.45, 0))]
+		"snake_pupils":   # vertical slits
+			return [[H, ToonRig.box(0.005, 0.028, 0.004), Vector3(sex + 0.006, sey, sez + 0.014), Vector3(0, 0.45, 0), Vector3.ONE],
+				[H, ToonRig.box(0.005, 0.028, 0.004), Vector3(-sex - 0.006, sey, sez + 0.014), Vector3(0, -0.45, 0), Vector3.ONE]]
+		"snake_fangs2":
+			return [[H, ToonRig.cyl(0.0, 0.007, 0.034), Vector3(0.022, c.y - 0.05, front + 0.07), Vector3(PI, 0, 0), Vector3.ONE],
+				[H, ToonRig.cyl(0.0, 0.007, 0.034), Vector3(-0.022, c.y - 0.05, front + 0.07), Vector3(PI, 0, 0), Vector3.ONE]]
+		"snake_tongue":   # forked
+			return [[H, ToonRig.box(0.008, 0.003, 0.05), Vector3(0, c.y - 0.06, front + 0.105), Vector3(0.2, 0, 0), Vector3.ONE],
+				[H, ToonRig.box(0.005, 0.003, 0.028), Vector3(0.009, c.y - 0.066, front + 0.14), Vector3(0.2, 0.45, 0), Vector3.ONE],
+				[H, ToonRig.box(0.005, 0.003, 0.028), Vector3(-0.009, c.y - 0.066, front + 0.14), Vector3(0.2, -0.45, 0), Vector3.ONE]]
+		"snake_hood2":   # the cobra hood flaring from the back of the head down to the shoulders
+			return [S.call(H, Vector3(0, c.y - 0.04, c.z - 0.2), r * 2.4, r * 2.2, 0.035, Vector3(0.15, 0, 0)),
+				S.call("upperChest", Vector3(0, 0.22, -0.12), 0.26, 0.15, 0.045)]
+		"snake_belly":   # pale belly scales down the chest and stomach
+			var out := []
+			for k in 7:
+				var bone: String = "upperChest" if k < 3 else ("chest" if k < 5 else "hips")
+				var y: float = [0.1, 0.03, -0.04, 0.06, -0.02, 0.07, 0.0][k]
+				out.append(["upperChest" if k < 3 else bone, ToonRig.box(0.15 - k * 0.006, 0.05, 0.02), Vector3(0, y, 0.13), Vector3(-0.05, 0, 0), Vector3.ONE])
+			return out
+		"snake_tail2":   # a long tail from the base of the spine, sweeping down and curling on the floor
+			var out := []
+			for k in 14:
+				var t := k / 13.0
+				var rr := 0.075 - t * 0.06
+				var pos := Vector3(sin(t * 3.2) * 0.12, -0.12 - t * 0.78 + t * t * 0.25, -0.16 - t * 0.55)
+				out.append(S.call("hips", pos, rr, rr, rr * 1.4))
+			return out
+		# ---------------------------------------------------------------- sheep-man (Sarfraz)
+		"sheep_head":   # the long dark face and skull (encloses the human head)
+			return [S.call(H, hcc, r * 1.1, skull.size.y * 0.54, r * 1.15),
+				S.call(H, hmc, r * 0.6, r * 0.58, r * 0.9, Vector3(0.3, 0, 0)),
+				S.call(H, Vector3(0, bottom + 0.0, c.z), r * 0.95, 0.06, r * 0.95)]
+		"sheep_wool":   # a thick woolly cap over the crown and down the back of the head
+			var out := []
+			for k in 18:
+				var a := TAU * k / 18.0
+				out.append(S.call(H, hcc + Vector3(cos(a) * r * 1.0, r * 0.75 + absf(sin(a)) * 0.02, -0.02 + sin(a) * r * 0.75), 0.05, 0.045, 0.05))
+			for k in 7:
+				out.append(S.call(H, hcc + Vector3(rng.randf_range(-0.06, 0.06), r * 1.05, rng.randf_range(-0.1, 0.0)), 0.055, 0.045, 0.055))
+			for k in 6:   # down the back of the head
+				out.append(S.call(H, hcc + Vector3((k % 3 - 1) * 0.06, r * 0.2 - (k / 3) * 0.08, -r * 1.05), 0.055, 0.05, 0.045))
+			return out
+		"sheep_ears":
+			return [S.call(H, Vector3(r * 1.25, c.y + 0.02, c.z + 0.01), 0.075, 0.022, 0.035, Vector3(0, 0, -0.55)),
+				S.call(H, Vector3(-r * 1.25, c.y + 0.02, c.z + 0.01), 0.075, 0.022, 0.035, Vector3(0, 0, 0.55))]
+		"sheep_horns":   # curled ram horns spiralling beside the head
+			var out := []
+			for sx in [-1.0, 1.0]:
+				for k in 3:
+					var rr := 0.055 - k * 0.014
+					out.append([H, tor.call(rr, 0.017 - k * 0.003), Vector3(sx * (r * 1.05 + k * 0.012), c.y + 0.04 - k * 0.012, c.z - 0.01 + k * 0.012), Vector3(0, PI / 2, 0), Vector3.ONE])
+			return out
+		"sheep_eyes":
+			return [S.call(H, Vector3(hex, hey, hez), 0.021, 0.02, 0.012, Vector3(0, 0.6, 0)),
+				S.call(H, Vector3(-hex, hey, hez), 0.021, 0.02, 0.012, Vector3(0, -0.6, 0))]
+		"sheep_pupils":   # sideways bar pupils
+			return [[H, ToonRig.box(0.02, 0.006, 0.004), Vector3(hex + 0.006, hey, hez + 0.011), Vector3(0, 0.6, 0), Vector3.ONE],
+				[H, ToonRig.box(0.02, 0.006, 0.004), Vector3(-hex - 0.006, hey, hez + 0.011), Vector3(0, -0.6, 0), Vector3.ONE]]
+		"sheep_nose":
+			var tip := hmc + Basis.from_euler(Vector3(0.3, 0, 0)) * Vector3(0, 0, r * 0.86)
+			return [S.call(H, tip + Vector3(0, 0.0, 0.0), 0.034, 0.024, 0.016, Vector3(0.3, 0, 0)),
+				S.call(H, tip + Vector3(0, -0.034, -0.012), 0.022, 0.005, 0.01, Vector3(0.3, 0, 0))]
+		"sheep_hooves":
+			return [S.call("leftHand", Vector3(0.045, 0, 0), 0.05, 0.042, 0.05), S.call("rightHand", Vector3(-0.045, 0, 0), 0.05, 0.042, 0.05),
+				S.call("leftFoot", Vector3(0, -0.02, 0.05), 0.06, 0.05, 0.1), S.call("rightFoot", Vector3(0, -0.02, 0.05), 0.06, 0.05, 0.1)]
+		"sheep_tail":
+			return [S.call("hips", Vector3(0, -0.06, -0.19), 0.05, 0.05, 0.045)]
+		"sheep_fleece":   # wool clusters over the shoulders, chest, back and upper arms
+			var out := []
+			for k in 26:
+				var bone: String = ["upperChest", "chest", "hips", "leftUpperArm", "rightUpperArm"][k % 5]
+				var p: Vector3
+				if bone.ends_with("UpperArm"):
+					p = Vector3((0.06 + rng.randf() * 0.14) * (1.0 if bone.begins_with("left") else -1.0), rng.randf_range(-0.03, 0.04), rng.randf_range(-0.05, 0.05))
+				else:
+					var a := rng.randf() * TAU
+					p = Vector3(cos(a) * 0.17, rng.randf_range(-0.07, 0.09), sin(a) * 0.14)
+				var rr := rng.randf_range(0.055, 0.075)
+				out.append(S.call(bone, p, rr, rr * 0.9, rr))
+			return out
+		# ---------------------------------------------------------------- banana-man (Nauman)
+		"banana_crown":   # the head grows up into the curved, tapering top of a banana
+			var out := []
+			# two smooth tapering sections along the banana's curve, with a rounded joint (no stacked rings)
+			var segs := [[0, 3, 1.04, 0.66], [3, 6, 0.66, 0.26]]
+			for sg in segs:
+				var p0: Vector3 = _banana_layer(sg[0]); var p1: Vector3 = _banana_layer(sg[1])
+				var dir := (p1 - p0)
+				var len := dir.length()
+				var up := dir / len
+				var bas := Basis(Vector3.UP.cross(up).normalized(), Vector3.UP.angle_to(up)) if Vector3.UP.cross(up).length() > 1e-4 else Basis()
+				var cy := CylinderMesh.new(); cy.top_radius = r * float(sg[3]); cy.bottom_radius = r * float(sg[2]); cy.height = len; cy.radial_segments = 20
+				out.append([H, cy, (p0 + p1) / 2.0, bas.get_euler(), Vector3(1.0, 1.0, 0.95)])
+			out.append(S.call(H, _banana_layer(3), r * 0.66, r * 0.66, r * 0.63))   # the joint
+			out.append(S.call(H, _banana_layer(6), r * 0.26, r * 0.26, r * 0.25))   # rounded tip
+			out.append(S.call(H, Vector3(c.x, c.y + 0.03, c.z - 0.045), r * 1.06, skull.size.y * 0.55, front - c.z - 0.02))   # hugs the scalp
+			out.append(S.call(H, Vector3(c.x, c.y + 0.0, c.z - 0.08), r * 1.08, skull.size.y * 0.55, r * 1.05))                # and the back of the head
+			return out
+		"banana_stalk":
+			var tip := _banana_layer(7)
+			return [[H, ToonRig.cyl(0.016, 0.022, 0.06), tip + Vector3(0, 0.0, 0.004), Vector3(0.45, 0, 0), Vector3.ONE],
+				S.call(H, tip + Vector3(0, 0.03, 0.018), 0.02, 0.012, 0.02)]
+		"banana_spots":   # ripe brown speckles sitting on the crown's surface
+			var out := []
+			for k in 9:
+				var layer := 1 + (k % 5)
+				var rad := r * (1.04 - layer / 6.0 * 0.78)
+				var a := rng.randf() * TAU
+				out.append(S.call(H, _banana_layer(layer) + Vector3(cos(a) * rad * 0.97, rng.randf_range(-0.01, 0.01), sin(a) * rad * 0.92), 0.011, 0.009, 0.011))
+			return out
+		"banana_petals":   # peel petals peeled back from the neck and hanging over the shoulders, chest and back
+			var out := []
+			for k in 4:
+				var a := TAU * k / 4.0 + PI / 4.0
+				var d := Vector3(cos(a), 0, sin(a))
+				var yaw := atan2(d.x, d.z)
+				out.append(["upperChest", cap.call(0.07, 0.34), Vector3(0, -0.06, 0) + d * 0.2, Vector3(-0.3, yaw, 0), Vector3(1.0, 1.0, 0.25)])   # hangs down, tips out
+			return out
+		"banana_skirt":   # the lower peel hangs from the waist in four petals
+			var out := []
+			for k in 4:
+				var a := TAU * k / 4.0 + PI / 4.0
+				var d := Vector3(cos(a), 0, sin(a))
+				out.append(["hips", cap.call(0.085, 0.3), Vector3(0, -0.15, 0) + d * 0.19, Vector3(-0.25, atan2(d.x, d.z), 0), Vector3(1.0, 1.0, 0.25)])
+			return out
+		"banana_tips":   # dark tips on the petals
+			var out := []
+			for k in 4:
+				var a := TAU * k / 4.0 + PI / 4.0
+				var d := Vector3(cos(a), 0, sin(a))
+				out.append(S.call("hips", Vector3(0, -0.29, 0) + d * 0.23, 0.045, 0.025, 0.02, Vector3(-0.25, atan2(d.x, d.z), 0)))
+			return out
+		# ---------------------------------------------------------------- the phone suit (Saad)
+		"phone2_case":
+			return _rbox("chest", Vector3(0, -0.15, 0.01), Vector3(0.5, 0.74, 0.26), 0.075)
+		"phone2_bezel":   # the black glass front
+			return _rbox("chest", Vector3(0, -0.15, 0.135), Vector3(0.46, 0.7, 0.012), 0.06)
+		"phone2_screen":
+			return _rbox("chest", Vector3(0, -0.15, 0.143), Vector3(0.42, 0.64, 0.006), 0.045)
+		"phone2_apps":   # rows of app tiles in four colours (one draw call each colour is fine here: one colour)
+			var out := []
+			for row in 4:
+				for col in 4:
+					out.append(["chest", ToonRig.box(0.064, 0.064, 0.008), Vector3(-0.135 + col * 0.09, 0.07 - row * 0.1, 0.149), Vector3.ZERO, Vector3.ONE])
+			out.append(["chest", ToonRig.box(0.3, 0.07, 0.008), Vector3(0, -0.4, 0.149), Vector3.ZERO, Vector3.ONE])   # the dock
+			return out
+		"phone2_buttons":   # volume and power keys on the sides
+			return [["chest", ToonRig.box(0.012, 0.09, 0.03), Vector3(0.255, 0.05, 0.01), Vector3.ZERO, Vector3.ONE],
+				["chest", ToonRig.box(0.012, 0.06, 0.03), Vector3(-0.255, 0.08, 0.01), Vector3.ZERO, Vector3.ONE],
+				["chest", ToonRig.box(0.012, 0.06, 0.03), Vector3(-0.255, -0.01, 0.01), Vector3.ZERO, Vector3.ONE]]
+		"phone2_back":   # the rear camera module
+			var out := _rbox("chest", Vector3(-0.1, 0.08, -0.13), Vector3(0.2, 0.2, 0.025), 0.05)
+			return out
+		"phone2_lens":
+			return [["chest", tor.call(0.032, 0.008), Vector3(-0.145, 0.125, -0.145), Vector3(PI / 2, 0, 0), Vector3.ONE],
+				["chest", tor.call(0.032, 0.008), Vector3(-0.145, 0.04, -0.145), Vector3(PI / 2, 0, 0), Vector3.ONE],
+				["chest", tor.call(0.032, 0.008), Vector3(-0.06, 0.125, -0.145), Vector3(PI / 2, 0, 0), Vector3.ONE],
+				S.call("chest", Vector3(-0.06, 0.045, -0.145), 0.016, 0.016, 0.006)]
+		"phone2_logo":
+			return [["chest", _txt("BNB", 0.11), Vector3(0, -0.22, -0.146), Vector3(0, PI, 0), Vector3.ONE]]
+		"phone2_notch":   # the front-camera island on the hood, right above the face
+			return [_rbox(H, Vector3(0, top + 0.005, front - 0.03), Vector3(0.1, 0.03, 0.02), 0.014)[0],
+				_rbox(H, Vector3(0, top + 0.005, front - 0.03), Vector3(0.1, 0.03, 0.02), 0.014)[1],
+				S.call(H, Vector3(0.03, top + 0.005, front - 0.018), 0.009, 0.009, 0.004)]
+		# ---------------------------------------------------------------- the vape suit (Faizan)
+		"vape2_body":
+			return _rbox("chest", Vector3(0, -0.15, 0.01), Vector3(0.46, 0.74, 0.28), 0.08)
+		"vape2_trim":   # brushed-metal bands at the top and bottom
+			return [["chest", ToonRig.box(0.47, 0.035, 0.285), Vector3(0, 0.17, 0.01), Vector3.ZERO, Vector3.ONE],
+				["chest", ToonRig.box(0.47, 0.035, 0.285), Vector3(0, -0.47, 0.01), Vector3.ZERO, Vector3.ONE]]
+		"vape2_tank":
+			return _rbox("chest", Vector3(0, 0.06, 0.148), Vector3(0.32, 0.15, 0.012), 0.04)
+		"vape2_screen":
+			return [["chest", ToonRig.box(0.15, 0.07, 0.008), Vector3(0, -0.11, 0.152), Vector3.ZERO, Vector3.ONE],
+				["chest", ToonRig.cyl(0.04, 0.04, 0.016), Vector3(0, -0.25, 0.152), Vector3(PI / 2, 0, 0), Vector3.ONE]]   # fire button
+		"vape2_slots":   # airflow slots on the back
+			var out := []
+			for k in 5:
+				out.append(["chest", ToonRig.box(0.24, 0.018, 0.01), Vector3(0, 0.05 - k * 0.045, -0.132), Vector3.ZERO, Vector3.ONE])
+			return out
+		"vape2_label":
+			return [["chest", _txt("CLOUD CHASER", 0.06), Vector3(0, -0.3, -0.135), Vector3(0, PI, 0), Vector3.ONE],
+				["chest", _txt("80W", 0.05), Vector3(0, -0.11, 0.158), Vector3.ZERO, Vector3.ONE]]
+		"vape2_hat":   # the silver base of the mouthpiece, worn as a hat
+			return [[H, ToonRig.cyl(r * 0.7, r * 0.85, 0.045), Vector3(0, top + 0.012, c.z - 0.02), Vector3.ZERO, Vector3.ONE],
+				[H, tor.call(r * 0.8, 0.008), Vector3(0, top - 0.005, c.z - 0.02), Vector3.ZERO, Vector3.ONE]]
+		"vape2_tip":
+			return [[H, ToonRig.cyl(0.035, 0.05, 0.07), Vector3(0, top + 0.07, c.z - 0.02), Vector3.ZERO, Vector3.ONE]]
+		"vape2_cloud":   # a soft cloud puffing off the tip
+			var out := []
+			for k in 6:
+				var a := TAU * k / 6.0
+				out.append(S.call(H, Vector3(cos(a) * 0.06, top + 0.15 + (k % 2) * 0.03, c.z - 0.02 + sin(a) * 0.05), 0.05, 0.04, 0.05))
+			out.append(S.call(H, Vector3(0.02, top + 0.22, c.z - 0.03), 0.06, 0.045, 0.06))
+			return out
+		# ---------------------------------------------------------------- the cigarette suit (Usman)
+		"cig2_paper":   # a smooth rolled-paper tube shaped round the torso
+			return [["chest", cap.call(0.205, 0.66), Vector3(0, 0.0, 0.0), Vector3.ZERO, Vector3(1.0, 1.0, 0.86)]]
+		"cig2_filter":
+			return [["hips", ToonRig.cyl(0.198, 0.19, 0.3), Vector3(0, -0.06, 0.0), Vector3.ZERO, Vector3(1.0, 1.0, 0.86)]]   # a straight cork tube
+		"cig2_dots":   # cork-pattern speckles on the filter
+			var out := []
+			for k in 26:
+				var a := rng.randf() * TAU
+				out.append(S.call("hips", Vector3(cos(a) * 0.196, rng.randf_range(-0.19, 0.07), sin(a) * 0.17), 0.011, 0.008, 0.011))
+			return out
+		"cig2_band":
+			return [["hips", tor.call(0.2, 0.012), Vector3(0, 0.09, 0.0), Vector3.ZERO, Vector3(1.0, 1.0, 0.86)]]
+		"cig2_seam":   # the paper's glued seam down the back
+			return [["chest", ToonRig.box(0.012, 0.6, 0.006), Vector3(0.04, 0.0, -0.177), Vector3.ZERO, Vector3.ONE]]
+		"cig2_label":
+			return [["chest", _txt("BNB LIGHTS", 0.055), Vector3(0, -0.12, 0.178), Vector3.ZERO, Vector3.ONE]]
+		"cig2_ash":   # the burning tip worn as a hat: grey ash...
+			return [[H, ToonRig.cyl(r * 0.9, r * 0.95, 0.05), Vector3(0, top + 0.01, c.z - 0.025), Vector3.ZERO, Vector3.ONE]]
+		"cig2_ember":   # ...glowing orange on top, with sparks
+			var out := [[H, ToonRig.cyl(r * 0.7, r * 0.88, 0.03), Vector3(0, top + 0.045, c.z - 0.025), Vector3.ZERO, Vector3.ONE]]
+			for k in 5:
+				var a := TAU * k / 5.0
+				out.append(S.call(H, Vector3(cos(a) * r * 0.5, top + 0.065, c.z - 0.025 + sin(a) * r * 0.5), 0.012, 0.01, 0.012))
+			return out
+		"cig2_smoke":   # a thin wisp drifting up and away
+			var out := []
+			for k in 7:
+				out.append(S.call(H, Vector3(sin(k * 1.1) * 0.035, top + 0.11 + k * 0.055, c.z - 0.03 - k * 0.012), 0.022 + k * 0.007, 0.018 + k * 0.004, 0.022 + k * 0.007))
+			return out
+		# ---------------------------------------------------------------- Zia: Principal Software Engineer
+		"zia_tee":   # the print on his chest
+			return [["upperChest", _txt("KABULI PULAO", 0.06), Vector3(0, 0.0, 0.142), Vector3(-0.06, 0, 0), Vector3.ONE],
+				["upperChest", _txt("> EVERYTHING", 0.045), Vector3(0, -0.055, 0.142), Vector3(-0.06, 0, 0), Vector3.ONE]]
+		"zia_pin":   # a round pin: a black chickpea...
+			return [["upperChest", ToonRig.cyl(0.035, 0.035, 0.008), Vector3(-0.09, 0.09, 0.13), Vector3(PI / 2 - 0.1, 0, 0), Vector3.ONE]]
+		"zia_chana":
+			return [S.call("upperChest", Vector3(-0.09, 0.09, 0.137), 0.014, 0.012, 0.007)]
+		"zia_pin_x":   # ...in a red no-entry ring
+			return [["upperChest", tor.call(0.033, 0.005), Vector3(-0.09, 0.09, 0.14), Vector3(PI / 2 - 0.1, 0, 0), Vector3.ONE],
+				["upperChest", ToonRig.box(0.06, 0.008, 0.004), Vector3(-0.09, 0.09, 0.142), Vector3(0, 0, -0.78), Vector3.ONE],
+				["upperChest", _txt("NO KAALI CHANA", 0.016), Vector3(-0.09, 0.045, 0.14), Vector3(-0.1, 0, 0), Vector3.ONE]]
+		"zia_badge":   # the lanyard badge says it all
+			return [["chest", ToonRig.box(0.08, 0.105, 0.006), Vector3(0.0, 0.04, 0.142), Vector3(-0.05, 0, 0), Vector3.ONE]]
+		"zia_badge_txt":
+			return [["chest", _txt("PRINCIPAL", 0.018), Vector3(0.0, 0.02, 0.147), Vector3(-0.05, 0, 0), Vector3.ONE],
+				["chest", _txt("ENGINEER", 0.014), Vector3(0.0, 0.0, 0.147), Vector3(-0.05, 0, 0), Vector3.ONE]]
+		"zia_phones":   # headphones resting round the neck
+			return [["upperChest", tor.call(0.1, 0.012), Vector3(0, 0.16, 0.02), Vector3(0.35, 0, 0), Vector3(1.05, 1.0, 1.0)],
+				S.call("upperChest", Vector3(0.1, 0.13, 0.07), 0.035, 0.04, 0.025, Vector3(0, 0.6, 0)),
+				S.call("upperChest", Vector3(-0.1, 0.13, 0.07), 0.035, 0.04, 0.025, Vector3(0, -0.6, 0))]
+		"zia_plate":   # a plate of Kabuli pulao in his left hand
+			return [["leftHand", ToonRig.cyl(0.13, 0.11, 0.02), Vector3(0.1, 0.0, 0.06), Vector3(0, 0, 0.25), Vector3.ONE]]
+		"zia_rice":
+			return [S.call("leftHand", Vector3(0.1, 0.03, 0.06), 0.1, 0.045, 0.1, Vector3(0, 0, 0.25))]
+		"zia_carrot":   # julienned carrots on top
+			var out := []
+			for k in 8:
+				var a := TAU * k / 8.0
+				out.append(["leftHand", ToonRig.box(0.05, 0.008, 0.008), Vector3(0.1 + cos(a) * 0.04, 0.07, 0.06 + sin(a) * 0.04), Vector3(0, a, 0.25), Vector3.ONE])
+			return out
+		"zia_raisin":
+			var out := []
+			for k in 7:
+				var a := TAU * k / 7.0 + 0.3
+				out.append(S.call("leftHand", Vector3(0.1 + cos(a) * 0.06, 0.062, 0.06 + sin(a) * 0.06), 0.009, 0.007, 0.009))
+			return out
+		"zia_mug":   # coffee mug in the other hand
+			return [["rightHand", ToonRig.cyl(0.04, 0.036, 0.09), Vector3(-0.07, 0.02, 0.04), Vector3.ZERO, Vector3.ONE],
+				["rightHand", tor.call(0.025, 0.007), Vector3(-0.115, 0.02, 0.04), Vector3(PI / 2, PI / 2, 0), Vector3.ONE]]
+		"zia_mug_txt":
+			return [["rightHand", _txt("git push", 0.014), Vector3(-0.07, 0.02, 0.083), Vector3.ZERO, Vector3.ONE]]
+	return []
+
+
 func _goat_parts(kind: String) -> Array:
 	var H := "head"
 	var c: Vector3 = skull.position + skull.size / 2.0
@@ -1256,7 +1604,7 @@ func _make_accessories(list: Array) -> void:
 	for a in list:
 		var kind: String = a[0]
 		var col: Color = a[1]
-		var flat := kind in ["visor", "glasses", "mustache", "beard", "kameez", "shalwar", "sleeves", "hijab", "dupatta", "lanyard", "goat_eyes", "goat_pupils", "goat_nose", "phone_screen", "app0", "app1", "app2", "app3", "gamcha_check", "banana_ridges", "phone_cam", "vape_tank", "vape_screen"]
+		var flat := kind in ["visor", "glasses", "mustache", "beard", "kameez", "shalwar", "sleeves", "hijab", "dupatta", "lanyard", "goat_eyes", "goat_pupils", "goat_nose", "phone_screen", "app0", "app1", "app2", "app3", "gamcha_check", "banana_ridges", "phone_cam", "vape_tank", "vape_screen", "phone2_screen", "phone2_apps", "phone2_logo", "vape2_tank", "vape2_screen", "vape2_label", "cig2_label", "cig2_seam", "cig2_dots", "zia_tee", "zia_pin_x", "zia_badge_txt", "zia_mug_txt", "snake_pupils", "sheep_pupils", "zia_carrot", "zia_raisin", "banana_spots"]
 		if kind != "visor":
 			col = col * 0.72   # keep within the texture range of the models so accessories don't bloom
 			col.a = 1.0
@@ -1266,11 +1614,11 @@ func _make_accessories(list: Array) -> void:
 		m.set_shader_parameter("tex", _white())
 		m.set_shader_parameter("albedo", col)
 		m.set_shader_parameter("shade", col.darkened(0.3).lerp(Color(0.55, 0.5, 0.75), 0.4))
-		if kind.begins_with("hair_") or kind in ["beard", "mustache", "goat_head", "fur_arms", "lion_mane", "tail", "wool_head", "wool_body", "tail_tuft", "smoke_body", "smoke_head"]:
+		if kind.begins_with("hair_") or kind in ["beard", "mustache", "goat_head", "fur_arms", "lion_mane", "tail", "snake_skull", "snake_hood2", "snake_tail2", "banana_crown", "sheep_wool", "sheep_fleece", "sheep_tail", "wool_head", "wool_body", "tail_tuft", "smoke_body", "smoke_head"]:
 			m.set_shader_parameter("hair_sheen", 1.0 if kind.begins_with("hair_") else 0.6)
 			m.set_shader_parameter("sheen_color", col.lightened(0.6).lerp(Color(0.8, 0.86, 1.0), 0.6))
 			m.set_shader_parameter("shade", col.lightened(0.15).lerp(Color(0.5, 0.48, 0.7), 0.45))
-		if kind in ["visor", "cig_ember", "phone_screen", "vape_tank", "vape_screen"]:
+		if kind in ["visor", "cig_ember", "phone_screen", "vape_tank", "vape_screen", "phone2_screen", "vape2_tank", "vape2_screen", "cig2_ember"]:
 			m.set_shader_parameter("emission_strength", 1.1 if kind == "visor" else 0.6)
 		elif not flat:
 			m.next_pass = outline
@@ -1280,6 +1628,10 @@ func _make_accessories(list: Array) -> void:
 			var mi := MeshInstance3D.new()
 			mi.mesh = part[1]
 			mi.material_override = m
+			if part[1] is TextMesh:   # printed text: crisp, front side only (never mirrored through the body)
+				var tm := StandardMaterial3D.new()
+				tm.albedo_color = Color(a[1]); tm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; tm.cull_mode = BaseMaterial3D.CULL_BACK
+				mi.material_override = tm
 			add_child(mi)
 			var off: Vector3 = part[2]
 			var bas := Basis.from_euler(part[3]).scaled(part[4])
