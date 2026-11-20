@@ -18,6 +18,7 @@ boot_splash/show_image=true
 
 config/name="BNB Clashes"
 run/main_scene="res://scenes/main.tscn"
+run/main_scene.office="res://scenes/office.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.png"
 

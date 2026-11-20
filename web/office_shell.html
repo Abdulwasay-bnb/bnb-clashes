@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+<title>BNB Virtual Office</title>
+<script>if (window.top === window) location.replace('/office/');</script>
+<style>
+html, body, #canvas { margin: 0; padding: 0; border: 0; }
+body { background: #15111d; color: #fff; overflow: hidden; touch-action: none; }
+#canvas { display: block; }
+#canvas:focus { outline: none; }
+</style>
+$GODOT_HEAD_INCLUDE
+</head>
+<body>
+<canvas id="canvas">Your browser can't show the office.</canvas>
+<script src="$GODOT_URL"></script>
+<script>
+/* BNB Virtual Office loader. The hub page around this frame shows the loading screen: this only
+   starts the engine and tells the hub how far the download has got (or that it failed). */
+const GODOT_CONFIG = $GODOT_CONFIG;
+const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
+const engine = new Engine(GODOT_CONFIG);
+(function () {
+	function tell(m) { try { parent.postMessage(JSON.stringify(m), location.origin); } catch (e) {} }
+	const missing = Engine.getMissingFeatures({ threads: GODOT_THREADS_ENABLED });
+	if (missing.length) { tell({ t: 'error', why: 'unsupported', detail: missing.join(', ') }); return; }
+	let last = -1;
+	tell({ t: 'load', p: 0 });
+	engine.startGame({
+		onProgress: function (current, total) {
+			const p = total > 0 ? Math.min(1, current / total) : 0;
+			if (p - last >= 0.004 || (p === 1 && last !== 1)) { last = p; tell({ t: 'load', p: p }); }
+		},
+	}).then(function () { tell({ t: 'started' }); }, function (err) {
+		console.error(err);
+		tell({ t: 'error', why: 'failed', detail: String((err && err.message) || err) });
+	});
+}());
+</script>
+</body>
+</html>
