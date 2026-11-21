@@ -101,11 +101,35 @@ func _ready() -> void:
 		if q is String and q != "":
 			ui.show_join(q)
 			return
+		# opened from the BNB virtual office (…/?play=carrom&char=ID): straight to that game's
+		# "play with friends" screen (create or join a room), or the game itself if it's single-player
+		var play = JavaScriptBridge.eval("new URLSearchParams(location.search).get('play') || ''")
+		if play is String and play != "":
+			_play_from_link(play)
+			return
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--autotest="):
 			autotest = a.substr(11)
 	if autotest != "":
 		_run_autotest()
+	else:
+		ui.show_title()
+
+
+const LINK_PARTY_MODES := ["race", "ludo", "mafia", "cricket", "carrom", "blast", "tumble", "cards", "ops"]
+
+
+func _play_from_link(play: String) -> void:
+	var cid = JavaScriptBridge.eval("new URLSearchParams(location.search).get('char') || ''")
+	var C: Dictionary = Data.by_id(String(cid)) if cid is String and cid != "" else {}
+	if C.is_empty(): C = Data.ROSTER.pick_random()
+	if play == "dash":
+		ui.show_select({mode = "dash"})
+	elif play in LINK_PARTY_MODES:
+		if play == "cards":
+			var v = JavaScriptBridge.eval("new URLSearchParams(location.search).get('variant') || 'rung'")
+			ui.card_variant = String(v) if CARD_GAMES.has(String(v)) else "rung"
+		lobby.show_menu(play, C)
 	else:
 		ui.show_title()
 

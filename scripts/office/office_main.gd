@@ -31,7 +31,11 @@ const STATUS_COL := {"working": Color(0.3, 0.85, 0.5), "break": Color(1.0, 0.75,
 	"call": Color(1.0, 0.4, 0.45), "away": Color(0.6, 0.6, 0.65), "off": Color(0.6, 0.6, 0.65)}
 ## Default room names; the hub sends the real ones (departments are given rooms by headcount).
 const ROOM_NAMES := {"cafe": "CAFETERIA", "dev": "DEVELOPMENT", "hr": "MANAGEMENT", "server": "BUSINESS DEVELOPMENT",
-	"storage": "GAME ROOM", "print": "CREATIVE & QA", "board": "MEETING ROOM", "reception": "RECEPTION"}
+	"storage": "GAME ROOM", "print": "CREATIVE & QA", "board": "MEETING ROOM", "reception": "RECEPTION", "ceo": "CEO OFFICE"}
+## Rooms the office adds to the BNB floor plan: the CEO's office, in the hall north of the meeting room.
+const EXTRA_ROOMS := [{id = "ceo", name = "CEO OFFICE", r = [-7, -20, 7, -11], doors = "s"}]
+## Rooms where only the people inside hear each other.
+const PRIVATE_ROOMS := ["board", "ceo"]
 const EMOTES := {"wave": "in_wave", "clap": "in_clap", "dance": "in_dance", "laugh": "in_laughing",
 	"cheer": "win_cheer", "think": "in_thinking", "stretch": "in_stretch"}
 const EMOTE_KEYS := [KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7]
@@ -114,6 +118,15 @@ const OFFICE_DECOR := [
 	{m = "table", p = [0.0, 0.0], s = [9.0, 4.0, 0.8], block = true},
 	{m = "pottedPlant", p = [-7.3, 6.3], s = [0.7, 0.7, 1.6]}, {m = "pottedPlant", p = [7.3, 6.3], s = [0.7, 0.7, 1.6]},
 	{m = "pottedPlant", p = [7.3, -6.3], s = [0.7, 0.7, 1.6]},
+	# CEO office: an executive desk facing the door, two visitor chairs, a sofa corner, books
+	{m = "desk", p = [0.0, -16.6], s = [3.0, 1.3, 0.78], block = true},
+	{m = "computerScreen", p = [-0.6, -16.75], s = [0.9, 0.2, 0.62], y = 0.78}, {m = "laptop", p = [0.8, -16.5], s = [0.6, 0.45, 0.35], y = 0.78},
+	{m = "chairDesk", p = [0.0, -17.9], s = [0.9, 0.9, 1.15], seat = "desk"},
+	{m = "chair", p = [-0.8, -15.2], r = 180, s = [0.55, 0.55, 0.95], seat = "visit"}, {m = "chair", p = [0.8, -15.2], r = 180, s = [0.55, 0.55, 0.95], seat = "visit"},
+	{m = "loungeSofa", p = [-5.9, -15.8], r = 90, s = [2.4, 0.9, 0.9], block = true, seat = "sofa", seats = 2},
+	{m = "tableCoffee", p = [-4.6, -15.8], s = [0.8, 1.4, 0.4], block = true},
+	{m = "bookcaseClosedWide", p = [4.6, -19.4], s = [2.4, 0.6, 2.0], block = true},
+	{m = "pottedPlant", p = [-6.3, -19.3], s = [0.8, 0.8, 1.8]}, {m = "pottedPlant", p = [6.3, -12.0], s = [0.7, 0.7, 1.6]},
 	# reception: front desk, sofas (the rug is the BNB logo, drawn separately)
 	{m = "kitchenBar", p = [0.0, 15.2], s = [5.0, 1.1, 1.05], block = true},
 	{m = "laptop", p = [1.5, 15.2], s = [0.6, 0.45, 0.35], y = 1.05},
@@ -244,7 +257,7 @@ func _build_collision() -> void:
 	var T := 0.4
 	sim.walls.append(Rect2(-31, -21, 62, T)); sim.walls.append(Rect2(-31, 20.6, 62, T))
 	sim.walls.append(Rect2(-31, -21, T, 42)); sim.walls.append(Rect2(30.6, -21, T, 42))
-	for rm in MafiaSim.ROOMS:
+	for rm in all_rooms():
 		var r: Array = rm.r
 		var d: String = rm.doors
 		sim._wall_side(r[0], r[1], r[2], r[1], "n" in d)
@@ -301,6 +314,28 @@ func _build_collision() -> void:
 		stations.append({p = Vector2(28.1, float(a[1])), face = Vector2(1, 0), kind = "arcade", name = "Play " + String(GAMES[a[0]].name).capitalize(), solo = true, game = a[0]})
 
 
+## Desk chairs face their desk, and screens/laptops on a desk face that desk's chair, whatever
+## rotation the list gives them (models face +z at r=0, like the meeting room chairs).
+func _oriented(d: Dictionary) -> Dictionary:
+	var m := String(d.m)
+	var p := Vector2(float(d.p[0]), float(d.p[1]))
+	var face := Vector2.ZERO
+	if m.begins_with("chair") and d.has("seat"):
+		face = _seat_face(p, Vector2(sin(deg_to_rad(float(d.get("r", 0.0)))), cos(deg_to_rad(float(d.get("r", 0.0))))))
+	elif m in ["computerScreen", "laptop"]:
+		var best := 2.2
+		for c in OFFICE_DECOR:
+			if String(c.m).begins_with("chair") and c.has("seat"):
+				var q := Vector2(float(c.p[0]), float(c.p[1]))
+				if p.distance_to(q) < best: best = p.distance_to(q); face = (q - p).normalized()
+		if face != Vector2.ZERO:
+			face = Vector2(signf(face.x), 0) if absf(face.x) > absf(face.y) else Vector2(0, signf(face.y))
+	if face == Vector2.ZERO: return d
+	var out := d.duplicate()
+	out.r = rad_to_deg(atan2(face.x, face.y))
+	return out
+
+
 func _seat_face(p: Vector2, fwd: Vector2) -> Vector2:
 	# face the nearest table or desk; a chair on its own faces the way it points
 	var best := INF; var face := fwd
@@ -328,7 +363,7 @@ func _build_world() -> void:
 	sun.directional_shadow_max_distance = 40
 	world.add_child(sun)
 	mg._box(Vector3(62, 0.1, 42), mg._tex_mat("concrete_tiles_02", Color(0.74, 0.7, 0.8), 0.35), Vector3(0, -0.05, 0))
-	for rm in MafiaSim.ROOMS:
+	for rm in all_rooms():
 		var r: Array = rm.r
 		var c := Vector2((r[0] + r[2]) / 2.0, (r[1] + r[3]) / 2.0)
 		var tex: String = MafiaGame.ROOM_TEX.get(rm.id, "laminate_floor_02")
@@ -359,13 +394,14 @@ func _build_world() -> void:
 		mg._box(Vector3(w.size.x, 1.35, w.size.y), wall_m, V(c, 0.675))
 		mg._box(Vector3(w.size.x + 0.02, 0.06, w.size.y + 0.02), top_m, V(c, 1.35))
 		mg._box(Vector3(w.size.x + 0.03, 0.02, w.size.y + 0.03), glow_m, V(c, 1.39))   # a thin cyan light along every wall top
-	for d in OFFICE_DECOR: mg._decor(d)
+	for d in OFFICE_DECOR: mg._decor(_oriented(d))
 	for s in seats:
 		if s.get("chair", false):
 			mg._decor({m = "chairDesk", p = [s.p.x, s.p.y], r = rad_to_deg(atan2(-s.p.x, -s.p.y)), s = [0.8, 0.8, 1.0]})
 	for p in [[-13, -19], [13, -19], [-13, 19], [13, 19], [-13, -6.5], [13, 8.5]]:
 		mg._decor({m = "pottedPlant", p = p, s = [0.7, 0.7, 1.6]})
 	_build_brand()
+	_build_ceo_office()
 	_build_game_room()
 	_build_tea_bar()
 	_build_meeting_screen()
@@ -389,6 +425,17 @@ func _sprite(tex_path: String, size_m: float, pos: Vector3, flat := false, alpha
 	if flat: s.rotation.x = -PI / 2
 	world.add_child(s)
 	return s
+
+
+func _build_ceo_office() -> void:
+	# the BNB mark on the wall behind the desk, a nameplate and a dark rug
+	_sprite("res://assets/brand/bnb_mark_trim.png", 1.3, Vector3(-2.2, 1.85, -19.74))
+	var plate := Label3D.new()
+	plate.text = "CHIEF EXECUTIVE"; plate.font = font; plate.font_size = 40; plate.modulate = Color(1.0, 0.86, 0.55)
+	plate.outline_size = 8; plate.outline_modulate = INK; plate.pixel_size = 0.005; plate.position = Vector3(0.0, 0.84, -15.94)
+	world.add_child(plate)
+	mg._box(Vector3(5.2, 0.04, 4.2), mg._mat(BRAND.darkened(0.45), 0.85), Vector3(0, 0.06, -16.2))
+	mg._box(Vector3(5.4, 0.04, 4.4), mg._mat(Color(1.0, 0.82, 0.45), 0.4, 0.6), Vector3(0, 0.03, -16.2))
 
 
 func _build_brand() -> void:
@@ -495,8 +542,12 @@ func set_rooms(r: Dictionary) -> void:
 		if room_signs.has(id): (room_signs[id] as Label3D).text = nm
 
 
+func all_rooms() -> Array:
+	return MafiaSim.ROOMS + EXTRA_ROOMS
+
+
 func room_at(p: Vector2) -> String:
-	for rm in MafiaSim.ROOMS:
+	for rm in all_rooms():
 		var r: Array = rm.r
 		if p.x >= r[0] and p.x <= r[2] and p.y >= r[1] and p.y <= r[3]: return rm.id
 	return "hall"
@@ -688,7 +739,25 @@ func _do(act: String) -> void:
 
 
 func _set_act(act: String) -> void:
+	var was := _game_of(my_act)
 	my_act = act; my_act_t = 0.0
+	var now := _game_of(act)
+	if now != was:   # at a game table / arcade: the hub offers to open the real game (create or join a room)
+		var C: Dictionary = my_rig.get_meta("C", {}) if my_rig != null else {}
+		_post({t = "play", game = now, name = String(GAMES[now].name).capitalize() if now != "" else "",
+			table = (("arcade:" if act.begins_with("st:") else "table:") + now) if now != "" else "",
+			char = String(C.get("id", ""))})
+
+
+## The game this action plays ("" if none): a seat at a game table or an arcade machine.
+func _game_of(act: String) -> String:
+	if act.begins_with("sit:"):
+		var i := int(act.substr(4))
+		return String(seats[i].get("game", "")) if i < seats.size() else ""
+	if act.begins_with("st:"):
+		var j := int(act.substr(3))
+		return String(stations[j].get("game", "")) if j < stations.size() else ""
+	return ""
 
 
 func _stand_up() -> void:
@@ -967,7 +1036,7 @@ func _act_clip(act: String, talking: bool, status: String, moving: bool) -> Stri
 		match String(s.kind):
 			"desk": return "m_type"
 			"game": return "m_type"
-			"meet": return "m_sit_talk" if talking else "m_sit"
+			"meet", "visit": return "m_sit_talk" if talking else "m_sit"
 			"cafe": return "m_sit_talk" if talking else "m_sit"
 			_: return "m_sit"
 	if act.begins_with("st:"):
@@ -1006,7 +1075,7 @@ func _process(dt: float) -> void:
 	_animate(my_rig, C, my_clip, my_act_t if my_act != "" else _anim_t)
 	my_tag.position = V(my_pos, 2.35 * float(C.get("scale", 1.0)))
 	my_ring.position = V(my_pos, 0.05)
-	my_ring.visible = my_room != "board"   # the meeting room is one conversation, whatever the distance
+	my_ring.visible = not (my_room in PRIVATE_ROOMS)   # a private room is one conversation, whatever the distance
 	for id in people:
 		var v: Dictionary = people[id]
 		var goal: Vector2 = v.goal

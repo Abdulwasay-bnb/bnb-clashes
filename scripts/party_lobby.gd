@@ -32,8 +32,18 @@ func _ready() -> void:
 	party.connected_to_host.connect(func(): party.send({t = "hi", c = C.id, gun = gun}))
 	party.host_left.connect(func(): _gone("The host left the game."))
 	party.failed.connect(func(msg): if not in_game: show_menu(mode, C, msg))
-	party.room_created.connect(func(_code): _render_lobby())
+	party.room_created.connect(func(code): _render_lobby(); _tell_office(code))
 	party.message.connect(_on_message)
+
+
+## Opened from the BNB virtual office: hand the room code back to the office tab, so the people at
+## that table can join. Only to the hub's own addresses (?back=…).
+func _tell_office(code: String) -> void:
+	if not OS.has_feature("web"): return
+	var msg := JSON.stringify({t = "bnb-room", code = code, mode = mode, variant = String(cfg.variant)})
+	JavaScriptBridge.eval(("(function(){try{var o=window.opener,b=new URLSearchParams(location.search).get('back')||'';"
+		+ "var ok=['https://ems.bitandbytes.net','http://127.0.0.1:8010','http://localhost:8010'];"
+		+ "if(o&&ok.indexOf(b)>=0)o.postMessage(%s,b);}catch(e){}})()") % JSON.stringify(msg))
 
 
 func max_players() -> int:
