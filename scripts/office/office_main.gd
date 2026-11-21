@@ -559,22 +559,20 @@ const ALIASES := {"abdulwasay_waqas": "abdul_wasay_waqas", "kashaf_duja": "kasha
 	"saad_shafqat": "muhammad_saad", "sabir_din": "sabir_ud_din", "sarfaraz_yousaf": "sarfraz_yousaf"}
 
 
-## The character for a hub user: their own (by username, alias or exact name), else a stand-in.
-func character_for(u: String, name: String) -> Dictionary:
+## The character for a hub user: their own (by username, alias or exact name); an admin without
+## one plays Hamza Khan, anyone else Ali (real roster bodies, so they walk and sit like everyone).
+func character_for(u: String, name: String, admin := false) -> Dictionary:
 	var want: String = ALIASES.get(u, u)
 	var n := _norm(name)
 	for C in Data.ROSTER:
 		if String(C.id) == want: return C
 	for C in Data.ROSTER:
 		if n != "" and _norm(C.name) == n: return C
-	return _stand_in(u)
+	return _stand_in("hamza_khan" if admin else "ali")
 
 
-func _stand_in(u: String) -> Dictionary:
-	# someone without their own character: one of the team's bodies, recoloured, so nobody wears a colleague's face
-	var C: Dictionary = (Data.ROSTER[absi(hash(u)) % Data.ROSTER.size()] as Dictionary).duplicate()
-	C.id = "guest_" + u
-	return C
+func _stand_in(id: String) -> Dictionary:
+	return Data.by_id(id)
 
 
 static func _norm(s: String) -> String:
@@ -591,7 +589,7 @@ func _costume_count(C: Dictionary) -> int:
 func _add_person(p: Dictionary) -> void:
 	var id := int(p.id)
 	if id == int(me.get("id", -1)) or people.has(id): return
-	var C := character_for(String(p.get("u", "")), String(p.get("name", "")))
+	var C := character_for(String(p.get("u", "")), String(p.get("name", "")), bool(p.get("admin", false)))
 	var costume := clampi(int(p.get("costume", 0)), 0, _costume_count(C) - 1)
 	var rig := Main.make_rig(C, costume)
 	world.add_child(rig)
@@ -669,7 +667,7 @@ func _init_me(m: Dictionary, spawn: Array) -> void:
 	me = m
 	if my_rig != null: my_rig.queue_free()
 	if my_tag != null: my_tag.queue_free()
-	var C := character_for(String(m.get("u", "")), String(m.get("name", "")))
+	var C := character_for(String(m.get("u", "")), String(m.get("name", "")), bool(m.get("admin", false)))
 	my_costume = clampi(int(m.get("costume", 0)), 0, _costume_count(C) - 1)
 	my_rig = Main.make_rig(C, my_costume)
 	my_rig.set_meta("C", C)
