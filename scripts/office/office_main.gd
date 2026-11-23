@@ -23,8 +23,13 @@ extends Node
 ## An action ("a") is "" or "sit:<seat>", "st:<station>" (standing at the tea bar, an arcade, the
 ## presentation screen) or "e:<emote>". Everyone draws everyone else's action from it.
 ##
-## The rooms are the BNB office floor plan (MafiaSim.ROOMS, shared with BNB Mafia); the furniture
-## here is the office's own (OFFICE_DECOR). Outside a browser it runs a demo with wandering colleagues.
+## The building (office_floors.gd): the 3rd floor (Sales and Management), the 4th (Development and
+## everyone else), the rooftop and the parking, side by side on the map and joined by lifts and stairs.
+## The 4th floor keeps the BNB office floor plan shared with BNB Mafia; the furniture here is the
+## office's own (OFFICE_DECOR + OfficeFloors.decor()). Outside a browser it runs a demo with wandering colleagues.
+##
+##   hub -> office  {t:"screen", name, room} (who is sharing in that meeting room)
+##   Room ids posted in "pos" are the room you're in, or "hall<level>" (hall0, hall3, hall4, hall5).
 
 const CLIPS := ["idle_relaxed", "m_walk", "m_run", "in_wave", "m_sit", "m_sit_talk", "m_type", "in_phone",
 	"in_drinking", "in_clap", "in_dance", "in_laughing", "win_cheer", "in_thinking", "in_stretch", "in_tablet", "in_point"]
@@ -35,13 +40,12 @@ const HEAR := 4.5                      # the hub connects voice inside this dist
 const REACH := 1.5                     # how close you must be to sit / use something
 const STATUS_COL := {"working": Color(0.3, 0.85, 0.5), "break": Color(1.0, 0.75, 0.3), "focus": Color(0.7, 0.5, 1.0),
 	"call": Color(1.0, 0.4, 0.45), "away": Color(0.6, 0.6, 0.65), "off": Color(0.6, 0.6, 0.65)}
-## Default room names; the hub sends the real ones (departments are given rooms by headcount).
-const ROOM_NAMES := {"cafe": "CAFETERIA", "dev": "DEVELOPMENT", "hr": "MANAGEMENT", "server": "BUSINESS DEVELOPMENT",
-	"storage": "GAME ROOM", "print": "CREATIVE & QA", "board": "MEETING ROOM", "reception": "RECEPTION", "ceo": "CEO OFFICE"}
-## Rooms the office adds to the BNB floor plan: the CEO's office, in the hall north of the meeting room.
-const EXTRA_ROOMS := [{id = "ceo", name = "CEO OFFICE", r = [-7, -20, 7, -11], doors = "s"}]
+## Default room names; the hub sends the real ones.
+const ROOM_NAMES := OfficeFloors.ROOM_NAMES
 ## Rooms where only the people inside hear each other.
-const PRIVATE_ROOMS := ["board", "ceo"]
+const PRIVATE_ROOMS := ["board", "conf", "ceo", "pray3", "pray4", "wash3", "wash4"]
+## Meeting rooms (one on each floor): a screen to share on, a whiteboard. Room -> the table's centre.
+const MEETING := {"board": Vector2(0, 0), "conf": Vector2(120, 0)}
 const EMOTES := {"wave": "in_wave", "clap": "in_clap", "dance": "in_dance", "laugh": "in_laughing",
 	"cheer": "win_cheer", "think": "in_thinking", "stretch": "in_stretch"}
 const EMOTE_KEYS := [KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7]
@@ -86,13 +90,7 @@ const OFFICE_DECOR := [
 	# development (the desks in the department rooms come from office_desks.gd)
 	{m = "bookcaseOpen", p = [-29.4, 0.8], r = 90, s = [1.6, 0.6, 1.8], block = true},
 	{m = "plantSmall1", p = [-15.0, 5.3], s = [0.5, 0.5, 0.7]},
-	# management
-	{m = "bookcaseClosedWide", p = [-27.5, 10.6], s = [1.8, 0.6, 1.8], block = true},
-	{m = "coatRack", p = [-29.3, 19.4], s = [0.6, 0.3, 1.8]},
-	{m = "pottedPlant", p = [-14.8, 19.2], s = [0.7, 0.7, 1.6]},
-	# business development
-	{m = "bookcaseOpen", p = [29.4, -11.0], r = 270, s = [1.6, 0.6, 1.8], block = true},
-	{m = "pottedPlant", p = [15.0, -19.2], s = [0.7, 0.7, 1.6]},
+	# (management, business development and the CEO office are on the 3rd floor: OfficeFloors.decor())
 	# creative & QA
 	{m = "kitchenCabinet", p = [29.3, 12.0], r = 270, s = [1.0, 0.7, 1.0], block = true},
 	{m = "pottedPlant", p = [15.0, 19.2], s = [0.7, 0.7, 1.6]},
@@ -100,22 +98,12 @@ const OFFICE_DECOR := [
 	{m = "table", p = [0.0, 0.0], s = [9.0, 4.0, 0.8], block = true},
 	{m = "pottedPlant", p = [-7.3, 6.3], s = [0.7, 0.7, 1.6]}, {m = "pottedPlant", p = [7.3, 6.3], s = [0.7, 0.7, 1.6]},
 	{m = "pottedPlant", p = [7.3, -6.3], s = [0.7, 0.7, 1.6]},
-	# CEO office: an executive desk facing the door, two visitor chairs, a sofa corner, books
-	{m = "desk", p = [0.0, -16.6], s = [3.0, 1.3, 0.78], block = true},
-	{m = "computerScreen", p = [-0.6, -16.75], s = [0.9, 0.2, 0.62], y = 0.78}, {m = "laptop", p = [0.8, -16.5], s = [0.6, 0.45, 0.35], y = 0.78},
-	{m = "chairDesk", p = [0.0, -17.9], s = [0.9, 0.9, 1.15], seat = "desk"},
-	{m = "chair", p = [-0.8, -15.2], r = 180, s = [0.55, 0.55, 0.95], seat = "visit"}, {m = "chair", p = [0.8, -15.2], r = 180, s = [0.55, 0.55, 0.95], seat = "visit"},
-	{m = "loungeSofa", p = [-5.9, -15.8], r = 90, s = [2.4, 0.9, 0.9], block = true, seat = "sofa", seats = 2},
-	{m = "tableCoffee", p = [-4.6, -15.8], s = [0.8, 1.4, 0.4], block = true},
-	{m = "bookcaseClosedWide", p = [4.6, -19.4], s = [2.4, 0.6, 2.0], block = true},
-	{m = "pottedPlant", p = [-6.3, -19.3], s = [0.8, 0.8, 1.8]}, {m = "pottedPlant", p = [6.3, -12.0], s = [0.7, 0.7, 1.6]},
 	# reception: front desk, sofas (the rug is the BNB logo, drawn separately)
 	{m = "kitchenBar", p = [0.0, 15.2], s = [5.0, 1.1, 1.05], block = true},
 	{m = "laptop", p = [1.5, 15.2], s = [0.6, 0.45, 0.35], y = 1.05},
 	{m = "loungeSofa", p = [-1.6, 19.5], r = 180, s = [2.4, 0.9, 0.9], block = true, seat = "sofa", seats = 2},
 	{m = "loungeChair", p = [2.0, 19.5], r = 180, s = [1.1, 0.9, 0.9], block = true, seat = "sofa"},
 	{m = "pottedPlant", p = [-7.4, 12.6], s = [0.7, 0.7, 1.6]}, {m = "pottedPlant", p = [7.4, 12.6], s = [0.7, 0.7, 1.6]},
-	{m = "sideTable", p = [5.0, 18.6], s = [1.0, 0.6, 0.8]},
 	{m = "bookcaseOpen", p = [-7.5, 16.1], r = 90, s = [2.6, 0.6, 1.2], block = true},   # the trophy cabinet (OfficeEvents)
 	# game room: three tables, a sofa, the arcade machines are drawn separately
 	{m = "tableCoffeeSquare", p = [18.0, -1.2], s = [1.5, 1.5, 0.7], block = true, game = "carrom"},
@@ -140,7 +128,7 @@ const ARCADES := [["cricket", -2.6], ["race", -1.0], ["dash", 0.6], ["tumble", 2
 var decor: Array = []                   # OFFICE_DECOR plus everyone's desks (office_desks.gd)
 const SEAT_TABLES := ["desk", "table", "tableRound", "tableCoffeeSquare", "tableCoffee"]
 
-var sim: MafiaSim
+var sim: OfficeSim
 var mg: MafiaGame                      # borrowed for its floor and furniture builders (never added to the tree)
 var world: Node3D
 var cam: Camera3D
@@ -159,10 +147,13 @@ var desks: OfficeDesks                  # everyone's desk and what they're up to
 var events: OfficeEvents                # trophy cabinet and the next tournament
 var desk_list: Array = []
 var my_desk := ""                       # the desk you're sitting at ("" if none)
-var screen_logo: Sprite3D
-var screen_label: Label3D               # the meeting room screen: who is sharing
+var screens := {}                       # meeting room -> {logo: Sprite3D, label: Label3D}: who is sharing there
+var floors: OfficeFloors                # the levels: lifts, stairs, rooftop, parking
+var level := 4                          # the level you're on
+var picker: Control                     # which level to go to (the lift / the stairs)
+var fade: ColorRect
 var ceo_let_in := false                 # someone in the CEO office let you in
-const CEO_DOOR := Vector2(0.0, -10.3)   # just outside the CEO office door
+const CEO_DOOR := Vector2(120.0, -10.3)   # just outside the CEO office door (3rd floor)
 var my_dress: Node3D
 var my_ring: MeshInstance3D
 var my_pos := Vector2(0, 16)
@@ -224,20 +215,23 @@ func _ready() -> void:
 		loading.text = "Setting up the office  %d%%" % int(f * 100.0)
 		_post({t = "boot", p = f})
 		await get_tree().process_frame
-	sim = MafiaSim.new()
-	decor = OFFICE_DECOR + OfficeDesks.decor()
+	sim = OfficeSim.new()
+	decor = OFFICE_DECOR + OfficeDesks.decor() + OfficeFloors.decor()
 	_build_collision()
 	world = Node3D.new(); add_child(world)
 	mg = MafiaGame.new(); mg.world = world; mg.font = font; mg.small = small
 	party = OfficeParty.new(); party.world = world; party.mg = mg; party.font = font
 	desks = OfficeDesks.new(); desks.world = world; desks.mg = mg; desks.small = small; desks.party = party
 	events = OfficeEvents.new(); events.world = world; events.mg = mg; events.font = font
+	floors = OfficeFloors.new(); floors.main = self; floors.mg = mg; floors.font = font
 	desks.map_seats(seats, decor)
 	for id in ROOM_NAMES: rooms[id] = {name = ROOM_NAMES[id], kind = "room"}
 	_build_world()
 	_post({t = "boot", p = 0.95})
 	cam = Camera3D.new(); cam.fov = 50; cam.near = 0.25; cam.far = 160;   # a sane near plane keeps the thin floor layers from flickering
 	world.add_child(cam); cam.current = true
+	_build_picker()
+	floors.show_level(level)
 	if OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios"):
 		get_viewport().msaa_3d = Viewport.MSAA_DISABLED
 		get_viewport().scaling_3d_scale = 0.8
@@ -250,19 +244,29 @@ func _ready() -> void:
 
 
 # ---------------------------------------------------------------- map
+var rails: Array = []                   # walls drawn as a railing (the rooftop's edge, the parking's)
+var unseen: Array = []                  # collision with nothing drawn for it (parked cars, the banks)
+
+
 func _build_collision() -> void:
-	# the BNB floor plan's walls with the office's own furniture (MafiaSim.build_map would add BNB Mafia's)
+	# every level's walls with the office's own furniture (MafiaSim.build_map would add BNB Mafia's)
 	sim.walls.clear()
-	var T := 0.4
-	sim.walls.append(Rect2(-31, -21, 62, T)); sim.walls.append(Rect2(-31, 20.6, 62, T))
-	sim.walls.append(Rect2(-31, -21, T, 42)); sim.walls.append(Rect2(30.6, -21, T, 42))
+	for l in OfficeFloors.LEVELS:
+		var outer := OfficeFloors.outer_walls(l)
+		sim.walls.append_array(outer)
+		if l in OfficeFloors.OPEN: rails.append_array(outer)
 	for rm in all_rooms():
+		if rm.get("open", false): continue
+		if rm.get("wash", false):
+			sim.walls.append_array(OfficeFloors.wash_walls(rm)); continue
 		var r: Array = rm.r
 		var d: String = rm.doors
 		sim._wall_side(r[0], r[1], r[2], r[1], "n" in d)
 		sim._wall_side(r[0], r[3], r[2], r[3], "s" in d)
 		sim._wall_side(r[0], r[1], r[0], r[3], "w" in d)
 		sim._wall_side(r[2], r[1], r[2], r[3], "e" in d)
+	unseen = OfficeFloors.vehicle_walls()
+	sim.walls.append_array(unseen)
 	for d in decor:
 		if d.get("block", false):
 			var sz: Array = d.s
@@ -276,11 +280,14 @@ func _build_collision() -> void:
 	# through doors instead of pushing into them
 	# (1 m apart: a 2 m grid can't fit between the cafeteria tables)
 	sim.waypoints.clear(); sim.links.clear()
+	sim.index_walls()
 	var index := {}
-	for x in range(-30, 31):
-		for z in range(-20, 21):
-			var wp := Vector2(x, z)
-			if not sim.blocked(wp, RADIUS + 0.1): index[wp] = sim.waypoints.size(); sim.waypoints.append(wp)
+	for l in OfficeFloors.LEVELS:
+		var ox := int(OfficeFloors.X[l])
+		for x in range(-30, 31):
+			for z in range(-20, 21):
+				var wp := Vector2(ox + x, z)
+				if not sim.blocked(wp, RADIUS + 0.1): index[wp] = sim.waypoints.size(); sim.waypoints.append(wp)
 	for wp in sim.waypoints: sim.links.append([])
 	for i in sim.waypoints.size():   # each pair checked once
 		var wp: Vector2 = sim.waypoints[i]
@@ -302,15 +309,17 @@ func _build_collision() -> void:
 			for k in n:
 				var sp := p + side * ((k - (n - 1) / 2.0) * 0.8) + fwd * 0.1
 				seats.append({p = sp, face = fwd, kind = d.seat, room = room_at(sp), game = ""})
-	for k in MafiaSim.SEATS:   # meeting room chairs round the table, facing it
-		var a := TAU * k / MafiaSim.SEATS
-		var cp := Vector2(cos(a) * 5.6, sin(a) * 3.0)
-		seats.append({p = cp, face = -cp.normalized(), kind = "meet", room = "board", game = "", chair = true})
+	for mr in MEETING:   # meeting room chairs round the table, facing it
+		for k in MafiaSim.SEATS:
+			var a := TAU * k / MafiaSim.SEATS
+			var cp := Vector2(cos(a) * 5.6, sin(a) * 3.0)
+			seats.append({p = MEETING[mr] + cp, face = -cp.normalized(), kind = "meet", room = mr, game = "", chair = true})
 	for x in [-26.2, -25.0, -23.8]:
 		stations.append({p = Vector2(x, -18.15), face = Vector2(0, -1), kind = "tea", name = "Have some tea", solo = true, game = ""})
 	stations.append({p = Vector2(-4.5, -5.6), face = Vector2(0, 1), kind = "present", name = "Present", solo = true, game = ""})
 	for a in ARCADES:
 		stations.append({p = Vector2(28.1, float(a[1])), face = Vector2(1, 0), kind = "arcade", name = "Play " + String(GAMES[a[0]].name).capitalize(), solo = true, game = a[0]})
+	stations.append_array(OfficeFloors.stations())
 
 
 ## Desk chairs face their desk, and screens/laptops on a desk face that desk's chair, whatever
@@ -361,49 +370,66 @@ func _build_world() -> void:
 	sun.rotation = Vector3(deg_to_rad(-62), deg_to_rad(25), 0); sun.light_energy = 0.75; sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 40
 	world.add_child(sun)
-	mg._box(Vector3(62, 0.1, 42), mg._tex_mat("concrete_tiles_02", Color(0.74, 0.7, 0.8), 0.35), Vector3(0, -0.05, 0))
+	for l in OfficeFloors.LEVELS:
+		var g: Array = OfficeFloors.GROUND[l]
+		mg._box(Vector3(62, 0.1, 42), mg._tex_mat(g[0], g[1], g[2]), Vector3(float(OfficeFloors.X[l]), -0.05, 0))
 	for rm in all_rooms():
 		var r: Array = rm.r
 		var c := Vector2((r[0] + r[2]) / 2.0, (r[1] + r[3]) / 2.0)
-		var tex: String = MafiaGame.ROOM_TEX.get(rm.id, "laminate_floor_02")
-		if rm.id == "storage": tex = "laminate_floor_02"
-		mg._box(Vector3(r[2] - r[0], 0.02, r[3] - r[1]), mg._tex_mat(tex, MafiaGame.FLOOR_TINT.get(rm.id, Color.WHITE), MafiaGame.ROOM_SCALE.get(rm.id, 0.3)), V(c, 0.01))
+		if OfficeFloors.FLOOR.has(rm.id):
+			var f: Array = OfficeFloors.FLOOR[rm.id]
+			mg._box(Vector3(r[2] - r[0], 0.02, r[3] - r[1]), mg._tex_mat(f[0], f[1], f[2]), V(c, 0.01))
 		var l := Label3D.new()
-		l.text = ROOM_NAMES.get(rm.id, rm.name); l.font = font; l.font_size = 120; l.outline_size = 0
+		l.text = ROOM_NAMES.get(rm.id, String(rm.id).to_upper()); l.font = font; l.font_size = 120; l.outline_size = 0
 		l.modulate = Color(1, 1, 1, 0.12); l.rotation.x = -PI / 2; l.pixel_size = 0.01; l.position = V(c, 0.045)
 		l.width = (r[2] - r[0] - 1.0) * 100.0; l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		world.add_child(l)
 		room_labels[rm.id] = l
 		# a lit sign on the room's back wall (the camera looks north, so the north wall faces it)
 		var sign := Label3D.new()
-		sign.text = ROOM_NAMES.get(rm.id, rm.name); sign.font = font; sign.font_size = 64
+		sign.text = ROOM_NAMES.get(rm.id, String(rm.id).to_upper()); sign.font = font; sign.font_size = 64
 		sign.modulate = CYAN.lightened(0.25); sign.outline_modulate = BRAND.darkened(0.2); sign.outline_size = 14
 		sign.pixel_size = 0.0075; sign.position = Vector3(c.x, 1.75, float(r[1]) + 0.25)
+		if rm.id in ["parking", "psmoke"]: sign.visible = false      # the parking has its own signs
+		if rm.get("open", false) or (rm.get("wash", false)) or rm.id == "lobby0":
+			sign.position = Vector3(c.x, 2.3, float(r[1]) + 0.4); sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		sign.width = (r[2] - r[0] - 2.0) / 0.0075; sign.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		world.add_child(sign)
 		room_signs[rm.id] = sign
-		var om := OmniLight3D.new(); om.position = V(c, 3.2); om.omni_range = 13.0; om.light_energy = 0.8
-		om.light_color = Color(1.0, 0.96, 0.92); world.add_child(om)
+		if not rm.get("open", false) and not rm.get("wash", false) and not String(rm.id).begins_with("lobby") and not String(rm.id).begins_with("pray"):
+			floors.light(V(c, 3.2), 13.0, 0.8)
 	var wall_m := mg._tex_mat("grey_plaster", Color(0.94, 0.92, 0.98), 0.5)
 	var top_m := mg._mat(BRAND, 0.5, 0.9)
 	var glow_m := mg._mat(CYAN, 0.3, 2.2)
+	var rail_m := mg._mat(Color(0.55, 0.8, 0.95, 0.3), 0.1)
+	rail_m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	var post_m := mg._mat(Color(0.3, 0.3, 0.33), 0.4)
 	for w in sim.walls:
 		if not (w.size.x < 0.5 or w.size.y < 0.5): continue   # furniture: drawn from the decor list
+		if w in unseen: continue
 		var c: Vector2 = w.get_center()
+		if w in rails:    # a glass railing at the edge of the rooftop (the parking's is behind the building and by the road)
+			if OfficeFloors.level_of(c.x) == 0: continue
+			mg._box(Vector3(w.size.x, 1.0, w.size.y), rail_m, V(c, 0.5))
+			mg._box(Vector3(w.size.x + 0.04, 0.07, w.size.y + 0.04), post_m, V(c, 1.03))
+			continue
 		mg._box(Vector3(w.size.x, 1.35, w.size.y), wall_m, V(c, 0.675))
 		mg._box(Vector3(w.size.x + 0.02, 0.06, w.size.y + 0.02), top_m, V(c, 1.35))
 		mg._box(Vector3(w.size.x + 0.03, 0.02, w.size.y + 0.03), glow_m, V(c, 1.39))   # a thin cyan light along every wall top
 	for d in decor: mg._decor(_oriented(d))
 	for s in seats:
 		if s.get("chair", false):
-			mg._decor({m = "chairDesk", p = [s.p.x, s.p.y], r = rad_to_deg(atan2(-s.p.x, -s.p.y)), s = [0.8, 0.8, 1.0]})
-	for p in [[-13, -19], [13, -19], [-13, 19], [13, 19], [-13, -6.5], [13, 8.5]]:
-		mg._decor({m = "pottedPlant", p = p, s = [0.7, 0.7, 1.6]})
+			var rel: Vector2 = s.p - MEETING[s.room]
+			mg._decor({m = "chairDesk", p = [s.p.x, s.p.y], r = rad_to_deg(atan2(-rel.x, -rel.y)), s = [0.8, 0.8, 1.0]})
+	for ox in [0.0, 120.0]:   # hallway plants on both office floors
+		for p in [[-13, -19], [13, -19], [-13, 19], [13, 19], [-13, -6.5], [13, 8.5]]:
+			mg._decor({m = "pottedPlant", p = [ox + p[0], p[1]], s = [0.7, 0.7, 1.6]})
 	_build_brand()
 	_build_ceo_office()
 	_build_game_room()
 	_build_tea_bar()
-	_build_meeting_screen()
+	for mr in MEETING: _build_meeting_screen(mr)
+	floors.build()
 	# the hearing circle round you: people inside it hear you
 	my_ring = MeshInstance3D.new()
 	var tor := TorusMesh.new(); tor.inner_radius = HEAR - 0.06; tor.outer_radius = HEAR; tor.rings = 64; tor.ring_segments = 4
@@ -428,13 +454,13 @@ func _sprite(tex_path: String, size_m: float, pos: Vector3, flat := false, alpha
 
 func _build_ceo_office() -> void:
 	# the BNB mark on the wall behind the desk, a nameplate and a dark rug
-	_sprite("res://assets/brand/bnb_mark_trim.png", 1.3, Vector3(-2.2, 1.85, -19.74))
+	_sprite("res://assets/brand/bnb_mark_trim.png", 1.3, Vector3(117.8, 1.85, -19.74))
 	var plate := Label3D.new()
 	plate.text = "CHIEF EXECUTIVE"; plate.font = font; plate.font_size = 40; plate.modulate = Color(1.0, 0.86, 0.55)
-	plate.outline_size = 8; plate.outline_modulate = INK; plate.pixel_size = 0.005; plate.position = Vector3(0.0, 0.84, -15.94)
+	plate.outline_size = 8; plate.outline_modulate = INK; plate.pixel_size = 0.005; plate.position = Vector3(120.0, 0.84, -15.94)
 	world.add_child(plate)
-	mg._box(Vector3(5.2, 0.04, 4.2), mg._mat(BRAND.darkened(0.45), 0.85), Vector3(0, 0.06, -16.2))
-	mg._box(Vector3(5.4, 0.04, 4.4), mg._mat(Color(1.0, 0.82, 0.45), 0.4, 0.6), Vector3(0, 0.03, -16.2))
+	mg._box(Vector3(5.2, 0.04, 4.2), mg._mat(BRAND.darkened(0.45), 0.85), Vector3(120, 0.06, -16.2))
+	mg._box(Vector3(5.4, 0.04, 4.4), mg._mat(Color(1.0, 0.82, 0.45), 0.4, 0.6), Vector3(120, 0.03, -16.2))
 
 
 func _build_brand() -> void:
@@ -464,23 +490,25 @@ func _build_tea_bar() -> void:
 		world.add_child(cup)
 
 
-func _build_meeting_screen() -> void:
+func _build_meeting_screen(room: String) -> void:
 	# a big screen standing on the meeting room's north wall, tilted back so the camera above can read
 	# it: the BNB wordmark, or who is sharing their screen
 	var W := 5.4; var H := 3.04
-	var pivot := Node3D.new(); pivot.position = Vector3(-4.7, 1.0, -6.78); pivot.rotation.x = -0.42
+	var c: Vector2 = MEETING[room]
+	var pivot := Node3D.new(); pivot.position = Vector3(c.x - 4.7, 1.0, c.y - 6.78); pivot.rotation.x = -0.42
 	world.add_child(pivot)
 	mg._box(Vector3(W + 0.2, H + 0.2, 0.1), mg._mat(Color(0.05, 0.05, 0.07), 0.3), Vector3(0, H / 2.0, 0), pivot)
 	mg._box(Vector3(W, H, 0.02), mg._mat(INK.lightened(0.05), 0.5, 0.6), Vector3(0, H / 2.0, 0.06), pivot)
 	mg._box(Vector3(0.16, 1.0, 0.16), mg._mat(Color(0.05, 0.05, 0.07), 0.3), Vector3(0, -0.3, -0.1), pivot)   # the stand
-	screen_logo = _sprite("res://assets/brand/bnb_wordmark_light.png", 4.4, Vector3.ZERO)
-	screen_logo.reparent(pivot, false); screen_logo.position = Vector3(0, H / 2.0, 0.08)
-	screen_label = Label3D.new()
-	screen_label.font = font; screen_label.font_size = 64; screen_label.pixel_size = 0.0075; screen_label.modulate = CYAN.lightened(0.3)
-	screen_label.outline_size = 10; screen_label.outline_modulate = INK
-	screen_label.position = Vector3(0, H / 2.0, 0.09); screen_label.width = (W - 0.4) / 0.0075; screen_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	screen_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; screen_label.visible = false
-	pivot.add_child(screen_label)
+	var logo := _sprite("res://assets/brand/bnb_wordmark_light.png", 4.4, Vector3.ZERO)
+	logo.reparent(pivot, false); logo.position = Vector3(0, H / 2.0, 0.08)
+	var label := Label3D.new()
+	label.font = font; label.font_size = 64; label.pixel_size = 0.0075; label.modulate = CYAN.lightened(0.3)
+	label.outline_size = 10; label.outline_modulate = INK
+	label.position = Vector3(0, H / 2.0, 0.09); label.width = (W - 0.4) / 0.0075; label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; label.visible = false
+	pivot.add_child(label)
+	screens[room] = {logo = logo, label = label}
 
 
 func _build_game_room() -> void:
@@ -554,14 +582,14 @@ func set_rooms(r: Dictionary) -> void:
 
 
 func all_rooms() -> Array:
-	return MafiaSim.ROOMS + EXTRA_ROOMS
+	return OfficeFloors.ROOMS
 
 
 func room_at(p: Vector2) -> String:
 	for rm in all_rooms():
 		var r: Array = rm.r
 		if p.x >= r[0] and p.x <= r[2] and p.y >= r[1] and p.y <= r[3]: return rm.id
-	return "hall"
+	return "hall%d" % OfficeFloors.level_of(p.x)
 
 
 # ---------------------------------------------------------------- people
@@ -809,6 +837,8 @@ func _do(act: String) -> void:
 	if act == "": return
 	if act == "knock":
 		_post({t = "knock"}); _emote("wave"); return
+	if act.begins_with("st:") and String(stations[int(act.substr(3))].kind) in ["lift", "stairs"]:
+		_open_picker(String(stations[int(act.substr(3))].kind)); target = Vector2.INF; pending = ""; return
 	var p := Vector2.INF; var face := my_dir
 	if act.begins_with("sit:"):
 		var s: Dictionary = seats[int(act.substr(4))]; p = s.p; face = s.face
@@ -950,16 +980,78 @@ func _message(d: Dictionary) -> void:
 			if my_act != "": _stand_up()
 			var want := Vector2(float(d.get("x", 0.0)), float(d.get("z", 0.0)))
 			if d.has("id") and people.has(int(d.id)): want = people[int(d.id)].pos
+			var to_level := OfficeFloors.level_of(want.x)
+			if to_level != level: _travel(to_level, "lift")      # on another level: take the lift first
 			target = _free_near(want, room_at(want), d.has("id")); route_t = 0.0; pending = ""
 		"rooms": set_rooms(d.rooms)
 		"act": _act_key()
 		"let_in": ceo_let_in = true
-		"screen":
+		"screen":     # {name, room}: who is sharing in your meeting room ("" when nobody is)
 			var who := String(d.get("name", ""))
-			screen_label.text = who + " sharing\n" + ("your" if who == "You are" else "their") + " screen"
-			screen_label.visible = who != ""; screen_logo.visible = who == ""
+			var in_room := String(d.get("room", "board"))
+			for mr in screens:
+				var sc: Dictionary = screens[mr]
+				var on: bool = who != "" and mr == in_room
+				(sc.label as Label3D).text = who + " sharing\n" + ("your" if who == "You are" else "their") + " screen"
+				(sc.label as Label3D).visible = on; (sc.logo as Sprite3D).visible = not on
 		"emote": _emote(String(d.get("e", "")))
 		"costume": _set_my_costume(int(d.get("i", 0)))
+
+
+# ---------------------------------------------------------------- lifts and stairs
+func _build_picker() -> void:
+	fade = ColorRect.new(); fade.color = Color(INK, 0.0); fade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(fade)
+	picker = PanelContainer.new(); picker.visible = false
+	var sb := StyleBoxFlat.new(); sb.bg_color = Color(INK, 0.94); sb.border_color = CYAN; sb.set_border_width_all(2)
+	sb.set_corner_radius_all(14); sb.content_margin_left = 22; sb.content_margin_right = 22; sb.content_margin_top = 16; sb.content_margin_bottom = 16
+	picker.add_theme_stylebox_override("panel", sb)
+	picker.set_anchors_preset(Control.PRESET_CENTER)
+	layer.add_child(picker)
+
+
+## Where would you like to go? The lift goes to any level, the stairs one level up or down.
+func _open_picker(kind: String) -> void:
+	for c in picker.get_children(): c.queue_free()
+	var box := VBoxContainer.new(); box.add_theme_constant_override("separation", 8)
+	picker.add_child(box)
+	var title := Label.new(); title.text = ("Lift" if kind == "lift" else "Stairs") + "  ·  you're on the " + String(OfficeFloors.NAMES[level]).to_lower()
+	if level in [0, 5]: title.text = ("Lift" if kind == "lift" else "Stairs") + "  ·  " + String(OfficeFloors.NAMES[level])
+	title.add_theme_font_override("font", small); title.add_theme_font_size_override("font_size", 24); title.add_theme_color_override("font_color", CYAN.lightened(0.3))
+	box.add_child(title)
+	var to: Array = OfficeFloors.stairs_to(level) if kind == "stairs" else OfficeFloors.LEVELS.filter(func(l): return l != level)
+	to.reverse()   # top floor first, like a lift panel
+	var words := {0: "Parking  ·  cars, bikes and the smoking corner", 3: "3rd floor  ·  Sales and Management",
+		4: "4th floor  ·  Development, Creative and QA", 5: "Rooftop  ·  BBQ, smoking area, lounge"}
+	for l in to:
+		var b := Button.new()
+		b.text = ("[%s]   " % OfficeFloors.SHORT[l]) + String(words[l])
+		b.add_theme_font_override("font", small); b.add_theme_font_size_override("font_size", 22)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT; b.custom_minimum_size = Vector2(380, 44)
+		b.pressed.connect(func(): _travel(l, kind))
+		box.add_child(b)
+	var cancel := Button.new(); cancel.text = "Stay here  (Esc)"; cancel.flat = true
+	cancel.add_theme_font_override("font", small); cancel.add_theme_font_size_override("font_size", 20)
+	cancel.pressed.connect(func(): picker.visible = false)
+	box.add_child(cancel)
+	picker.visible = true
+	picker.reset_size()
+	picker.position = (get_viewport().get_visible_rect().size - picker.size) / 2.0
+	(box.get_child(1) as Button).grab_focus()
+
+
+## Go to another level: out of the lift (or off the stairs) in its lobby.
+func _travel(to_level: int, via: String) -> void:
+	if picker != null: picker.visible = false
+	if to_level == level: return
+	if my_act != "": _stand_up()
+	var out := OfficeFloors.lobby(to_level, OfficeFloors.LIFT_OUT if via == "lift" else OfficeFloors.STAIRS_OUT)
+	my_pos = out; my_dir = Vector2(-1, 0); target = Vector2.INF; pending = ""
+	level = to_level; floors.show_level(level)
+	cam.position = Vector3.ZERO      # the camera jumps with you
+	fade.color = Color(INK, 1.0)
+	create_tween().tween_property(fade, "color", Color(INK, 0.0), 0.45 if via == "lift" else 0.7)
 
 
 ## The CEO office is closed to you while someone else is in it, unless you're an admin or were let in.
@@ -992,6 +1084,14 @@ func _unhandled_input(e: InputEvent) -> void:
 	if my_rig == null: return
 	if e is InputEventKey and e.pressed and not e.echo:
 		var k := (e as InputEventKey).physical_keycode
+		if picker != null and picker.visible:     # the lift / stairs panel: P 3 4 R, or Esc to stay
+			var keys := {KEY_P: 0, KEY_0: 0, KEY_3: 3, KEY_4: 4, KEY_R: 5, KEY_5: 5}
+			if k == KEY_ESCAPE: picker.visible = false
+			elif keys.has(k):
+				var kind := "lift" if picker.get_child(0).get_child(0).text.begins_with("Lift") else "stairs"
+				var allowed: Array = OfficeFloors.stairs_to(level) if kind == "stairs" else OfficeFloors.LEVELS
+				if keys[k] in allowed: _travel(keys[k], kind)
+			get_viewport().set_input_as_handled(); return
 		if k == KEY_E or k == KEY_ENTER: _act_key(); return
 		var ei := EMOTE_KEYS.find(k)
 		if ei >= 0: _emote(EMOTE_ORDER[ei]); return
@@ -1119,9 +1219,12 @@ func _keys() -> Vector2:
 		(1.0 if k.call([KEY_S, KEY_DOWN]) else 0.0) - (1.0 if k.call([KEY_W, KEY_UP]) else 0.0))
 
 
-func _physics_process(dt: float) -> void:
-	if my_rig == null: return
+## Moving happens every drawn frame (not on the fixed physics tick) so you and the camera move
+## smoothly together: on a fast screen a physics-rate position steps between frames, and the
+## camera chasing it flickered side to side when walking left or right.
+func _move(dt: float) -> void:
 	var mv := _keys()
+	if picker != null and picker.visible: mv = Vector2.ZERO
 	if mv != Vector2.ZERO:
 		target = Vector2.INF; pending = ""
 		if my_act != "" and not my_act.begins_with("e:"): _stand_up()
@@ -1166,6 +1269,9 @@ func _physics_process(dt: float) -> void:
 	_update_prompt()
 	var room := room_at(my_pos)
 	if my_room == "ceo" and room != "ceo": ceo_let_in = false     # leaving: next time you knock again
+	var lv := OfficeFloors.level_of(my_pos.x)
+	if lv != level:
+		level = lv; floors.show_level(level)
 	_send_t -= dt
 	var now := {x = snappedf(my_pos.x, 0.01), z = snappedf(my_pos.y, 0.01), dx = snappedf(my_dir.x, 0.01), dz = snappedf(my_dir.y, 0.01), m = 1 if my_moving else 0, room = room, a = my_act}
 	if _send_t <= 0.0 and (now != _sent or room != my_room):
@@ -1181,13 +1287,15 @@ func _act_clip(act: String, talking: bool, status: String, moving: bool) -> Stri
 		match String(s.kind):
 			"desk": return "m_type"
 			"game": return "m_type"
-			"meet", "visit": return "m_sit_talk" if talking else "m_sit"
+			"meet", "visit", "booth": return "m_sit_talk" if talking else "m_sit"
 			"cafe": return "m_sit_talk" if talking else "m_sit"
 			_: return "m_sit"
 	if act.begins_with("st:"):
 		var st: Dictionary = stations[clampi(int(act.substr(3)), 0, stations.size() - 1)]
 		match String(st.kind):
 			"tea": return "in_drinking"
+			"smoke", "vape": return "in_drinking"      # hand to mouth (office_floors.gd puffs the smoke)
+			"grill": return "in_tablet"
 			"present": return "in_point" if talking else "in_thinking"
 			"arcade": return "in_tablet"
 	if act.begins_with("e:"): return EMOTES.get(act.substr(2), "idle_relaxed")
@@ -1210,6 +1318,7 @@ func _act_place(act: String) -> Array:
 
 func _process(dt: float) -> void:
 	if my_rig == null: return
+	_move(dt)
 	if demo: _demo_tick(dt)
 	_anim_t += dt
 	my_rig.position = V(my_pos)
@@ -1253,10 +1362,17 @@ func _process(dt: float) -> void:
 		foot.position = Vector3(rig.position.x, 0.03, rig.position.z)
 		foot.visible = linked.has(id)
 		foot.scale = Vector3.ONE * (1.0 + 0.35 * clampf(talk * 3.0, 0.0, 1.0))
-	var focus := V(my_pos)
-	var want := focus + Vector3(0, 11.0, 7.5) * zoom
-	cam.position = cam.position.lerp(want, clampf(dt * 6.0, 0.0, 1.0)) if cam.position != Vector3.ZERO else want
-	cam.look_at(focus + Vector3(0, 0.8, 0), Vector3.UP)
+	# who is smoking or vaping where (the smoke), the road's traffic, the grill fires
+	var busy := {}
+	for a in [my_act] + people.values().map(func(v): return String(v.act)):
+		if String(a).begins_with("st:"): busy[int(String(a).substr(3))] = true
+	floors.tick(dt, busy)
+	# the camera follows you smoothly at a fixed angle: it never turns, so walking sideways can't make it swing
+	var off := Vector3(0, 11.0, 7.5) * zoom
+	var want := V(my_pos) + off
+	if cam.position == Vector3.ZERO or cam.position.distance_to(want) > 30.0: cam.position = want    # arriving, or another level
+	else: cam.position = cam.position.lerp(want, 1.0 - exp(-dt * 8.0))
+	cam.look_at(cam.position - off + Vector3(0, 0.8, 0), Vector3.UP)
 
 
 func _animate(rig, C: Dictionary, clip: String, t: float) -> void:
@@ -1300,7 +1416,18 @@ func _start_demo() -> void:
 			my_pos = Vector2(float(xz[0]), float(xz[1]))
 			for id in people: people[id].pos = my_pos + Vector2(id - 11.5, -1.5); people[id].goal = people[id].pos
 		if a.begins_with("--shot="): _shot_later(a.substr(7))
-		if a == "--sharing": _message({t = "screen", name = "Ayesha is"})
+		if a == "--sharing": _message({t = "screen", name = "Ayesha is", room = room_at(my_pos)})
+		if a.begins_with("--lift="): _travel(int(a.substr(7)), "lift")
+		if a.begins_with("--smoke="):     # --smoke=n: n colleagues smoking and vaping where you are
+			var spots := []
+			for i in stations.size():
+				if String(stations[i].kind) in ["smoke", "vape", "grill"] and OfficeFloors.level_of(stations[i].p.x) == OfficeFloors.level_of(my_pos.x): spots.append(i)
+			var ids := people.keys()
+			for j in mini(int(a.substr(8)), mini(spots.size(), ids.size())):
+				people[ids[j]].act = "st:%d" % spots[j]; people[ids[j]].pos = stations[spots[j]].p; people[ids[j]].goal = stations[spots[j]].p
+		if a == "--picker": _open_picker("lift")
+		if a.begins_with("--zoom="): zoom = float(a.substr(7))
+		if a == "--puffs": floors.always_puff = true
 		if a == "--look":
 			_set_my_avatar({model = "female", skin = "#b57d56", hair_style = "hair_ponytail", hair = "#6b4423", face = "none", glasses = true, outfit = "pakistani", colour = "#26b1ce"})
 			_set_avatar(11, {model = "male", skin = "#e6bc9a", hair_style = "hair_spiky", hair = "#a0703c", face = "both", glasses = false, outfit = "smart", colour = "#e0464e"})
@@ -1314,8 +1441,8 @@ func _start_demo() -> void:
 				people[int(g[0])].pos = Vector2(float(xz2[0]), float(xz2[1])); people[int(g[0])].goal = people[int(g[0])].pos; people[int(g[0])].act = ""
 			_goto_check(int(g[0]))
 		if a == "--knock":       # someone in the CEO office: you can't walk in, the prompt offers a knock
-			people[13].room = "ceo"; people[13].pos = Vector2(0, -15); people[13].goal = people[13].pos
-			my_pos = Vector2(0, -9.5); target = Vector2(0, -15)
+			people[13].room = "ceo"; people[13].pos = Vector2(120, -15); people[13].goal = people[13].pos
+			my_pos = Vector2(120, -9.5); target = Vector2(120, -15)
 
 
 func _goto_check(id: int) -> void:
