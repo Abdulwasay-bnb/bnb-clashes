@@ -885,7 +885,7 @@ func _message(d: Dictionary) -> void:
 		"let_in": ceo_let_in = true
 		"screen":
 			var who := String(d.get("name", ""))
-			screen_label.text = who + " sharing\ntheir screen"
+			screen_label.text = who + " sharing\n" + ("your" if who == "You are" else "their") + " screen"
 			screen_label.visible = who != ""; screen_logo.visible = who == ""
 		"emote": _emote(String(d.get("e", "")))
 		"costume": _set_my_costume(int(d.get("i", 0)))
