@@ -77,41 +77,17 @@ const OFFICE_DECOR := [
 	{m = "tableCoffee", p = [-27.5, -12.5], s = [0.8, 1.4, 0.4], block = true},
 	{m = "trashcan", p = [-14.8, -19.2], s = [0.6, 0.55, 0.9]},
 	{m = "pottedPlant", p = [-29.2, -9.0], s = [0.7, 0.7, 1.6]},
-	# development: two rows of desks with screens and chairs
-	{m = "desk", p = [-25.0, 3.5], s = [2.0, 1.0, 0.76], block = true}, {m = "desk", p = [-21.5, 3.5], s = [2.0, 1.0, 0.76], block = true},
-	{m = "desk", p = [-25.0, -2.0], s = [2.0, 1.0, 0.76], block = true}, {m = "desk", p = [-21.5, -2.0], s = [2.0, 1.0, 0.76], block = true},
-	{m = "desk", p = [-18.0, 3.5], s = [2.0, 1.0, 0.76], block = true},
-	{m = "computerScreen", p = [-25.0, 3.6], r = 180, s = [0.8, 0.2, 0.6], y = 0.76}, {m = "computerScreen", p = [-21.5, 3.6], r = 180, s = [0.8, 0.2, 0.6], y = 0.76},
-	{m = "computerScreen", p = [-25.0, -2.1], s = [0.8, 0.2, 0.6], y = 0.76}, {m = "computerScreen", p = [-21.5, -2.1], s = [0.8, 0.2, 0.6], y = 0.76},
-	{m = "laptop", p = [-18.0, 3.6], r = 180, s = [0.6, 0.45, 0.35], y = 0.76},
-	{m = "chairDesk", p = [-25.0, 2.4], r = 180, s = [0.8, 0.8, 1.0], seat = "desk"}, {m = "chairDesk", p = [-21.5, 2.4], r = 180, s = [0.8, 0.8, 1.0], seat = "desk"},
-	{m = "chairDesk", p = [-25.0, -0.9], s = [0.8, 0.8, 1.0], seat = "desk"}, {m = "chairDesk", p = [-21.5, -0.9], s = [0.8, 0.8, 1.0], seat = "desk"},
-	{m = "chairDesk", p = [-18.0, 2.4], r = 180, s = [0.8, 0.8, 1.0], seat = "desk"},
-	{m = "bookcaseOpen", p = [-29.4, 4.0], r = 90, s = [1.6, 0.6, 1.8], block = true},
+	# development (the desks in the department rooms come from office_desks.gd)
+	{m = "bookcaseOpen", p = [-29.4, 0.8], r = 90, s = [1.6, 0.6, 1.8], block = true},
 	{m = "plantSmall1", p = [-15.0, 5.3], s = [0.5, 0.5, 0.7]},
 	# management
-	{m = "desk", p = [-23.0, 16.0], s = [2.2, 1.1, 0.76], block = true},
-	{m = "laptop", p = [-23.0, 16.1], r = 180, s = [0.6, 0.45, 0.35], y = 0.76},
-	{m = "chairDesk", p = [-23.0, 17.3], r = 180, s = [0.8, 0.8, 1.0], seat = "desk"},
-	{m = "desk", p = [-18.5, 16.0], s = [2.2, 1.1, 0.76], block = true},
-	{m = "computerScreen", p = [-18.5, 16.1], r = 180, s = [0.8, 0.2, 0.6], y = 0.76},
-	{m = "chairDesk", p = [-18.5, 17.3], r = 180, s = [0.8, 0.8, 1.0], seat = "desk"},
 	{m = "bookcaseClosedWide", p = [-27.5, 10.6], s = [1.8, 0.6, 1.8], block = true},
 	{m = "coatRack", p = [-29.3, 19.4], s = [0.6, 0.3, 1.8]},
 	{m = "pottedPlant", p = [-14.8, 19.2], s = [0.7, 0.7, 1.6]},
 	# business development
-	{m = "desk", p = [19.0, -16.5], s = [2.0, 1.0, 0.76], block = true}, {m = "desk", p = [23.0, -16.5], s = [2.0, 1.0, 0.76], block = true},
-	{m = "desk", p = [27.0, -16.5], s = [2.0, 1.0, 0.76], block = true},
-	{m = "computerScreen", p = [19.0, -16.6], s = [0.8, 0.2, 0.6], y = 0.76}, {m = "laptop", p = [23.0, -16.6], s = [0.6, 0.45, 0.35], y = 0.76},
-	{m = "computerScreen", p = [27.0, -16.6], s = [0.8, 0.2, 0.6], y = 0.76},
-	{m = "chairDesk", p = [19.0, -15.4], s = [0.8, 0.8, 1.0], seat = "desk"}, {m = "chairDesk", p = [23.0, -15.4], s = [0.8, 0.8, 1.0], seat = "desk"},
-	{m = "chairDesk", p = [27.0, -15.4], s = [0.8, 0.8, 1.0], seat = "desk"},
 	{m = "bookcaseOpen", p = [29.4, -11.0], r = 270, s = [1.6, 0.6, 1.8], block = true},
 	{m = "pottedPlant", p = [15.0, -19.2], s = [0.7, 0.7, 1.6]},
 	# creative & QA
-	{m = "desk", p = [19.5, 17.0], s = [2.2, 1.1, 0.76], block = true}, {m = "desk", p = [25.0, 17.0], s = [2.2, 1.1, 0.76], block = true},
-	{m = "computerScreen", p = [19.5, 17.1], r = 180, s = [0.8, 0.2, 0.6], y = 0.76}, {m = "computerScreen", p = [25.0, 17.1], r = 180, s = [0.8, 0.2, 0.6], y = 0.76},
-	{m = "chairDesk", p = [19.5, 15.9], r = 180, s = [0.8, 0.8, 1.0], seat = "desk"}, {m = "chairDesk", p = [25.0, 15.9], r = 180, s = [0.8, 0.8, 1.0], seat = "desk"},
 	{m = "kitchenCabinet", p = [29.3, 12.0], r = 270, s = [1.0, 0.7, 1.0], block = true},
 	{m = "pottedPlant", p = [15.0, 19.2], s = [0.7, 0.7, 1.6]},
 	# meeting room: the long table (chairs are added round it), plants
@@ -154,6 +130,7 @@ const OFFICE_DECOR := [
 ]
 ## Arcade machines along the game room's east wall: one player stands at each.
 const ARCADES := [["cricket", -2.6], ["race", -1.0], ["dash", 0.6], ["tumble", 2.2], ["blast", 3.8], ["mafia", 5.3]]
+var decor: Array = []                   # OFFICE_DECOR plus everyone's desks (office_desks.gd)
 const SEAT_TABLES := ["desk", "table", "tableRound", "tableCoffeeSquare", "tableCoffee"]
 
 var sim: MafiaSim
@@ -171,6 +148,9 @@ var me := {}                            # {id, u, name, costume}
 var my_rig: Node3D
 var my_tag: Label3D
 var party: OfficeParty                  # birthday / work anniversary decorations
+var desks: OfficeDesks                  # everyone's desk and what they're up to
+var desk_list: Array = []
+var my_desk := ""                       # the desk you're sitting at ("" if none)
 var my_dress: Node3D
 var my_ring: MeshInstance3D
 var my_pos := Vector2(0, 16)
@@ -233,10 +213,13 @@ func _ready() -> void:
 		_post({t = "boot", p = f})
 		await get_tree().process_frame
 	sim = MafiaSim.new()
+	decor = OFFICE_DECOR + OfficeDesks.decor()
 	_build_collision()
 	world = Node3D.new(); add_child(world)
 	mg = MafiaGame.new(); mg.world = world; mg.font = font; mg.small = small
 	party = OfficeParty.new(); party.world = world; party.mg = mg; party.font = font
+	desks = OfficeDesks.new(); desks.world = world; desks.mg = mg; desks.small = small; desks.party = party
+	desks.map_seats(seats, decor)
 	for id in ROOM_NAMES: rooms[id] = {name = ROOM_NAMES[id], kind = "room"}
 	_build_world()
 	_post({t = "boot", p = 0.95})
@@ -267,7 +250,7 @@ func _build_collision() -> void:
 		sim._wall_side(r[0], r[3], r[2], r[3], "s" in d)
 		sim._wall_side(r[0], r[1], r[0], r[3], "w" in d)
 		sim._wall_side(r[2], r[1], r[2], r[3], "e" in d)
-	for d in OFFICE_DECOR:
+	for d in decor:
 		if d.get("block", false):
 			var sz: Array = d.s
 			var rot: float = d.get("r", 0.0)
@@ -293,7 +276,7 @@ func _build_collision() -> void:
 			if index.has(nb) and sim.clear(wp, nb, RADIUS):
 				var j: int = index[nb]; sim.links[i].append(j); sim.links[j].append(i)
 	# where people can sit and what they can use
-	for d in OFFICE_DECOR:
+	for d in decor:
 		if not d.has("seat"): continue
 		var p := Vector2(float(d.p[0]), float(d.p[1]))
 		var rot := deg_to_rad(float(d.get("r", 0.0)))
@@ -327,7 +310,7 @@ func _oriented(d: Dictionary) -> Dictionary:
 		face = _seat_face(p, Vector2(sin(deg_to_rad(float(d.get("r", 0.0)))), cos(deg_to_rad(float(d.get("r", 0.0))))))
 	elif m in ["computerScreen", "laptop"]:
 		var best := 2.2
-		for c in OFFICE_DECOR:
+		for c in decor:
 			if String(c.m).begins_with("chair") and c.has("seat"):
 				var q := Vector2(float(c.p[0]), float(c.p[1]))
 				if p.distance_to(q) < best: best = p.distance_to(q); face = (q - p).normalized()
@@ -342,7 +325,7 @@ func _oriented(d: Dictionary) -> Dictionary:
 func _seat_face(p: Vector2, fwd: Vector2) -> Vector2:
 	# face the nearest table or desk; a chair on its own faces the way it points
 	var best := INF; var face := fwd
-	for d in OFFICE_DECOR:
+	for d in decor:
 		if not (String(d.m) in SEAT_TABLES): continue
 		var q := Vector2(float(d.p[0]), float(d.p[1]))
 		var dist := p.distance_to(q)
@@ -397,7 +380,7 @@ func _build_world() -> void:
 		mg._box(Vector3(w.size.x, 1.35, w.size.y), wall_m, V(c, 0.675))
 		mg._box(Vector3(w.size.x + 0.02, 0.06, w.size.y + 0.02), top_m, V(c, 1.35))
 		mg._box(Vector3(w.size.x + 0.03, 0.02, w.size.y + 0.03), glow_m, V(c, 1.39))   # a thin cyan light along every wall top
-	for d in OFFICE_DECOR: mg._decor(_oriented(d))
+	for d in decor: mg._decor(_oriented(d))
 	for s in seats:
 		if s.get("chair", false):
 			mg._decor({m = "chairDesk", p = [s.p.x, s.p.y], r = rad_to_deg(atan2(-s.p.x, -s.p.y)), s = [0.8, 0.8, 1.0]})
@@ -481,7 +464,7 @@ func _build_game_room() -> void:
 	g.outline_modulate = BRAND.darkened(0.3); g.outline_size = 16; g.pixel_size = 0.006
 	g.position = Vector3(22.0, 2.15, -3.75)
 	world.add_child(g)
-	for d in OFFICE_DECOR:
+	for d in decor:
 		if not d.has("game") or d.has("seat"): continue
 		var p := Vector2(float(d.p[0]), float(d.p[1]))
 		var top := float(d.s[2]) + 0.01
@@ -753,6 +736,11 @@ func _do(act: String) -> void:
 func _set_act(act: String) -> void:
 	var was := _game_of(my_act)
 	my_act = act; my_act_t = 0.0
+	var dk := desks.desk_of_seat(int(act.substr(4))) if act.begins_with("sit:") else ""
+	if dk != my_desk:
+		my_desk = dk
+		var row := desks.row_for(dk)
+		_post({t = "desk", desk = dk, owner = row.get("id"), name = row.get("name", ""), party = row.get("party", "")})
 	var now := _game_of(act)
 	if now != was:   # at a game table / arcade: the hub offers to open the real game (create or join a room)
 		var C: Dictionary = my_rig.get_meta("C", {}) if my_rig != null else {}
@@ -833,8 +821,14 @@ func _message(d: Dictionary) -> void:
 			party.build(d.get("party", []))
 			_init_me(d.me, d.get("spawn", []))
 			for p in d.get("people", []): _add_person(p)
-		"join": _add_person(d.person)
-		"leave": _remove_person(int(d.id))
+			desk_list = d.get("desks", [])
+			_show_desks()
+			if d.get("arrive", false):        # a fresh arrival starts at their own desk
+				var at := desks.arrival(String(desks.by_owner.get(int(me.get("id", -1)), "")))
+				if at != Vector2.INF and not sim.blocked(at, RADIUS): my_pos = at
+		"join": _add_person(d.person); _show_desks()
+		"leave": _remove_person(int(d.id)); _show_desks()
+		"desks": desk_list = d.get("desks", []); _show_desks()
 		"state":
 			for row in d.get("p", []):
 				var id := int(row[0])
@@ -850,7 +844,7 @@ func _message(d: Dictionary) -> void:
 		"status":
 			var id := int(d.id)
 			if people.has(id):
-				people[id].status = String(d.status); _restatus(id)
+				people[id].status = String(d.status); _restatus(id); _show_desks()
 		"look": _set_look(int(d.id), int(d.costume))
 		"talk":
 			var lv: Dictionary = d.get("levels", {})
@@ -866,6 +860,14 @@ func _message(d: Dictionary) -> void:
 		"act": _act_key()
 		"emote": _emote(String(d.get("e", "")))
 		"costume": _set_my_costume(int(d.get("i", 0)))
+
+
+## Desks, with the live status of whoever is in the office right now.
+func _show_desks() -> void:
+	var present := {}
+	for id in people: present[id] = String(people[id].status)
+	if me.has("id"): present[int(me.id)] = "here"
+	desks.show(desk_list, present)
 
 
 func _post(d: Dictionary) -> void:
@@ -1148,6 +1150,11 @@ func _start_demo() -> void:
 	people[13].act = "st:3"
 	# desktop checks: `-- --party` shows the birthday decorations, `--at=x,z` moves you, `--shot=file.png` saves a picture
 	var args := OS.get_cmdline_user_args()
+	desk_list = [{desk = "dev:0", id = 10, name = "Tuaha Aamir", status = "in"}, {desk = "dev:1", id = 20, name = "Hira Ali", status = "leave"},
+		{desk = "dev:2", id = 21, name = "Omar Farooq", status = "break"}, {desk = "dev:3", id = 22, name = "Sana Iqbal", status = "call"},
+		{desk = "dev:4", id = 23, name = "Bilal Ahmed", status = "off"}, {desk = "dev:5", id = 24, name = "Ayesha Khan", status = "wfh", party = "birthday"},
+		{desk = "dev:6", id = 1, name = "Abdul Wasay", status = "in"}]
+	_show_desks()
 	if args.has("--party"):
 		party.build([{name = "Kiran Fazal", kind = "birthday", years = 0}, {name = "Zia Khan", kind = "anniversary", years = 3}])
 		people[13].party = "birthday"; people[13].dress = party.dress("birthday"); people[13].act = ""; _restatus(13)

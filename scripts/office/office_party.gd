@@ -142,18 +142,23 @@ func _string(parent: Node3D, a: Vector3, b: Vector3) -> void:
 
 
 func _bunch(p: Vector2, n: int) -> void:
+	bunch_at(root, p, n, cols)
+
+
+## A bunch of balloons tied to a little gold weight on the floor at p.
+func bunch_at(parent: Node3D, p: Vector2, n: int, palette: Array) -> void:
 	var anchor := Vector3(p.x, 0.05, p.y)
 	var weight := MeshInstance3D.new()
 	var w := CylinderMesh.new(); w.top_radius = 0.08; w.bottom_radius = 0.1; w.height = 0.1
 	weight.mesh = w; weight.material_override = mg._mat(GOLD, 0.3, 0.4); weight.position = anchor
-	root.add_child(weight)
+	parent.add_child(weight)
 	for i in n:
 		var ang := TAU * float(i) / n + randf() * 0.4
 		var top := anchor + Vector3(cos(ang) * 0.28, 2.0 + randf() * 0.6, sin(ang) * 0.28)
-		_string(root, anchor + Vector3(0, 0.05, 0), top)
-		var b := _balloon(cols[(i + int(absf(p.x))) % cols.size()], 0.24)
+		_string(parent, anchor + Vector3(0, 0.05, 0), top)
+		var b := _balloon(palette[(i + int(absf(p.x))) % palette.size()], 0.24)
 		b.position = top
-		root.add_child(b)
+		parent.add_child(b)
 		bobs.append([b, top, randf() * TAU])
 
 
