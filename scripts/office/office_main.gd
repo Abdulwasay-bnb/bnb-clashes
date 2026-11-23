@@ -465,15 +465,22 @@ func _build_tea_bar() -> void:
 
 
 func _build_meeting_screen() -> void:
-	# a big screen on the meeting room's north wall, showing the BNB wordmark
-	mg._box(Vector3(3.2, 1.8, 0.08), mg._mat(Color(0.05, 0.05, 0.07), 0.3), Vector3(-4.5, 1.55, -6.72))
-	mg._box(Vector3(3.0, 1.62, 0.02), mg._mat(INK.lightened(0.05), 0.5, 0.6), Vector3(-4.5, 1.55, -6.66))
-	screen_logo = _sprite("res://assets/brand/bnb_wordmark_light.png", 2.6, Vector3(-4.5, 1.55, -6.64))
+	# a big screen standing on the meeting room's north wall, tilted back so the camera above can read
+	# it: the BNB wordmark, or who is sharing their screen
+	var W := 5.4; var H := 3.04
+	var pivot := Node3D.new(); pivot.position = Vector3(-4.7, 1.0, -6.78); pivot.rotation.x = -0.42
+	world.add_child(pivot)
+	mg._box(Vector3(W + 0.2, H + 0.2, 0.1), mg._mat(Color(0.05, 0.05, 0.07), 0.3), Vector3(0, H / 2.0, 0), pivot)
+	mg._box(Vector3(W, H, 0.02), mg._mat(INK.lightened(0.05), 0.5, 0.6), Vector3(0, H / 2.0, 0.06), pivot)
+	mg._box(Vector3(0.16, 1.0, 0.16), mg._mat(Color(0.05, 0.05, 0.07), 0.3), Vector3(0, -0.3, -0.1), pivot)   # the stand
+	screen_logo = _sprite("res://assets/brand/bnb_wordmark_light.png", 4.4, Vector3.ZERO)
+	screen_logo.reparent(pivot, false); screen_logo.position = Vector3(0, H / 2.0, 0.08)
 	screen_label = Label3D.new()
-	screen_label.font = font; screen_label.font_size = 52; screen_label.pixel_size = 0.0045; screen_label.modulate = CYAN.lightened(0.3)
-	screen_label.position = Vector3(-4.5, 1.55, -6.62); screen_label.width = 2.8 / 0.0045; screen_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	screen_label.font = font; screen_label.font_size = 64; screen_label.pixel_size = 0.0075; screen_label.modulate = CYAN.lightened(0.3)
+	screen_label.outline_size = 10; screen_label.outline_modulate = INK
+	screen_label.position = Vector3(0, H / 2.0, 0.09); screen_label.width = (W - 0.4) / 0.0075; screen_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	screen_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; screen_label.visible = false
-	world.add_child(screen_label)
+	pivot.add_child(screen_label)
 
 
 func _build_game_room() -> void:
@@ -565,7 +572,9 @@ const ALIASES := {"abdulwasay_waqas": "abdul_wasay_waqas", "kashaf_duja": "kasha
 
 ## The character for a hub user: their own (by username, alias or exact name); an admin without
 ## one plays Hamza Khan, anyone else Ali (real roster bodies, so they walk and sit like everyone).
-func character_for(u: String, name: String, admin := false) -> Dictionary:
+func character_for(u: String, name: String, admin := false, look = null, id := 0) -> Dictionary:
+	if typeof(look) == TYPE_DICTIONARY and not (look as Dictionary).is_empty():
+		return _custom_character(id, look)
 	var want: String = ALIASES.get(u, u)
 	var n := _norm(name)
 	for C in Data.ROSTER:
@@ -573,6 +582,35 @@ func character_for(u: String, name: String, admin := false) -> Dictionary:
 	for C in Data.ROSTER:
 		if n != "" and _norm(C.name) == n: return C
 	return _stand_in("hamza_khan" if admin else "ali")
+
+
+## A character from the hub's character builder: {model, skin, hair_style, hair, face, glasses, outfit, colour}.
+## It is made like a staff character (Models.register from a person description), so it gets the same
+## outfits; it borrows the moves of a plain base character.
+func _custom_character(id: int, look: Dictionary) -> Dictionary:
+	var female := String(look.get("model", "male")) == "female"
+	var base: Dictionary = Data.by_id("mahveen_khan" if female else "abdul_wasay_waqas")
+	if base.is_empty(): return _stand_in("ali")
+	var C := base.duplicate()
+	var key := "look_%d" % id
+	var rgb := func(h, fallback: Color) -> Array:
+		var c := Color.html(String(h)) if Color.html_is_valid(String(h)) else fallback
+		return [c.r, c.g, c.b]
+	var face := String(look.get("face", "none"))
+	var p: Dictionary = (base.person as Dictionary).duplicate(true)
+	p.id = key; p.model = "female" if female else "male"
+	p.skin = rgb.call(look.get("skin", ""), Color(0.83, 0.63, 0.48))
+	p.hair_style = String(look.get("hair_style", "hair_short"))
+	p.hair_color = rgb.call(look.get("hair", ""), Color(0.09, 0.07, 0.06))
+	p.hair = ""
+	p.extras = (["beard"] if face in ["beard", "both"] else []) + (["mustache"] if face in ["mustache", "both"] else [])
+	p.glasses = bool(look.get("glasses", false))
+	p.outfit_kind = String(look.get("outfit", "casual"))
+	p.accent = rgb.call(look.get("colour", ""), Color(0.4, 0.2, 0.58))
+	p.eyes = []
+	Models.register(p)
+	C.id = key; C.person = p; C.scale = 0.98 if female else 1.0
+	return C
 
 
 func _stand_in(id: String) -> Dictionary:
@@ -593,7 +631,7 @@ func _costume_count(C: Dictionary) -> int:
 func _add_person(p: Dictionary) -> void:
 	var id := int(p.id)
 	if id == int(me.get("id", -1)) or people.has(id): return
-	var C := character_for(String(p.get("u", "")), String(p.get("name", "")), bool(p.get("admin", false)))
+	var C := character_for(String(p.get("u", "")), String(p.get("name", "")), bool(p.get("admin", false)), p.get("look"), id)
 	var costume := clampi(int(p.get("costume", 0)), 0, _costume_count(C) - 1)
 	var rig := Main.make_rig(C, costume)
 	world.add_child(rig)
@@ -605,7 +643,7 @@ func _add_person(p: Dictionary) -> void:
 	foot.mesh = cyl; foot.material_override = mg._mat(CYAN, 0.4, 1.5); foot.visible = false
 	world.add_child(foot)
 	people[id] = {rig = rig, tag = tag, foot = foot, pos = pos, goal = pos, dir = Vector2(float(p.get("dx", 0.0)), float(p.get("dz", 1.0))),
-		moving = false, name = String(p.get("name", "")), status = String(p.get("status", "working")), talk = 0.0, t = randf() * 5.0, C = C,
+		moving = false, name = String(p.get("name", "")), u = String(p.get("u", "")), admin = bool(p.get("admin", false)), status = String(p.get("status", "working")), talk = 0.0, t = randf() * 5.0, C = C,
 		act = String(p.get("act", "")), act_t = 0.0, costume = costume, party = String(p.get("party", "")), room = String(p.get("room", "")),
 		dress = party.dress(String(p.get("party", ""))) if String(p.get("party", "")) != "" else null}
 	_restatus(id)
@@ -621,6 +659,33 @@ func _set_look(id: int, costume: int) -> void:
 	world.add_child(rig)
 	rig.position = V(v.pos)
 	v.rig = rig; v.costume = costume
+
+
+## Someone saved a new look in the character builder (null: back to their own character).
+func _set_avatar(id: int, look) -> void:
+	if not people.has(id): return
+	var v: Dictionary = people[id]
+	var C := character_for(String(v.get("u", "")), String(v.name), bool(v.get("admin", false)), look, id)
+	(v.rig as Node).queue_free()
+	v.C = C; v.costume = 0
+	var rig := Main.make_rig(C, 0)
+	world.add_child(rig)
+	rig.position = V(v.pos)
+	v.rig = rig
+
+
+## Your own look: while the builder is open it's a preview; saving keeps it.
+func _set_my_avatar(look) -> void:
+	if my_rig == null: return
+	var C := character_for(String(me.get("u", "")), String(me.get("name", "")), bool(me.get("admin", false)), look, int(me.get("id", 0)))
+	var old := my_rig
+	my_costume = 0
+	my_rig = Main.make_rig(C, 0)
+	my_rig.set_meta("C", C)
+	world.add_child(my_rig)
+	my_rig.position = old.position; my_rig.rotation = old.rotation
+	old.queue_free()
+	_post({t = "costumes", names = Models.costume_names(String(C.id)), current = 0})
 
 
 func _tag(text: String) -> Label3D:
@@ -675,7 +740,7 @@ func _init_me(m: Dictionary, spawn: Array) -> void:
 	me = m
 	if my_rig != null: my_rig.queue_free()
 	if my_tag != null: my_tag.queue_free()
-	var C := character_for(String(m.get("u", "")), String(m.get("name", "")), bool(m.get("admin", false)))
+	var C := character_for(String(m.get("u", "")), String(m.get("name", "")), bool(m.get("admin", false)), m.get("look"), int(m.get("id", 0)))
 	my_costume = clampi(int(m.get("costume", 0)), 0, _costume_count(C) - 1)
 	my_rig = Main.make_rig(C, my_costume)
 	my_rig.set_meta("C", C)
@@ -842,6 +907,7 @@ func _message(d: Dictionary) -> void:
 			if d.has("rooms"): set_rooms(d.rooms)
 			party.build(d.get("party", []))
 			events.build(d.get("trophies", []), d.get("event", null))
+			events.build_shoutouts(d.get("shoutouts", []))
 			_init_me(d.me, d.get("spawn", []))
 			for p in d.get("people", []): _add_person(p)
 			desk_list = d.get("desks", [])
@@ -870,6 +936,9 @@ func _message(d: Dictionary) -> void:
 			if people.has(id):
 				people[id].status = String(d.status); _restatus(id); _show_desks()
 		"look": _set_look(int(d.id), int(d.costume))
+		"avatar": _set_avatar(int(d.id), d.get("look"))
+		"shoutouts": events.build_shoutouts(d.get("list", []))
+		"my_look": _set_my_avatar(d.get("look"))
 		"talk":
 			var lv: Dictionary = d.get("levels", {})
 			for k in lv:
@@ -877,9 +946,11 @@ func _message(d: Dictionary) -> void:
 		"linked":
 			linked.clear()
 			for id in d.get("ids", []): linked[int(id)] = true
-		"goto":
+		"goto":     # {id} walks up to that person; {x, z} to a spot
 			if my_act != "": _stand_up()
-			target = Vector2(float(d.x), float(d.z)); route_t = 0.0
+			var want := Vector2(float(d.get("x", 0.0)), float(d.get("z", 0.0)))
+			if d.has("id") and people.has(int(d.id)): want = people[int(d.id)].pos
+			target = _free_near(want, room_at(want), d.has("id")); route_t = 0.0; pending = ""
 		"rooms": set_rooms(d.rooms)
 		"act": _act_key()
 		"let_in": ceo_let_in = true
@@ -1010,7 +1081,22 @@ func _aim(screen: Vector2) -> void:
 	if g == Vector2.INF: return
 	if my_act.begins_with("sit:") or my_act.begins_with("st:"): _stand_up()
 	pending = ""
-	target = g; route_t = 0.0
+	target = _free_near(g, room_at(g)); route_t = 0.0
+
+
+## The nearest open floor next to p, in the same room, closest to you: a person at a desk or against a
+## wall has no free floor at their exact spot, and walking at a blocked point only ends in the wall.
+func _free_near(p: Vector2, room: String, beside := false) -> Vector2:
+	for r in ([0.9, 1.3, 1.8, 2.4, 3.2] if beside else [0.0, 0.9, 1.3, 1.8, 2.4, 3.2]):
+		var best := Vector2.INF; var bd := INF
+		for k in (1 if r == 0.0 else 16):
+			var q: Vector2 = p + Vector2(cos(TAU * k / 16.0), sin(TAU * k / 16.0)) * r
+			if sim.blocked(q, RADIUS + 0.1) or room_at(q) != room: continue
+			if r > 0.0 and not sim.clear(q, q.lerp(p, 0.8), 0.05): continue     # same side of any wall as p
+			var dd := q.distance_to(my_pos)
+			if dd < bd: bd = dd; best = q
+		if best != Vector2.INF: return best
+	return p
 
 
 func _person_at(screen: Vector2) -> int:
@@ -1059,7 +1145,7 @@ func _physics_process(dt: float) -> void:
 	if my_moving:
 		mv = mv.normalized()
 		my_dir = mv
-		var step := mv * (RUN if running else WALK) * dt
+		var step := mv * (RUN if running else WALK) * minf(dt, 0.05)     # a slow frame mustn't jump into a wall
 		var np := my_pos + step
 		if not _blocked(np): my_pos = np
 		elif not _blocked(my_pos + Vector2(step.x, 0)): my_pos += Vector2(step.x, 0)
@@ -1067,7 +1153,7 @@ func _physics_process(dt: float) -> void:
 		elif pending != "" and my_pos.distance_to(target) < 1.8: target = Vector2.INF; _do(pending)
 		else:
 			# bumped into something: re-plan right away, and only give up after a second of being stuck
-			stuck_t += dt; route_t = 0.0
+			stuck_t += minf(dt, 0.05); route_t = 0.0
 			if stuck_t > 1.0: target = Vector2.INF; my_moving = false; pending = ""; stuck_t = 0.0
 	if not my_moving or mv == Vector2.ZERO: stuck_t = 0.0
 	# an emote plays once (a dance twice), then you're back to standing
@@ -1199,6 +1285,9 @@ func _start_demo() -> void:
 		{desk = "dev:4", id = 23, name = "Bilal Ahmed", status = "off"}, {desk = "dev:5", id = 24, name = "Ayesha Khan", status = "wfh", party = "birthday"},
 		{desk = "dev:6", id = 1, name = "Abdul Wasay", status = "in"}]
 	_show_desks()
+	events.build_shoutouts([{to = "Aqsa Altaf", from = "Zia", text = "Fixed the payroll export the night before the deadline. Legend."},
+		{to = "Umar Farooq", from = "Kiran", text = "Closed two new clients this week!"}, {to = "Sabir ud Din", from = "Abdul", text = "Helped me debug the office build for an hour."},
+		{to = "Hira", from = "Faizan", text = "Best chai in the office"}])
 	events.build([{name = "Sabir ud Din", title = "Carrom cup", date = "20 Nov"}, {name = "Kiran Fazal", title = "Ludo night", date = "13 Nov"},
 		{name = "Zia Khan", title = "Cards", date = "6 Nov"}], {title = "Friday carrom cup", game = "carrom", when = "FRI 5:00 PM"})
 	if args.has("--party"):
@@ -1211,9 +1300,34 @@ func _start_demo() -> void:
 			my_pos = Vector2(float(xz[0]), float(xz[1]))
 			for id in people: people[id].pos = my_pos + Vector2(id - 11.5, -1.5); people[id].goal = people[id].pos
 		if a.begins_with("--shot="): _shot_later(a.substr(7))
+		if a == "--sharing": _message({t = "screen", name = "Ayesha is"})
+		if a == "--look":
+			_set_my_avatar({model = "female", skin = "#b57d56", hair_style = "hair_ponytail", hair = "#6b4423", face = "none", glasses = true, outfit = "pakistani", colour = "#26b1ce"})
+			_set_avatar(11, {model = "male", skin = "#e6bc9a", hair_style = "hair_spiky", hair = "#a0703c", face = "both", glasses = false, outfit = "smart", colour = "#e0464e"})
+			_set_avatar(12, {model = "female", skin = "#d3a07a", hair_style = "hair_long", hair = "#17120f", face = "none", glasses = false, outfit = "hijab", colour = "#2fbf71"})
+			for k in [[11, Vector2(-1.4, 0.2)], [12, Vector2(1.4, 0.2)]]:
+				people[k[0]].pos = my_pos + k[1]; people[k[0]].goal = people[k[0]].pos; people[k[0]].act = ""
+		if a.begins_with("--goto="):     # --goto=id or --goto=id@x,z (put them somewhere awkward first)
+			var g := a.substr(7).split("@")
+			if g.size() > 1:
+				var xz2 := g[1].split(",")
+				people[int(g[0])].pos = Vector2(float(xz2[0]), float(xz2[1])); people[int(g[0])].goal = people[int(g[0])].pos; people[int(g[0])].act = ""
+			_goto_check(int(g[0]))
 		if a == "--knock":       # someone in the CEO office: you can't walk in, the prompt offers a knock
 			people[13].room = "ceo"; people[13].pos = Vector2(0, -15); people[13].goal = people[13].pos
 			my_pos = Vector2(0, -9.5); target = Vector2(0, -15)
+
+
+func _goto_check(id: int) -> void:
+	await get_tree().create_timer(1.0).timeout
+	var start := my_pos
+	_message({t = "goto", id = id})
+	print("goto ", id, " from ", start, " person at ", people[id].pos, " target ", target)
+	for i in 120:
+		await get_tree().create_timer(0.5).timeout
+		if i % 2 == 0: print("  t=", i / 2, " at ", my_pos, " step ", route_step, " target ", target, " moving ", my_moving, " act ", my_act)
+		if target == Vector2.INF: break
+	print("goto result: at ", my_pos, " distance to person ", my_pos.distance_to(people[id].pos), " still walking ", target != Vector2.INF)
 
 
 func _shot_later(path: String) -> void:
