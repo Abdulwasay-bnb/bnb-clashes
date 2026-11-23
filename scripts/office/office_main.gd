@@ -10,7 +10,7 @@ extends Node
 ##   hub -> office  {t:"init", me, spawn, rooms, people}  {t:"state", p:[[id,x,z,dx,dz,moving,room,act],...]}
 ##                  {t:"join", person}  {t:"leave", id}  {t:"status", id, status}  {t:"look", id, costume}
 ##                  {t:"talk", levels:{id:0..1}}  {t:"linked", ids:[...]}  {t:"goto", x, z}
-##                  {t:"act"} (do what the prompt says)  {t:"emote", e}  {t:"costume", i}
+##                  {t:"act"} (do what the prompt says)  init.party / person.party: birthdays, anniversaries (office_party.gd)  {t:"emote", e}  {t:"costume", i}
 ##   office -> hub  {t:"boot", p}  {t:"ready"}  {t:"pos", x, z, dx, dz, m, room, a}  {t:"person", id}
 ##                  {t:"prompt", text, act}  {t:"costumes", names, current}  {t:"look", costume}
 ##
@@ -170,6 +170,8 @@ var zoom := 1.0
 var me := {}                            # {id, u, name, costume}
 var my_rig: Node3D
 var my_tag: Label3D
+var party: OfficeParty                  # birthday / work anniversary decorations
+var my_dress: Node3D
 var my_ring: MeshInstance3D
 var my_pos := Vector2(0, 16)
 var my_dir := Vector2(0, -1)
@@ -234,6 +236,7 @@ func _ready() -> void:
 	_build_collision()
 	world = Node3D.new(); add_child(world)
 	mg = MafiaGame.new(); mg.world = world; mg.font = font; mg.small = small
+	party = OfficeParty.new(); party.world = world; party.mg = mg; party.font = font
 	for id in ROOM_NAMES: rooms[id] = {name = ROOM_NAMES[id], kind = "room"}
 	_build_world()
 	_post({t = "boot", p = 0.95})
@@ -602,7 +605,8 @@ func _add_person(p: Dictionary) -> void:
 	world.add_child(foot)
 	people[id] = {rig = rig, tag = tag, foot = foot, pos = pos, goal = pos, dir = Vector2(float(p.get("dx", 0.0)), float(p.get("dz", 1.0))),
 		moving = false, name = String(p.get("name", "")), status = String(p.get("status", "working")), talk = 0.0, t = randf() * 5.0, C = C,
-		act = String(p.get("act", "")), act_t = 0.0, costume = costume}
+		act = String(p.get("act", "")), act_t = 0.0, costume = costume, party = String(p.get("party", "")),
+		dress = party.dress(String(p.get("party", ""))) if String(p.get("party", "")) != "" else null}
 	_restatus(id)
 
 
@@ -647,6 +651,8 @@ func _restatus(id: int) -> void:
 	var doing := _act_label(String(v.act))
 	var extra := {"break": "on a break", "focus": "focusing", "call": "in a call", "away": "away", "off": "off today"}.get(st, "") if st != "working" else ""
 	if doing != "" and st != "call" and st != "focus": extra = doing
+	var pk := String(v.get("party", ""))
+	if pk != "": extra = ("birthday today!" if pk == "birthday" else "work anniversary!") + ("" if extra == "" else "  · " + extra)
 	(v.tag as Label3D).text = "● " + _first_two(v.name) + ("" if extra == "" else "  · " + extra)
 	(v.tag as Label3D).modulate = STATUS_COL.get(st, Color.WHITE).lerp(Color.WHITE, 0.35)
 
@@ -660,6 +666,7 @@ func _remove_person(id: int) -> void:
 	if not people.has(id): return
 	var v: Dictionary = people[id]
 	(v.rig as Node).queue_free(); (v.tag as Node).queue_free(); (v.foot as Node).queue_free()
+	if v.get("dress") != null: (v.dress as Node).queue_free()
 	people.erase(id)
 
 
@@ -674,6 +681,13 @@ func _init_me(m: Dictionary, spawn: Array) -> void:
 	world.add_child(my_rig)
 	my_tag = _tag("YOU")
 	my_tag.modulate = CYAN.lightened(0.3)
+	if my_dress != null: my_dress.queue_free()
+	my_dress = null
+	var pk := String(m.get("party", ""))
+	if pk != "":
+		my_tag.text = "YOU  · happy birthday!" if pk == "birthday" else "YOU  · happy work anniversary!"
+		my_tag.modulate = Color(1.0, 0.85, 0.45)
+		my_dress = party.dress(pk)
 	if spawn.size() == 2: my_pos = Vector2(float(spawn[0]), float(spawn[1]))
 	var tries := 0
 	while sim.blocked(my_pos, RADIUS) and tries < 40:   # never start inside a desk
@@ -816,6 +830,7 @@ func _message(d: Dictionary) -> void:
 		"init":
 			for id in people.keys(): _remove_person(id)
 			if d.has("rooms"): set_rooms(d.rooms)
+			party.build(d.get("party", []))
 			_init_me(d.me, d.get("spawn", []))
 			for p in d.get("people", []): _add_person(p)
 		"join": _add_person(d.person)
@@ -1072,6 +1087,9 @@ func _process(dt: float) -> void:
 	var my_clip := ("m_run" if running else "m_walk") if my_moving else _act_clip(my_act, false, "working", false)
 	_animate(my_rig, C, my_clip, my_act_t if my_act != "" else _anim_t)
 	my_tag.position = V(my_pos, 2.35 * float(C.get("scale", 1.0)))
+	party.tick(dt)
+	if my_dress != null:
+		my_dress.position = my_rig.position; my_dress.rotation.y = my_rig.rotation.y
 	my_ring.position = V(my_pos, 0.05)
 	my_ring.visible = not (my_room in PRIVATE_ROOMS)   # a private room is one conversation, whatever the distance
 	for id in people:
@@ -1095,6 +1113,8 @@ func _process(dt: float) -> void:
 		_animate(rig, v.C, clip, v.act_t if String(v.act) != "" else v.t)
 		var tag: Label3D = v.tag
 		tag.position = Vector3(rig.position.x, 2.35 * float(v.C.get("scale", 1.0)), rig.position.z)
+		if v.dress != null:
+			(v.dress as Node3D).position = rig.position; (v.dress as Node3D).rotation.y = rig.rotation.y
 		var talk: float = v.talk
 		tag.scale = Vector3.ONE * (1.0 + 0.12 * clampf(talk * 3.0, 0.0, 1.0))
 		var foot: MeshInstance3D = v.foot
@@ -1126,6 +1146,24 @@ func _start_demo() -> void:
 	people[11].act = "st:0"
 	people[12].act = "sit:%d" % _first_seat("game")
 	people[13].act = "st:3"
+	# desktop checks: `-- --party` shows the birthday decorations, `--at=x,z` moves you, `--shot=file.png` saves a picture
+	var args := OS.get_cmdline_user_args()
+	if args.has("--party"):
+		party.build([{name = "Kiran Fazal", kind = "birthday", years = 0}, {name = "Zia Khan", kind = "anniversary", years = 3}])
+		people[13].party = "birthday"; people[13].dress = party.dress("birthday"); people[13].act = ""; _restatus(13)
+		people[12].party = "anniversary"; people[12].dress = party.dress("anniversary"); _restatus(12)
+	for a in args:
+		if a.begins_with("--at="):
+			var xz := a.substr(5).split(",")
+			my_pos = Vector2(float(xz[0]), float(xz[1]))
+			for id in people: people[id].pos = my_pos + Vector2(id - 11.5, -1.5); people[id].goal = people[id].pos
+		if a.begins_with("--shot="): _shot_later(a.substr(7))
+
+
+func _shot_later(path: String) -> void:
+	await get_tree().create_timer(4.0).timeout
+	get_viewport().get_texture().get_image().save_png(path)
+	get_tree().quit()
 
 
 func _first_seat(kind: String) -> int:
