@@ -18,21 +18,108 @@ $GODOT_HEAD_INCLUDE
 <script src="$GODOT_URL"></script>
 <script>
 /* BNB Virtual Office loader. The hub page around this frame shows the loading screen: this only
-   starts the engine and tells the hub how far the download has got (or that it failed). */
+   starts the engine and tells the hub how far the download has got (or that it failed).
+
+   The game pack is big (~50 MB). On a slow or patchy connection one long download keeps getting cut off
+   and starts again from zero, so it is fetched in 4 MB pieces instead: a piece that stalls is fetched
+   again on its own, finished pieces are kept in the browser's cache (a reload carries on where it got to,
+   and later visits only check the version), and a new build replaces the old pieces. Browsers without
+   the pieces (no Cache Storage / DecompressionStream), or a server that can't send ranges, get the plain
+   one-shot download as before. */
 const GODOT_CONFIG = $GODOT_CONFIG;
 const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
-const engine = new Engine(GODOT_CONFIG);
 (function () {
 	function tell(m) { try { parent.postMessage(JSON.stringify(m), location.origin); } catch (e) {} }
 	const missing = Engine.getMissingFeatures({ threads: GODOT_THREADS_ENABLED });
 	if (missing.length) { tell({ t: 'error', why: 'unsupported', detail: missing.join(', ') }); return; }
-	let last = -1;
-	tell({ t: 'load', p: 0 });
-	engine.startGame({
+
+	const exe = GODOT_CONFIG.executable, PACK = exe + '.pck', PACK_SIZE = (GODOT_CONFIG.fileSizes || {})[PACK] || 0;
+	const CHUNK = 4 << 20, STALL_MS = 20000, TRIES = 8, CACHE = 'bnb-office-pack';
+	// share of the progress bar: the engine (~10 MB over the wire) and the pack (~50 MB)
+	const W_ENGINE = 0.17;
+	let engineP = 0, packP = 0, last = -1, oneShot = false;
+	function report() {
+		const p = Math.min(1, W_ENGINE * engineP + (1 - W_ENGINE) * packP);
+		if (p - last >= 0.004 || (p === 1 && last !== 1)) { last = p; tell({ t: 'load', p: p }); }
+	}
+	const engine = new Engine(Object.assign({}, GODOT_CONFIG, {
 		onProgress: function (current, total) {
-			const p = total > 0 ? Math.min(1, current / total) : 0;
-			if (p - last >= 0.004 || (p === 1 && last !== 1)) { last = p; tell({ t: 'load', p: p }); }
+			engineP = total > 0 ? Math.min(1, current / total) : 0;
+			if (oneShot) { packP = engineP; }      // the engine is downloading both: its numbers cover it all
+			report();
 		},
+	}));
+	const sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+
+	// one piece, with a watchdog: no bytes for STALL_MS -> give up on this attempt
+	async function piece(url, from, to, tag, onBytes) {
+		const ctl = new AbortController();
+		let timer = setTimeout(function () { ctl.abort(); }, STALL_MS);
+		const poke = function () { clearTimeout(timer); timer = setTimeout(function () { ctl.abort(); }, STALL_MS); };
+		try {
+			const r = await fetch(url, { headers: { Range: 'bytes=' + from + '-' + to, 'If-Range': tag }, cache: 'no-store', signal: ctl.signal });
+			if (r.status === 200) throw Object.assign(new Error('changed'), { fatal: true });   // new build mid-download, or no ranges
+			if (r.status !== 206) throw new Error('HTTP ' + r.status);
+			const reader = r.body.getReader(), out = new Uint8Array(to - from + 1);
+			let got = 0;
+			for (;;) {
+				const { done, value } = await reader.read();
+				if (done) break;
+				if (got + value.length > out.length) throw new Error('too long');
+				out.set(value, got); got += value.length; poke(); onBytes(got);
+			}
+			if (got !== out.length) throw new Error('short piece');
+			return out;
+		} finally { clearTimeout(timer); }
+	}
+
+	async function pieces() {
+		if (!PACK_SIZE || !window.caches || typeof DecompressionStream === 'undefined' || !window.AbortController) return null;
+		const url = PACK + '.gz';
+		const head = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+		const size = +head.headers.get('Content-Length') || 0, tag = head.headers.get('ETag') || '';
+		if (!head.ok || !size || !tag || head.headers.get('Content-Encoding')) return null;
+		const cache = await caches.open(CACHE);
+		const ver = 'v=' + encodeURIComponent(tag);
+		for (const req of await cache.keys()) { if (req.url.indexOf(ver) < 0) await cache.delete(req); }   // older builds
+		const n = Math.ceil(size / CHUNK), parts = new Array(n);
+		const key = function (i) { return url + '?' + ver + '&c=' + i; };
+		let have = 0;
+		for (let i = 0; i < n; i++) {
+			const hit = await cache.match(key(i));
+			if (hit) { parts[i] = new Uint8Array(await hit.arrayBuffer()); have += parts[i].length; }
+		}
+		packP = have / size; report();
+		for (let i = 0; i < n; i++) {
+			if (parts[i]) continue;
+			const from = i * CHUNK, to = Math.min(size, from + CHUNK) - 1;
+			for (let attempt = 1; ; attempt++) {
+				try {
+					parts[i] = await piece(url, from, to, tag, function (b) { packP = (have + b) / size; report(); });
+					break;
+				} catch (e) {
+					if (e.fatal || attempt >= TRIES) { if (e.fatal) await caches.delete(CACHE); throw e; }
+					await sleep(Math.min(8000, 1000 * attempt));
+				}
+			}
+			have += parts[i].length;
+			try { await cache.put(key(i), new Response(parts[i])); } catch (e) { /* storage full: carry on without */ }
+		}
+		const raw = await new Response(new Blob(parts).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+		if (raw.byteLength !== PACK_SIZE) { await caches.delete(CACHE); throw new Error('pack is the wrong size'); }
+		return raw;
+	}
+
+	tell({ t: 'load', p: 0 });
+	const pack = pieces().catch(function (e) { console.warn('office: pieces failed, downloading in one go', e); return null; });
+	Promise.all([engine.init(exe), pack]).then(function (res) {
+		const buf = res[1];
+		if (!buf) {      // plain one-shot download (the engine's own loader, with its own progress)
+			oneShot = true;
+			return engine.startGame();
+		}
+		packP = 1; report();
+		return engine.preloadFile(buf, PACK).then(function () { return engine.start({ args: ['--main-pack', PACK].concat(GODOT_CONFIG.args || []) }); });
 	}).then(function () { tell({ t: 'started' }); }, function (err) {
 		console.error(err);
 		tell({ t: 'error', why: 'failed', detail: String((err && err.message) || err) });
