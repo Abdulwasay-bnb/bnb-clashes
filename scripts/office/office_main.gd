@@ -10,7 +10,12 @@ extends Node
 ##   hub -> office  {t:"init", me, spawn, rooms, people}  {t:"state", p:[[id,x,z,dx,dz,moving,room,act],...]}
 ##                  {t:"join", person}  {t:"leave", id}  {t:"status", id, status}  {t:"look", id, costume}
 ##                  {t:"talk", levels:{id:0..1}}  {t:"linked", ids:[...]}  {t:"goto", x, z}
-##                  {t:"act"} (do what the prompt says)  init.party / person.party: birthdays, anniversaries (office_party.gd)  {t:"emote", e}  {t:"costume", i}
+##                  {t:"act"} (do what the prompt says)  init.party / person.party: birthdays, anniversaries (office_party.gd)
+##                  {t:"desks", desks} (office_desks.gd)  {t:"let_in"} (the CEO office let you in)
+##   office -> hub  {t:"desk", desk, owner, name, party} (sat at a desk)  {t:"knock"} (at the CEO office door)
+##
+## The CEO office is closed while someone is in it: others knock, and anyone inside can let them in.
+## Admins walk straight in, and an empty office is open.  {t:"emote", e}  {t:"costume", i}
 ##   office -> hub  {t:"boot", p}  {t:"ready"}  {t:"pos", x, z, dx, dz, m, room, a}  {t:"person", id}
 ##                  {t:"prompt", text, act}  {t:"costumes", names, current}  {t:"look", costume}
 ##
@@ -151,6 +156,8 @@ var party: OfficeParty                  # birthday / work anniversary decoration
 var desks: OfficeDesks                  # everyone's desk and what they're up to
 var desk_list: Array = []
 var my_desk := ""                       # the desk you're sitting at ("" if none)
+var ceo_let_in := false                 # someone in the CEO office let you in
+const CEO_DOOR := Vector2(0.0, -10.3)   # just outside the CEO office door
 var my_dress: Node3D
 var my_ring: MeshInstance3D
 var my_pos := Vector2(0, 16)
@@ -588,7 +595,7 @@ func _add_person(p: Dictionary) -> void:
 	world.add_child(foot)
 	people[id] = {rig = rig, tag = tag, foot = foot, pos = pos, goal = pos, dir = Vector2(float(p.get("dx", 0.0)), float(p.get("dz", 1.0))),
 		moving = false, name = String(p.get("name", "")), status = String(p.get("status", "working")), talk = 0.0, t = randf() * 5.0, C = C,
-		act = String(p.get("act", "")), act_t = 0.0, costume = costume, party = String(p.get("party", "")),
+		act = String(p.get("act", "")), act_t = 0.0, costume = costume, party = String(p.get("party", "")), room = String(p.get("room", "")),
 		dress = party.dress(String(p.get("party", ""))) if String(p.get("party", "")) != "" else null}
 	_restatus(id)
 
@@ -706,6 +713,8 @@ func _taken(act: String) -> bool:
 ## The nearest thing within reach you could do: ["sit:3", "Sit down"] or ["", ""].
 func _nearby() -> Array:
 	var best := REACH; var out := ["", ""]
+	if _ceo_closed() and my_pos.distance_to(CEO_DOOR) < 3.0:
+		return ["knock", "Knock on the CEO office door"]
 	for i in seats.size():
 		var s: Dictionary = seats[i]
 		var d := my_pos.distance_to(s.p)
@@ -722,6 +731,8 @@ func _nearby() -> Array:
 
 func _do(act: String) -> void:
 	if act == "": return
+	if act == "knock":
+		_post({t = "knock"}); _emote("wave"); return
 	var p := Vector2.INF; var face := my_dir
 	if act.begins_with("sit:"):
 		var s: Dictionary = seats[int(act.substr(4))]; p = s.p; face = s.face
@@ -838,6 +849,7 @@ func _message(d: Dictionary) -> void:
 				var dir := Vector2(float(row[3]), float(row[4]))
 				if dir.length() > 0.1: v.dir = dir
 				v.moving = int(row[5]) != 0
+				if row.size() > 6: v.room = String(row[6])
 				var act := String(row[7]) if row.size() > 7 else ""
 				if act != String(v.act):
 					v.act = act; v.act_t = 0.0; _restatus(id)
@@ -858,8 +870,21 @@ func _message(d: Dictionary) -> void:
 			target = Vector2(float(d.x), float(d.z)); route_t = 0.0
 		"rooms": set_rooms(d.rooms)
 		"act": _act_key()
+		"let_in": ceo_let_in = true
 		"emote": _emote(String(d.get("e", "")))
 		"costume": _set_my_costume(int(d.get("i", 0)))
+
+
+## The CEO office is closed to you while someone else is in it, unless you're an admin or were let in.
+func _ceo_closed() -> bool:
+	if ceo_let_in or bool(me.get("admin", false)) or room_at(my_pos) == "ceo": return false
+	for id in people:
+		if String(people[id].get("room", "")) == "ceo": return true
+	return false
+
+
+func _blocked(p: Vector2) -> bool:
+	return sim.blocked(p, RADIUS) or (room_at(p) == "ceo" and _ceo_closed())
 
 
 ## Desks, with the live status of whoever is in the office right now.
@@ -1000,6 +1025,8 @@ func _physics_process(dt: float) -> void:
 		if my_act != "" and not my_act.begins_with("e:"): _stand_up()
 		elif my_act.begins_with("e:"): _set_act("")
 	elif target != Vector2.INF:
+		if room_at(target) == "ceo" and _ceo_closed():     # someone's in: walk to the door and knock
+			target = CEO_DOOR; pending = ""
 		var to := target - my_pos
 		if to.length() < 0.25 or (pending != "" and to.length() < 0.9):
 			target = Vector2.INF
@@ -1018,9 +1045,9 @@ func _physics_process(dt: float) -> void:
 		my_dir = mv
 		var step := mv * (RUN if running else WALK) * dt
 		var np := my_pos + step
-		if not sim.blocked(np, RADIUS): my_pos = np
-		elif not sim.blocked(my_pos + Vector2(step.x, 0), RADIUS): my_pos += Vector2(step.x, 0)
-		elif not sim.blocked(my_pos + Vector2(0, step.y), RADIUS): my_pos += Vector2(0, step.y)
+		if not _blocked(np): my_pos = np
+		elif not _blocked(my_pos + Vector2(step.x, 0)): my_pos += Vector2(step.x, 0)
+		elif not _blocked(my_pos + Vector2(0, step.y)): my_pos += Vector2(0, step.y)
 		elif pending != "" and my_pos.distance_to(target) < 1.8: target = Vector2.INF; _do(pending)
 		else:
 			# bumped into something: re-plan right away, and only give up after a second of being stuck
@@ -1036,6 +1063,7 @@ func _physics_process(dt: float) -> void:
 		my_act_t += dt
 	_update_prompt()
 	var room := room_at(my_pos)
+	if my_room == "ceo" and room != "ceo": ceo_let_in = false     # leaving: next time you knock again
 	_send_t -= dt
 	var now := {x = snappedf(my_pos.x, 0.01), z = snappedf(my_pos.y, 0.01), dx = snappedf(my_dir.x, 0.01), dz = snappedf(my_dir.y, 0.01), m = 1 if my_moving else 0, room = room, a = my_act}
 	if _send_t <= 0.0 and (now != _sent or room != my_room):
@@ -1165,10 +1193,14 @@ func _start_demo() -> void:
 			my_pos = Vector2(float(xz[0]), float(xz[1]))
 			for id in people: people[id].pos = my_pos + Vector2(id - 11.5, -1.5); people[id].goal = people[id].pos
 		if a.begins_with("--shot="): _shot_later(a.substr(7))
+		if a == "--knock":       # someone in the CEO office: you can't walk in, the prompt offers a knock
+			people[13].room = "ceo"; people[13].pos = Vector2(0, -15); people[13].goal = people[13].pos
+			my_pos = Vector2(0, -9.5); target = Vector2(0, -15)
 
 
 func _shot_later(path: String) -> void:
 	await get_tree().create_timer(4.0).timeout
+	print("prompt: ", _prompt, " at ", my_pos, " closed ", _ceo_closed(), " moving ", my_moving, " target ", target, " act ", my_act)
 	get_viewport().get_texture().get_image().save_png(path)
 	get_tree().quit()
 
