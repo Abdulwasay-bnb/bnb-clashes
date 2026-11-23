@@ -12,6 +12,7 @@ extends Node
 ##                  {t:"talk", levels:{id:0..1}}  {t:"linked", ids:[...]}  {t:"goto", x, z}
 ##                  {t:"act"} (do what the prompt says)  init.party / person.party: birthdays, anniversaries (office_party.gd)
 ##                  {t:"desks", desks} (office_desks.gd)  {t:"let_in"} (the CEO office let you in)
+##                  {t:"screen", name} (who is sharing their screen in the meeting room: "Ayesha is", "You are" or "")
 ##   office -> hub  {t:"desk", desk, owner, name, party} (sat at a desk)  {t:"knock"} (at the CEO office door)
 ##
 ## The CEO office is closed while someone is in it: others knock, and anyone inside can let them in.
@@ -156,6 +157,8 @@ var party: OfficeParty                  # birthday / work anniversary decoration
 var desks: OfficeDesks                  # everyone's desk and what they're up to
 var desk_list: Array = []
 var my_desk := ""                       # the desk you're sitting at ("" if none)
+var screen_logo: Sprite3D
+var screen_label: Label3D               # the meeting room screen: who is sharing
 var ceo_let_in := false                 # someone in the CEO office let you in
 const CEO_DOOR := Vector2(0.0, -10.3)   # just outside the CEO office door
 var my_dress: Node3D
@@ -462,7 +465,12 @@ func _build_meeting_screen() -> void:
 	# a big screen on the meeting room's north wall, showing the BNB wordmark
 	mg._box(Vector3(3.2, 1.8, 0.08), mg._mat(Color(0.05, 0.05, 0.07), 0.3), Vector3(-4.5, 1.55, -6.72))
 	mg._box(Vector3(3.0, 1.62, 0.02), mg._mat(INK.lightened(0.05), 0.5, 0.6), Vector3(-4.5, 1.55, -6.66))
-	_sprite("res://assets/brand/bnb_wordmark_light.png", 2.6, Vector3(-4.5, 1.55, -6.64))
+	screen_logo = _sprite("res://assets/brand/bnb_wordmark_light.png", 2.6, Vector3(-4.5, 1.55, -6.64))
+	screen_label = Label3D.new()
+	screen_label.font = font; screen_label.font_size = 52; screen_label.pixel_size = 0.0045; screen_label.modulate = CYAN.lightened(0.3)
+	screen_label.position = Vector3(-4.5, 1.55, -6.62); screen_label.width = 2.8 / 0.0045; screen_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	screen_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; screen_label.visible = false
+	world.add_child(screen_label)
 
 
 func _build_game_room() -> void:
@@ -871,6 +879,10 @@ func _message(d: Dictionary) -> void:
 		"rooms": set_rooms(d.rooms)
 		"act": _act_key()
 		"let_in": ceo_let_in = true
+		"screen":
+			var who := String(d.get("name", ""))
+			screen_label.text = who + " sharing\ntheir screen"
+			screen_label.visible = who != ""; screen_logo.visible = who == ""
 		"emote": _emote(String(d.get("e", "")))
 		"costume": _set_my_costume(int(d.get("i", 0)))
 
