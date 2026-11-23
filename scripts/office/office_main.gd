@@ -116,6 +116,7 @@ const OFFICE_DECOR := [
 	{m = "loungeChair", p = [2.0, 19.5], r = 180, s = [1.1, 0.9, 0.9], block = true, seat = "sofa"},
 	{m = "pottedPlant", p = [-7.4, 12.6], s = [0.7, 0.7, 1.6]}, {m = "pottedPlant", p = [7.4, 12.6], s = [0.7, 0.7, 1.6]},
 	{m = "sideTable", p = [5.0, 18.6], s = [1.0, 0.6, 0.8]},
+	{m = "bookcaseOpen", p = [-7.5, 16.1], r = 90, s = [2.6, 0.6, 1.2], block = true},   # the trophy cabinet (OfficeEvents)
 	# game room: three tables, a sofa, the arcade machines are drawn separately
 	{m = "tableCoffeeSquare", p = [18.0, -1.2], s = [1.5, 1.5, 0.7], block = true, game = "carrom"},
 	{m = "table", p = [18.0, 3.8], s = [1.6, 1.6, 0.75], block = true, game = "ludo"},
@@ -155,6 +156,7 @@ var my_rig: Node3D
 var my_tag: Label3D
 var party: OfficeParty                  # birthday / work anniversary decorations
 var desks: OfficeDesks                  # everyone's desk and what they're up to
+var events: OfficeEvents                # trophy cabinet and the next tournament
 var desk_list: Array = []
 var my_desk := ""                       # the desk you're sitting at ("" if none)
 var screen_logo: Sprite3D
@@ -229,6 +231,7 @@ func _ready() -> void:
 	mg = MafiaGame.new(); mg.world = world; mg.font = font; mg.small = small
 	party = OfficeParty.new(); party.world = world; party.mg = mg; party.font = font
 	desks = OfficeDesks.new(); desks.world = world; desks.mg = mg; desks.small = small; desks.party = party
+	events = OfficeEvents.new(); events.world = world; events.mg = mg; events.font = font
 	desks.map_seats(seats, decor)
 	for id in ROOM_NAMES: rooms[id] = {name = ROOM_NAMES[id], kind = "room"}
 	_build_world()
@@ -838,6 +841,7 @@ func _message(d: Dictionary) -> void:
 			for id in people.keys(): _remove_person(id)
 			if d.has("rooms"): set_rooms(d.rooms)
 			party.build(d.get("party", []))
+			events.build(d.get("trophies", []), d.get("event", null))
 			_init_me(d.me, d.get("spawn", []))
 			for p in d.get("people", []): _add_person(p)
 			desk_list = d.get("desks", [])
@@ -1195,6 +1199,8 @@ func _start_demo() -> void:
 		{desk = "dev:4", id = 23, name = "Bilal Ahmed", status = "off"}, {desk = "dev:5", id = 24, name = "Ayesha Khan", status = "wfh", party = "birthday"},
 		{desk = "dev:6", id = 1, name = "Abdul Wasay", status = "in"}]
 	_show_desks()
+	events.build([{name = "Sabir ud Din", title = "Carrom cup", date = "20 Nov"}, {name = "Kiran Fazal", title = "Ludo night", date = "13 Nov"},
+		{name = "Zia Khan", title = "Cards", date = "6 Nov"}], {title = "Friday carrom cup", game = "carrom", when = "FRI 5:00 PM"})
 	if args.has("--party"):
 		party.build([{name = "Kiran Fazal", kind = "birthday", years = 0}, {name = "Zia Khan", kind = "anniversary", years = 3}])
 		people[13].party = "birthday"; people[13].dress = party.dress("birthday"); people[13].act = ""; _restatus(13)
