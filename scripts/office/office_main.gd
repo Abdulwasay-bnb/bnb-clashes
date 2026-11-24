@@ -416,7 +416,11 @@ func _build_world() -> void:
 		mg._box(Vector3(w.size.x, 1.35, w.size.y), wall_m, V(c, 0.675))
 		mg._box(Vector3(w.size.x + 0.02, 0.06, w.size.y + 0.02), top_m, V(c, 1.35))
 		mg._box(Vector3(w.size.x + 0.03, 0.02, w.size.y + 0.03), glow_m, V(c, 1.39))   # a thin cyan light along every wall top
-	for d in decor: mg._decor(_oriented(d))
+	for d in decor:
+		var o := _oriented(d)
+		if String(o.m).begins_with("rug") and not o.has("y"):   # floors top out at 0.02: a rug lying there flickers
+			o = o.duplicate(); o.y = 0.04
+		mg._decor(o)
 	for s in seats:
 		if s.get("chair", false):
 			var rel: Vector2 = s.p - MEETING[s.room]
@@ -880,14 +884,22 @@ func _game_of(act: String) -> String:
 func _stand_up() -> void:
 	if not my_act.begins_with("sit:") and not my_act.begins_with("st:"):
 		_set_act(""); return
-	# step off the chair (it may be tucked under a table) onto the nearest free spot
-	var back := -my_dir
-	for r in [0.7, 1.0, 1.3, 1.7]:
-		for a in [0.0, 0.6, -0.6, 1.3, -1.3, PI]:
-			var q: Vector2 = my_pos + back.rotated(a) * r
-			if not sim.blocked(q, RADIUS):
-				my_pos = q; _set_act(""); return
+	var q := _stand_spot(my_pos, my_dir)
+	if q != Vector2.INF: my_pos = q
 	_set_act("")
+
+
+## Where to step to when getting up from p (facing face): the nearest free spot in the same room,
+## behind first (the chair may be tucked under a table), then to the sides, then in front.
+## INF if there's none, which --check-seats reports.
+func _stand_spot(p: Vector2, face: Vector2) -> Vector2:
+	var back := -face
+	var room := room_at(p)
+	for r in [0.7, 1.0, 1.3, 1.7, 2.2, 2.8, 3.5]:
+		for a in [0.0, 0.6, -0.6, 1.3, -1.3, PI / 2.0, -PI / 2.0, 2.0, -2.0, 2.6, -2.6, PI]:
+			var q: Vector2 = p + back.rotated(a) * r
+			if not _blocked(q) and room_at(q) == room: return q
+	return Vector2.INF
 
 
 func _act_key() -> void:
@@ -1250,7 +1262,8 @@ func _move(dt: float) -> void:
 		my_dir = mv
 		var step := mv * (RUN if running else WALK) * minf(dt, 0.05)     # a slow frame mustn't jump into a wall
 		var np := my_pos + step
-		if not _blocked(np): my_pos = np
+		if _blocked(my_pos) and room_at(np) == room_at(my_pos): my_pos = np   # caught in furniture: let them walk out
+		elif not _blocked(np): my_pos = np
 		elif not _blocked(my_pos + Vector2(step.x, 0)): my_pos += Vector2(step.x, 0)
 		elif not _blocked(my_pos + Vector2(0, step.y)): my_pos += Vector2(0, step.y)
 		elif pending != "" and my_pos.distance_to(target) < 1.8: target = Vector2.INF; _do(pending)
@@ -1426,6 +1439,11 @@ func _start_demo() -> void:
 			for j in mini(int(a.substr(8)), mini(spots.size(), ids.size())):
 				people[ids[j]].act = "st:%d" % spots[j]; people[ids[j]].pos = stations[spots[j]].p; people[ids[j]].goal = stations[spots[j]].p
 		if a == "--picker": _open_picker("lift")
+		if a == "--check-seats":   # every seat and station must have somewhere free to stand up to
+			var bad := 0
+			for st in seats + stations:
+				if _stand_spot(st.p, st.face) == Vector2.INF: bad += 1; print("NO ROOM TO STAND: ", st.kind, " ", st.p, " ", room_at(st.p))
+			print("check-seats: %d seats/stations, %d stuck" % [seats.size() + stations.size(), bad]); get_tree().quit()
 		if a.begins_with("--zoom="): zoom = float(a.substr(7))
 		if a == "--puffs": floors.always_puff = true
 		if a == "--look":

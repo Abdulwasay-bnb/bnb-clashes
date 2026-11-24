@@ -141,7 +141,7 @@ static func decor() -> Array:
 		{m = "bookcaseOpen", p = [-29.4, 13.6], r = 90, s = [2.0, 0.6, 1.9], block = true},
 		{m = "bookcaseOpen", p = [-29.4, 16.6], r = 90, s = [2.0, 0.6, 1.9], block = true},
 		{m = "loungeDesignSofa", p = [-24.0, 19.3], r = 180, s = [2.6, 1.0, 0.9], block = true, seat = "sofa", seats = 2},
-		{m = "tableCoffeeGlass", p = [-24.0, 17.6], s = [1.4, 0.8, 0.4], block = true},
+		{m = "tableCoffeeGlass", p = [-24.0, 17.2], s = [1.4, 0.8, 0.4], block = true},
 		{m = "loungeChairRelax", p = [-26.6, 16.2], r = 90, s = [1.0, 1.1, 0.9], block = true, seat = "sofa"},
 		{m = "loungeChairRelax", p = [-21.4, 16.2], r = 270, s = [1.0, 1.1, 0.9], block = true, seat = "sofa"},
 		{m = "loungeSofa", p = [-15.0, 15.0], r = 270, s = [2.4, 0.9, 0.9], block = true, seat = "sofa", seats = 2},
@@ -488,10 +488,11 @@ func _rooftop() -> void:
 	light(Vector3(262.0, 3.2, -12.0), 13.0, 0.7)
 	light(Vector3(262.0, 3.2, 12.0), 13.0, 0.6, Color(0.85, 1.0, 0.85))
 	light(Vector3(240.0, 3.2, 16.0), 10.0, 0.8)
-	# a parasol over the lounge, solar panels and water tanks on the roof
-	mg._box(Vector3(0.08, 2.4, 0.08), mg._mat(Color(0.9, 0.9, 0.9), 0.5), Vector3(219.0, 1.2, 15.6))
-	var shade := MeshInstance3D.new(); var cone := CylinderMesh.new(); cone.top_radius = 0.05; cone.bottom_radius = 2.0; cone.height = 0.5
-	shade.mesh = cone; shade.material_override = mg._mat(Color(0.95, 0.5, 0.25), 0.8); shade.position = Vector3(219.0, 2.5, 15.6)
+	# a parasol in the lounge's far corner (over the middle it hid the lounge from the camera),
+	# solar panels and water tanks on the roof
+	mg._box(Vector3(0.08, 2.0, 0.08), mg._mat(Color(0.9, 0.9, 0.9), 0.5), Vector3(225.8, 1.0, 6.4))
+	var shade := MeshInstance3D.new(); var cone := CylinderMesh.new(); cone.top_radius = 0.05; cone.bottom_radius = 1.3; cone.height = 0.4
+	shade.mesh = cone; shade.material_override = mg._mat(Color(0.95, 0.5, 0.25), 0.8); shade.position = Vector3(225.8, 2.1, 6.4)
 	main.world.add_child(shade)
 	var panel := mg._mat(Color(0.1, 0.16, 0.35), 0.2)
 	panel.metallic = 0.5
