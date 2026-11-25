@@ -24,6 +24,8 @@ const LIFT_OUT := Vector2(5.4, 15.0)
 const STAIRS := Vector2(4.4, 18.9)
 const STAIRS_OUT := Vector2(3.4, 17.6)
 const LOBBY_SHIFT := {0: Vector2(16.0, -32.0)}
+## The rooftop jump: by the railing on the sunset lounge's west edge (a shortcut down to the parking).
+const JUMP := Vector2(210.2, 12.0)
 
 const ROOMS := [
 	# 4th floor: Development and every other department
@@ -86,6 +88,19 @@ const GROUND := {0: ["concrete_tiles_02", Color(0.3, 0.3, 0.33), 0.25], 3: ["con
 const INK := Color(0.082, 0.067, 0.114)
 const BRAND := Color(0.404, 0.204, 0.576)
 const CYAN := Color(0.149, 0.694, 0.808)
+## Car body styles seen in a Pakistani office car park (plain shapes, no makes or badges):
+## [length, width, wheel radius, cabin front z, cabin back z, cabin height, sedan boot]
+const CAR_STYLES := {
+	"mini": [3.3, 1.45, 0.26, -0.45, 1.45, 0.56, false],     # small and boxy (Mehran-like)
+	"tall": [3.4, 1.5, 0.27, -0.4, 1.55, 0.64, false],       # tall small hatch (Alto-like)
+	"hatch": [3.75, 1.6, 0.29, -0.55, 1.6, 0.56, false],     # hatchback (Cultus-like)
+	"sedan": [4.3, 1.72, 0.31, -0.75, 1.0, 0.52, true],      # saloon (City / Corolla-like)
+	"ev": [3.95, 1.72, 0.31, -0.7, 1.7, 0.55, false]}        # two-tone electric hatch
+## The parked cars, in bay order: [style, paint, roof (or null = same as paint)]
+const PARKED_CARS := [["mini", Color(0.62, 0.72, 0.63), null], ["sedan", Color(0.95, 0.95, 0.96), null], ["sedan", Color(0.25, 0.26, 0.28), null],
+	["tall", Color(0.95, 0.95, 0.96), null], ["ev", Color(0.72, 0.88, 0.16), Color(0.96, 0.96, 0.96)], ["hatch", Color(0.74, 0.75, 0.77), null],
+	["sedan", Color(0.95, 0.95, 0.96), null], ["mini", Color(0.85, 0.83, 0.78), null], ["sedan", Color(0.12, 0.13, 0.15), null],
+	["hatch", Color(0.6, 0.12, 0.14), null], ["tall", Color(0.2, 0.35, 0.6), null]]
 const CAR_COLS := [Color(0.92, 0.92, 0.94), Color(0.1, 0.1, 0.12), Color(0.6, 0.62, 0.66), Color(0.65, 0.1, 0.12),
 	Color(0.15, 0.25, 0.55), Color(0.85, 0.85, 0.82), Color(0.3, 0.32, 0.3), Color(0.75, 0.6, 0.2)]
 
@@ -94,6 +109,7 @@ var mg: MafiaGame               # MafiaGame (box, material and furniture helpers
 var font: Font
 var lights := {}               # level -> [lights]; only your level's are on (the web renderer draws a limited number)
 var puffs := {}                # station index -> CPUParticles3D (smoke from whoever is smoking or vaping there)
+var parked: Array = []         # the parked cars and bikes (vehicles() order), hidden while someone drives one
 var traffic: Array = []        # [{node, speed, lane}] on the road past the parking
 var flames: Array = []         # [{light, base}] grill fires
 var _t := 0.0
@@ -265,13 +281,16 @@ static func decor() -> Array:
 	return out
 
 
-## Parked cars and bikes: [{p, r, kind}] (map coordinates). Cars block the way; you can't drive them.
+## Parked cars and bikes: [{p, r, kind}] (map coordinates). Cars block the way; stand at the back of
+## one and press E to drive it round the parking (OfficeRides).
 static func vehicles() -> Array:
 	var out: Array = []
 	# one row nose-in to the footpath in front of the building, like the real one; bikes along the front
 	var k := 0
 	for x in range(-147, -130, 3) + range(-98, -90, 3):
-		if k % 5 != 3: out.append({p = Vector2(float(x) + 0.5, -3.6), kind = "car", col = k % CAR_COLS.size()})
+		if k % 5 != 3:
+			var pc: Array = PARKED_CARS[out.size() % PARKED_CARS.size()]
+			out.append({p = Vector2(float(x) + 0.5, -3.6), kind = "car", col = k % CAR_COLS.size(), style = pc[0], paint = pc[1], roof = pc[2]})
 		k += 1
 	for b in 9:
 		out.append({p = Vector2(-129.0 + b * 1.1, 5.6), kind = "bike", col = b % 4})
@@ -296,8 +315,11 @@ static func vehicle_walls() -> Array:
 static func stations() -> Array:
 	var out: Array = []
 	for l in LEVELS:
-		out.append({p = lobby(l, LIFT), face = Vector2(1, 0), kind = "lift", name = "Take the lift", solo = false, game = "", level = l})
-		out.append({p = lobby(l, STAIRS), face = Vector2(1, 0), kind = "stairs", name = "Take the stairs", solo = false, game = "", level = l})
+		# hit: clicking anywhere on the lift doors / the flight of stairs uses them, not only the spot in front
+		out.append({p = lobby(l, LIFT), face = Vector2(1, 0), kind = "lift", name = "Take the lift", solo = false, game = "", level = l,
+			hit = lobby(l, Vector2(7.4, 15.0)), hit_r = 1.6})
+		out.append({p = lobby(l, STAIRS), face = Vector2(1, 0), kind = "stairs", name = "Take the stairs", solo = false, game = "", level = l,
+			hit = lobby(l, Vector2(6.2, 18.9)), hit_r = 1.7})
 	for x in [93.8, 96.2]:
 		out.append({p = Vector2(x, -18.15), face = Vector2(0, -1), kind = "tea", name = "Have some tea", solo = true, game = ""})
 	out.append({p = Vector2(115.5, -5.6), face = Vector2(0, 1), kind = "present", name = "Present", solo = true, game = ""})
@@ -307,6 +329,15 @@ static func stations() -> Array:
 		out.append({p = Vector2(s[0], -16.6), face = Vector2(0, -1), kind = s[1], name = "Have a smoke" if s[1] == "smoke" else "Vape", solo = true, game = ""})
 	for s2 in [[-127.0, "smoke"], [-125.0, "smoke"], [-119.0, "smoke"], [-117.0, "vape"]]:
 		out.append({p = Vector2(s2[0], -8.2), face = Vector2(0, 1), kind = s2[1], name = "Have a smoke" if s2[1] == "smoke" else "Vape", solo = true, game = ""})
+	# the parked cars and bikes: stand at the back and drive it (OfficeRides)
+	var vs := vehicles()
+	for i in vs.size():
+		var vp: Vector2 = vs[i].p
+		var car: bool = vs[i].kind == "car"
+		out.append({p = vp + (Vector2(0, 2.75) if car else Vector2(0, -1.45)), face = Vector2(0, -1) if car else Vector2(0, 1),
+			kind = "drive", name = "Drive this car" if car else "Ride this bike", solo = true, game = "", vehicle = i, hit = vp, hit_r = 1.8 if car else 0.8})
+	# the parachute jump off the rooftop's west edge, down to the parking
+	out.append({p = JUMP, face = Vector2(-1, 0), kind = "jump", name = "Parachute down to the parking", solo = true, game = "", hit = JUMP, hit_r = 1.4})
 	return out
 
 
@@ -477,6 +508,16 @@ func _rooftop() -> void:
 		var fl := light(Vector3(x, 1.6, -18.4), 5.0, 1.2, Color(1.0, 0.6, 0.3))
 		flames.append({light = fl, base = 1.2})
 	_label("BBQ", 120, Vector3(215.5, 2.4, -19.6), Color(1.0, 0.7, 0.3), 0.007, 16)
+	# the parachute jump: a striped pad by the west railing, a sign, a windsock
+	var pad := mg._mat(Color(1.0, 0.82, 0.3), 0.6, 0.3)
+	for k in 5: mg._box(Vector3(0.3, 0.02, 2.4), pad if k % 2 == 0 else mg._mat(INK, 0.6), Vector3(JUMP.x + 0.2 + k * 0.3, 0.02, JUMP.y))
+	var jump_sign := _label("PARACHUTE JUMP\nPress E · shortcut to the parking", 40, Vector3(JUMP.x + 1.3, 2.3, JUMP.y), Color(1.0, 0.85, 0.4), 0.006, 10)
+	jump_sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED; jump_sign.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mg._box(Vector3(0.06, 2.6, 0.06), mg._mat(Color(0.8, 0.8, 0.82), 0.4), Vector3(JUMP.x - 0.3, 1.3, JUMP.y - 1.6))
+	var sock := MeshInstance3D.new(); var sc := CylinderMesh.new(); sc.top_radius = 0.06; sc.bottom_radius = 0.16; sc.height = 0.8
+	sock.mesh = sc; sock.material_override = mg._mat(Color(1.0, 0.4, 0.15), 0.6, 0.3)
+	sock.position = Vector3(JUMP.x - 0.7, 2.5, JUMP.y - 1.6); sock.rotation.z = PI / 2 - 0.25
+	main.world.add_child(sock)
 	# string lights over the terrace and the lounge
 	for line in [[Vector3(210.5, 3.0, -19.5), Vector3(235.5, 3.0, -19.5)], [Vector3(210.5, 3.0, -2.5), Vector3(235.5, 3.0, -2.5)],
 			[Vector3(210.5, 3.0, -19.5), Vector3(235.5, 3.0, -2.5)], [Vector3(210.5, 3.0, 4.5), Vector3(227.5, 3.0, 19.5)]]:
@@ -560,16 +601,28 @@ func _parking() -> void:
 	mg._box(Vector3(62.0, 0.1, 6.0), mg._tex_mat("concrete_tiles_02", Color(0.5, 0.48, 0.45), 0.5), Vector3(ox, 0.05, -9.0))
 	var line := mg._mat(Color(0.92, 0.92, 0.9), 0.6)
 	for v in vehicles():
+		var holder := Node3D.new(); main.world.add_child(holder); parked.append(holder)
 		if v.kind == "car":
-			_car(v.p, CAR_COLS[v.col], false)
+			_car(v.p, v.paint, false, holder, v.style, v.roof)
 			mg._box(Vector3(0.1, 0.012, 4.6), line, Vector3(v.p.x - 1.5, 0.012, v.p.y))
 			mg._box(Vector3(0.1, 0.012, 4.6), line, Vector3(v.p.x + 1.5, 0.012, v.p.y))
-		else: _bike(v.p, v.col)
+		else: _bike(v.p, v.col, holder)
 	# the railing at the edge of the parking, then the road: a service lane, a green median with palms
 	# and yellow-and-black kerbs, and the main road (just to look at)
 	var rail := mg._mat(Color(0.3, 0.3, 0.32), 0.4)
-	mg._box(Vector3(62.0, 0.08, 0.08), rail, Vector3(ox, 0.9, 8.15))
-	for k in 32: mg._box(Vector3(0.08, 0.9, 0.08), rail, Vector3(ox - 31.0 + k * 2.0, 0.45, 8.15))
+	# a gate at the east end (x -97 .. -90.5) lets cars and bikes out onto the service road (OfficeRides.GATE)
+	mg._box(Vector3(54.0, 0.08, 0.08), rail, Vector3(ox - 4.0, 0.9, 8.15))
+	mg._box(Vector3(1.5, 0.08, 0.08), rail, Vector3(ox + 30.25, 0.9, 8.15))
+	for k in 32:
+		var px := ox - 31.0 + k * 2.0
+		if px > ox + 23.0 and px < ox + 29.5: continue
+		mg._box(Vector3(0.08, 0.9, 0.08), rail, Vector3(px, 0.45, 8.15))
+	mg._box(Vector3(0.3, 1.1, 0.3), mg._mat(Color(0.85, 0.75, 0.1), 0.5), Vector3(ox + 22.9, 0.55, 8.15))
+	for k in 6:     # the barrier arm, raised
+		var arm := mg._box(Vector3(0.5, 0.1, 0.1), mg._mat([Color(0.85, 0.1, 0.1), Color(0.95, 0.95, 0.95)][k % 2], 0.5), Vector3(ox + 23.05 + k * 0.12, 1.25 + k * 0.42, 8.15))
+		arm.rotation.z = 1.29
+	var gate_sign := _label("SERVICE ROAD", 36, Vector3(ox + 26.2, 1.6, 8.15), Color(1.0, 0.85, 0.4), 0.006, 8)
+	gate_sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	mg._box(Vector3(100.0, 0.04, 4.0), mg._mat(Color(0.18, 0.18, 0.2), 0.9), Vector3(ox, 0.0, 10.4))
 	mg._box(Vector3(62.0, 0.2, 2.6), mg._mat(Color(0.22, 0.4, 0.18), 0.95), Vector3(ox, 0.1, 13.7))
 	# the neighbourhood round the plot: grass and trees, so the edges aren't empty
@@ -603,7 +656,9 @@ func _parking() -> void:
 		var kind: String = ["car", "bike", "car", "rickshaw", "car", "bike", "car", "car"][k]
 		var lane := 16.8 if k % 2 == 0 else 19.6
 		var n := Node3D.new(); main.world.add_child(n)
-		if kind == "car": _car(Vector2.ZERO, CAR_COLS[(k * 3) % CAR_COLS.size()], false, n)
+		if kind == "car":
+			var tc: Array = PARKED_CARS[(k * 3 + 1) % PARKED_CARS.size()]
+			_car(Vector2.ZERO, tc[1], false, n, tc[0], tc[2])
 		elif kind == "bike": _bike(Vector2.ZERO, k % 4, n, true)
 		else: _rickshaw(n)
 		n.rotation.y = -PI / 2 if lane < 18.0 else PI / 2
@@ -626,25 +681,59 @@ func _palm(base: Vector3) -> void:
 		f.rotation.y = -a + PI / 2; f.rotation.x = 0.45
 
 
-func _car(p: Vector2, col: Color, flip: bool, parent: Node3D = null) -> void:
+## A car (front towards -z) in one of CAR_STYLES.
+func _car(p: Vector2, col: Color, flip: bool, parent: Node3D = null, style := "sedan", roof = null) -> void:
 	var root := Node3D.new(); root.position = Vector3(p.x, 0, p.y)
 	if flip: root.rotation.y = PI
 	(parent if parent != null else main.world).add_child(root)
-	var paint := mg._mat(col, 0.25); paint.metallic = 0.4
-	var glass := mg._mat(Color(0.12, 0.16, 0.22), 0.1)
-	mg._box(Vector3(1.8, 0.62, 4.1), paint, Vector3(0, 0.55, 0), root)
-	mg._box(Vector3(1.6, 0.55, 2.1), paint, Vector3(0, 1.12, 0.25), root)
-	mg._box(Vector3(1.62, 0.42, 1.9), glass, Vector3(0, 1.13, 0.25), root)
-	mg._box(Vector3(1.4, 0.4, 0.05), glass, Vector3(0, 1.1, -0.83), root)
-	mg._box(Vector3(0.36, 0.14, 0.04), mg._mat(Color(1.0, 0.95, 0.8), 0.3, 2.0), Vector3(-0.6, 0.62, -2.06), root)
-	mg._box(Vector3(0.36, 0.14, 0.04), mg._mat(Color(1.0, 0.95, 0.8), 0.3, 2.0), Vector3(0.6, 0.62, -2.06), root)
-	mg._box(Vector3(0.36, 0.12, 0.04), mg._mat(Color(0.9, 0.1, 0.1), 0.3, 1.5), Vector3(-0.6, 0.66, 2.06), root)
-	mg._box(Vector3(0.36, 0.12, 0.04), mg._mat(Color(0.9, 0.1, 0.1), 0.3, 1.5), Vector3(0.6, 0.66, 2.06), root)
+	var st: Array = CAR_STYLES.get(style, CAR_STYLES.sedan)
+	var L: float = st[0]; var W: float = st[1]; var wr: float = st[2]
+	var cz0: float = st[3]; var cz1: float = st[4]; var ch: float = st[5]
+	var paint := mg._mat(col, 0.22); paint.metallic = 0.45
+	var top_m := paint if roof == null else mg._mat(roof, 0.25)
+	var glass := mg._mat(Color(0.1, 0.13, 0.18), 0.08); glass.metallic = 0.3
+	var black := mg._mat(Color(0.06, 0.06, 0.07), 0.7)
+	var chrome := mg._mat(Color(0.82, 0.83, 0.86), 0.2); chrome.metallic = 0.8
+	var body_y := wr + 0.28
+	# the body, bumpers, a sill
+	mg._box(Vector3(W, 0.5, L - 0.1), paint, Vector3(0, body_y, 0), root)
+	mg._box(Vector3(W - 0.04, 0.16, 0.12), black if style != "mini" else chrome, Vector3(0, body_y - 0.2, -L / 2.0 + 0.02), root)
+	mg._box(Vector3(W - 0.04, 0.16, 0.12), black if style != "mini" else chrome, Vector3(0, body_y - 0.2, L / 2.0 - 0.02), root)
+	mg._box(Vector3(W + 0.02, 0.07, L * 0.55), black, Vector3(0, body_y - 0.22, 0.05), root)
+	# the cabin: a band of glass, pillars, the roof
+	var cy := body_y + 0.25 + ch / 2.0
+	var clen := cz1 - cz0
+	mg._box(Vector3(W - 0.12, ch * 0.82, clen - 0.1), glass, Vector3(0, cy - ch * 0.05, (cz0 + cz1) / 2.0), root)
+	for z in [cz0 + 0.08, (cz0 + cz1) / 2.0, cz1 - 0.08]:
+		mg._box(Vector3(W - 0.1, ch * 0.8, 0.08), top_m, Vector3(0, cy - ch * 0.05, z), root)
+	var rf := mg._box(Vector3(W - 0.16, 0.08, clen - (0.35 if style == "sedan" or style == "ev" else 0.15)), top_m, Vector3(0, cy + ch * 0.4, (cz0 + cz1) / 2.0 + (0.08 if style == "sedan" else 0.0)), root)
+	if style == "ev": rf.scale.y = 1.4
+	# windscreen (leaning back), rear window
+	var ws := mg._box(Vector3(W - 0.2, ch * 0.95, 0.05), glass, Vector3(0, cy, cz0 - 0.05), root)
+	ws.rotation.x = -0.55 if style in ["sedan", "ev"] else -0.3
+	var rw := mg._box(Vector3(W - 0.24, ch * 0.85, 0.05), glass, Vector3(0, cy, cz1 + 0.02), root)
+	rw.rotation.x = 0.6 if style == "sedan" else 0.15
+	# lights, grille, number plates, mirrors
+	var head := mg._mat(Color(1.0, 0.97, 0.88), 0.2, 2.0)
+	var hw := 0.34 if style in ["sedan", "ev"] else 0.26
+	for sx in [-1.0, 1.0]:
+		mg._box(Vector3(hw, 0.12 if style in ["sedan", "ev"] else 0.16, 0.05), head, Vector3(sx * (W / 2.0 - hw / 2.0 - 0.06), body_y + 0.1, -L / 2.0 + 0.04), root)
+		mg._box(Vector3(0.3, 0.13, 0.05), mg._mat(Color(0.85, 0.08, 0.08), 0.3, 1.5), Vector3(sx * (W / 2.0 - 0.2), body_y + 0.12, L / 2.0 - 0.04), root)
+		mg._box(Vector3(0.12, 0.08, 0.16), top_m, Vector3(sx * (W / 2.0 + 0.04), cy - ch * 0.25, cz0 + 0.15), root)
+	mg._box(Vector3(W * (0.42 if style == "mini" else 0.32), 0.12, 0.04), black if style != "mini" else chrome, Vector3(0, body_y + 0.08, -L / 2.0 + 0.03), root)
+	var plate := mg._mat(Color(0.95, 0.95, 0.92), 0.5)
+	mg._box(Vector3(0.42, 0.12, 0.03), plate, Vector3(0, body_y - 0.18, -L / 2.0 - 0.05), root)
+	mg._box(Vector3(0.42, 0.12, 0.03), plate, Vector3(0, body_y + 0.0, L / 2.0 - 0.0), root)
+	# wheels with silver hubcaps / alloys
 	var tyre := mg._mat(Color(0.05, 0.05, 0.05), 0.9)
-	for w in [Vector3(-0.85, 0.32, -1.3), Vector3(0.85, 0.32, -1.3), Vector3(-0.85, 0.32, 1.3), Vector3(0.85, 0.32, 1.3)]:
-		var wheel := MeshInstance3D.new(); var cm := CylinderMesh.new(); cm.top_radius = 0.32; cm.bottom_radius = 0.32; cm.height = 0.24
+	var wz := L / 2.0 - wr - 0.42
+	for w in [Vector3(-W / 2.0 + 0.08, wr, -wz), Vector3(W / 2.0 - 0.08, wr, -wz), Vector3(-W / 2.0 + 0.08, wr, wz), Vector3(W / 2.0 - 0.08, wr, wz)]:
+		var wheel := MeshInstance3D.new(); var cm := CylinderMesh.new(); cm.top_radius = wr; cm.bottom_radius = wr; cm.height = 0.22
 		wheel.mesh = cm; wheel.material_override = tyre; wheel.position = w; wheel.rotation.z = PI / 2
 		root.add_child(wheel)
+		var hub := MeshInstance3D.new(); var hm := CylinderMesh.new(); hm.top_radius = wr * 0.62; hm.bottom_radius = wr * 0.62; hm.height = 0.235
+		hub.mesh = hm; hub.material_override = chrome; hub.position = w; hub.rotation.z = PI / 2
+		root.add_child(hub)
 
 
 func _bike(p: Vector2, col: int, parent: Node3D = null, riding := false) -> void:

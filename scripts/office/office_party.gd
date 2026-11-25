@@ -3,9 +3,10 @@ extends RefCounted
 ## Birthdays and work anniversaries in the BNB Virtual Office.
 ##
 ## On someone's day the hub sends {t:"init", party:[{name, kind:"birthday"|"anniversary", years}]} and
-## each person's "party" flag. The office then decorates itself: a banner over reception, bunting, balloon
-## bunches, a cake on the front desk and in the cafeteria, confetti; and whoever is celebrating walks
-## round with balloons tied to them and a gold ring at their feet. Everything is built from plain shapes.
+## each person's "party" flag. The whole building then decorates itself: a banner in every lift lobby,
+## bunting, balloon bunches and confetti on each level (4th floor, 3rd floor, rooftop, parking), cakes on
+## the front desk, in the cafeteria and the pantry (stand at the table and have a slice), and whoever is
+## celebrating walks round with balloons tied to them and a gold ring at their feet. Plain shapes only.
 
 const BIRTHDAY_COLS := [Color(1.0, 0.45, 0.7), Color(0.149, 0.694, 0.808), Color(1.0, 0.82, 0.3), Color(0.55, 0.36, 0.95), Color(0.4, 0.88, 0.6)]
 const ANNIV_COLS := [Color(1.0, 0.8, 0.3), Color(0.404, 0.204, 0.576), Color(0.97, 0.95, 1.0), Color(0.149, 0.694, 0.808)]
@@ -19,6 +20,7 @@ var root: Node3D
 var bobs := []                          # [node, base position, phase]: balloons sway
 var t := 0.0
 var cols: Array = BIRTHDAY_COLS
+var plate_nodes := {}                  # station index -> the plate of cake in someone's hand
 
 
 static func banner_text(party: Array) -> String:
@@ -56,6 +58,7 @@ func clear() -> void:
 	if root != null: root.queue_free()
 	root = null
 	bobs.clear()
+	plate_nodes.clear()
 
 
 ## Decorate the office for today's celebrations (nothing when the list is empty).
@@ -82,6 +85,84 @@ func build(party: Array) -> void:
 	# the hallway into reception and the boardroom doors
 	for p in [Vector2(-1.6, 11.2), Vector2(1.6, 11.2), Vector2(-8.6, 0.0), Vector2(8.6, 0.0)]:
 		_bunch(p, 3)
+	var text := banner_text(party)
+	# 3rd floor: the lift lobby, the pantry (a cake on its round table), the conference room doors
+	_lobby(3, text)
+	for z in [-17.5, -11.0]: _bunting(Vector3(90.4, 2.5, z), Vector3(105.6, 2.5, z))
+	for p in [Vector2(91.0, -9.0), Vector2(105.0, -9.0), Vector2(105.0, -19.0)]:
+		_bunch(p, 4)
+	_cake(Vector3(96.0, 0.8, -13.6), has_bday)
+	for p in [Vector2(111.4, 0.0), Vector2(128.6, 0.0), Vector2(118.4, 11.2), Vector2(121.6, 11.2)]:
+		_bunch(p, 3)
+	# rooftop: the lift lobby, bunting between the string-light poles, balloons, confetti in the air
+	_lobby(5, text)
+	for line in [[Vector3(210.5, 2.7, -19.5), Vector3(235.5, 2.7, -19.5)], [Vector3(210.5, 2.7, -2.5), Vector3(235.5, 2.7, -2.5)],
+			[Vector3(210.5, 2.7, 4.5), Vector3(227.5, 2.7, 19.5)]]:
+		_bunting(line[0], line[1])
+	for p in [Vector2(211.0, -3.0), Vector2(235.0, -3.0), Vector2(211.0, 5.0), Vector2(227.0, 5.0), Vector2(255.0, 5.0), Vector2(269.0, 5.0), Vector2(255.0, -5.0)]:
+		_bunch(p, 4)
+	_confetti_fall(Vector3(222.0, 3.4, -10.0), Vector3(10.0, 0.2, 7.0))
+	_confetti_floor(Rect2(211.0, -19.0, 24.0, 16.0), 220)
+	# parking: the ground lobby, a banner over the building's front, bunting along the shop fronts,
+	# balloons on the railing and by the entrance
+	_lobby(0, text)
+	_banner(text, Vector3(-104.0, 3.9, -11.7))
+	_bunting(Vector3(-150.0, 3.25, -11.6), Vector3(-113.0, 3.25, -11.6))
+	_bunting(Vector3(-95.6, 3.25, -11.6), Vector3(-90.4, 3.25, -11.6))
+	for x in [-146.0, -134.0, -122.0, -110.0, -98.0]:
+		_bunch(Vector2(x, 7.6), 4)
+	for p in [Vector2(-111.4, -11.0), Vector2(-96.6, -11.0)]:
+		_bunch(p, 5)
+	_confetti_floor(Rect2(-130.0, -2.0, 36.0, 9.0), 220)
+
+
+## A level's lift lobby (OfficeFloors.lobby): the banner on its back wall, bunting, balloons in the corners.
+func _lobby(level: int, text: String) -> void:
+	var L := func(x: float, z: float, y: float) -> Vector3:
+		var q := OfficeFloors.lobby(level, Vector2(x, z))
+		return Vector3(q.x, y, q.y)
+	_banner(text, L.call(0.0, 12.35, 2.9))
+	for z in [14.2, 18.6]: _bunting(L.call(-7.6, z, 2.5), L.call(5.0, z, 2.5))
+	for c in [[-7.0, 12.9], [-7.0, 19.2], [3.0, 12.9]]:
+		var q := OfficeFloors.lobby(level, Vector2(c[0], c[1]))
+		_bunch(q, 4)
+	var r0 := OfficeFloors.lobby(level, Vector2(-7.5, 12.5))
+	_confetti_floor(Rect2(r0.x, r0.y, 11.0, 7.0), 80)
+
+
+## A slice of cake on a plate in the hand of whoever is at a cake station (busy: {station index: true}).
+func plates(stations: Array, busy: Dictionary) -> void:
+	for i in plate_nodes.keys():
+		if not busy.has(i) or root == null:
+			(plate_nodes[i] as Node3D).queue_free(); plate_nodes.erase(i)
+	if root == null: return
+	for i in busy:
+		if i >= stations.size() or String(stations[i].kind) != "cake": continue
+		if not plate_nodes.has(i): plate_nodes[i] = _slice()
+		var st: Dictionary = stations[i]
+		var side := Vector2(-st.face.y, st.face.x)
+		var p: Vector2 = st.p + st.face * 0.32 + side * 0.18
+		var n: Node3D = plate_nodes[i]
+		n.position = Vector3(p.x, 1.0 + sin(t * 2.6) * 0.04, p.y)
+
+
+func _slice() -> Node3D:
+	var n := Node3D.new()
+	var plate := MeshInstance3D.new()
+	var pl := CylinderMesh.new(); pl.top_radius = 0.12; pl.bottom_radius = 0.1; pl.height = 0.015
+	plate.mesh = pl; plate.material_override = mg._mat(Color(0.97, 0.97, 1.0), 0.3)
+	n.add_child(plate)
+	var cake := MeshInstance3D.new()
+	var pr := PrismMesh.new(); pr.size = Vector3(0.12, 0.08, 0.1); pr.left_to_right = 0.0
+	cake.mesh = pr; cake.material_override = mg._mat(Color(1.0, 0.93, 0.85), 0.7)
+	cake.position = Vector3(0, 0.05, 0); cake.rotation.x = -PI / 2
+	n.add_child(cake)
+	var icing := MeshInstance3D.new()
+	var ib := BoxMesh.new(); ib.size = Vector3(0.12, 0.02, 0.1)
+	icing.mesh = ib; icing.material_override = mg._mat(cols[0], 0.4, 0.15); icing.position = Vector3(0, 0.1, 0)
+	n.add_child(icing)
+	root.add_child(n)
+	return n
 
 
 ## Balloons tied to a person who's celebrating, and a gold ring at their feet. Place it at the person each frame.

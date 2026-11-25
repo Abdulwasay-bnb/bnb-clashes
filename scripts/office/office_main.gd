@@ -32,7 +32,8 @@ extends Node
 ##   Room ids posted in "pos" are the room you're in, or "hall<level>" (hall0, hall3, hall4, hall5).
 
 const CLIPS := ["idle_relaxed", "m_walk", "m_run", "in_wave", "m_sit", "m_sit_talk", "m_type", "in_phone",
-	"in_drinking", "in_clap", "in_dance", "in_laughing", "win_cheer", "in_thinking", "in_stretch", "in_tablet", "in_point"]
+	"in_drinking", "in_clap", "in_dance", "in_laughing", "win_cheer", "in_thinking", "in_stretch", "in_tablet", "in_point",
+	"win_jump", "intro_hard_landing"]
 const WALK := 3.6
 const RUN := 6.4
 const RADIUS := 0.35
@@ -149,6 +150,7 @@ var desk_list: Array = []
 var my_desk := ""                       # the desk you're sitting at ("" if none)
 var screens := {}                       # meeting room -> {logo: Sprite3D, label: Label3D}: who is sharing there
 var floors: OfficeFloors                # the levels: lifts, stairs, rooftop, parking
+var rides: OfficeRides                  # driving the parked cars and bikes, the rooftop parachute jump
 var level := 4                          # the level you're on
 var picker: Control                     # which level to go to (the lift / the stairs)
 var fade: ColorRect
@@ -163,6 +165,9 @@ var my_room := ""
 var route_step := Vector2.ZERO          # next point on the way to target
 var route_t := 0.0
 var stuck_t := 0.0
+var _fake_keys := ""                   # desktop checks (--keys)
+var _fake_t := 0.0
+var _jump_wait := 0.0
 var my_act := ""                        # see the header
 var my_act_t := 0.0
 var my_costume := 0
@@ -224,6 +229,7 @@ func _ready() -> void:
 	desks = OfficeDesks.new(); desks.world = world; desks.mg = mg; desks.small = small; desks.party = party
 	events = OfficeEvents.new(); events.world = world; events.mg = mg; events.font = font
 	floors = OfficeFloors.new(); floors.main = self; floors.mg = mg; floors.font = font
+	rides = OfficeRides.new(); rides.setup(self)
 	desks.map_seats(seats, decor)
 	for id in ROOM_NAMES: rooms[id] = {name = ROOM_NAMES[id], kind = "room"}
 	_build_world()
@@ -320,6 +326,10 @@ func _build_collision() -> void:
 	for a in ARCADES:
 		stations.append({p = Vector2(28.1, float(a[1])), face = Vector2(1, 0), kind = "arcade", name = "Play " + String(GAMES[a[0]].name).capitalize(), solo = true, game = a[0]})
 	stations.append_array(OfficeFloors.stations())
+	# on a birthday / anniversary: the cake on the cafeteria and pantry tables (party = only on party days)
+	for cx in [-24.0, 96.0]:
+		for c in [[Vector2(cx - 0.6, -15.15), Vector2(0, 1)], [Vector2(cx + 0.6, -15.15), Vector2(0, 1)], [Vector2(cx, -12.05), Vector2(0, -1)]]:
+			stations.append({p = c[0], face = c[1], kind = "cake", name = "Have some cake", solo = true, game = "", party = true})
 
 
 ## Desk chairs face their desk, and screens/laptops on a desk face that desk's chair, whatever
@@ -738,8 +748,11 @@ func _act_label(act: String) -> String:
 		var st: Dictionary = stations[clampi(int(act.substr(3)), 0, stations.size() - 1)]
 		match String(st.kind):
 			"tea": return "having tea"
+			"cake": return "having cake"
 			"present": return "presenting"
 			"arcade": return "playing " + String(GAMES[st.game].name).capitalize()
+	if act.begins_with("drive:"): return "driving" if OfficeRides.is_car(OfficeRides.vehicle_of(act)) else "riding a bike"
+	if act == "jump" or act == "chute": return "parachuting to the parking"
 	return ""
 
 
@@ -765,6 +778,7 @@ func _remove_person(id: int) -> void:
 	var v: Dictionary = people[id]
 	(v.rig as Node).queue_free(); (v.tag as Node).queue_free(); (v.foot as Node).queue_free()
 	if v.get("dress") != null: (v.dress as Node).queue_free()
+	rides.forget(id)
 	people.erase(id)
 
 
@@ -818,6 +832,14 @@ func _taken(act: String) -> bool:
 	return false
 
 
+## Station i can be used now: not someone else's solo spot (or their car), and party things only on a party day.
+func _st_free(i: int) -> bool:
+	var st: Dictionary = stations[i]
+	if st.get("party", false) and party.root == null: return false
+	if st.has("vehicle") and _taken("drive:%d" % int(st.vehicle)): return false
+	return not (st.solo and _taken("st:%d" % i))
+
+
 ## The nearest thing within reach you could do: ["sit:3", "Sit down"] or ["", ""].
 func _nearby() -> Array:
 	var best := REACH; var out := ["", ""]
@@ -832,7 +854,7 @@ func _nearby() -> Array:
 	for i in stations.size():
 		var st: Dictionary = stations[i]
 		var d := my_pos.distance_to(st.p)
-		if d < best and not (st.solo and _taken("st:%d" % i)):
+		if d < best and _st_free(i):
 			best = d; out = ["st:%d" % i, String(st.name)]
 	return out
 
@@ -843,6 +865,13 @@ func _do(act: String) -> void:
 		_post({t = "knock"}); _emote("wave"); return
 	if act.begins_with("st:") and String(stations[int(act.substr(3))].kind) in ["lift", "stairs"]:
 		_open_picker(String(stations[int(act.substr(3))].kind)); target = Vector2.INF; pending = ""; return
+	if act.begins_with("st:") and String(stations[int(act.substr(3))].kind) == "drive":     # into the car / onto the bike
+		var vi := int(stations[int(act.substr(3))].vehicle)
+		my_pos = OfficeFloors.vehicles()[vi].p; my_dir = Vector2(0, -1); rides.speed = 0.0
+		target = Vector2.INF; pending = ""; _set_act("drive:%d" % vi); return
+	if act.begins_with("st:") and String(stations[int(act.substr(3))].kind) == "jump":
+		my_pos = OfficeFloors.JUMP; my_dir = Vector2(-1, 0)
+		target = Vector2.INF; pending = ""; _set_act("jump"); return
 	var p := Vector2.INF; var face := my_dir
 	if act.begins_with("sit:"):
 		var s: Dictionary = seats[int(act.substr(4))]; p = s.p; face = s.face
@@ -882,6 +911,11 @@ func _game_of(act: String) -> String:
 
 
 func _stand_up() -> void:
+	if my_act == "jump" or my_act == "chute": return       # mid-air: nothing to stand up from
+	var vi := OfficeRides.vehicle_of(my_act)
+	if vi >= 0:     # park it back in its bay and get out beside where you stopped
+		my_pos = rides.get_out_spot(my_pos, my_dir, OfficeRides.is_car(vi)); rides.speed = 0.0
+		_set_act(""); return
 	if not my_act.begins_with("sit:") and not my_act.begins_with("st:"):
 		_set_act(""); return
 	var q := _stand_spot(my_pos, my_dir)
@@ -903,13 +937,14 @@ func _stand_spot(p: Vector2, face: Vector2) -> Vector2:
 
 
 func _act_key() -> void:
-	if my_act.begins_with("sit:") or my_act.begins_with("st:"): _stand_up(); return
+	if my_act.begins_with("sit:") or my_act.begins_with("st:") or my_act.begins_with("drive:"): _stand_up(); return
+	if my_act == "jump" or my_act == "chute": return
 	var n := _nearby()
 	if n[0] != "": _do(n[0])
 
 
 func _emote(e: String) -> void:
-	if not EMOTES.has(e) or my_rig == null: return
+	if not EMOTES.has(e) or my_rig == null or OfficeRides.busy_act(my_act): return
 	if my_act.begins_with("sit:"): return      # emotes are standing moves
 	if my_act.begins_with("st:"): _stand_up()
 	target = Vector2.INF
@@ -922,6 +957,10 @@ func _update_prompt() -> void:
 		var lab := _act_label(my_act)
 		text = "Stand up" if lab == "" else "Stand up · you're " + lab
 		can = true
+	elif my_act.begins_with("drive:"):
+		text = "Park and get out  ·  W/S drive, A/D steer"; can = true
+	elif my_act == "jump" or my_act == "chute":
+		text = ""
 	elif not my_moving:
 		var n := _nearby()
 		if n[0] != "": text = n[1]; can = true
@@ -989,6 +1028,7 @@ func _message(d: Dictionary) -> void:
 			linked.clear()
 			for id in d.get("ids", []): linked[int(id)] = true
 		"goto":     # {id} walks up to that person; {x, z} to a spot
+			if my_act == "jump" or my_act == "chute": return
 			if my_act != "": _stand_up()
 			var want := Vector2(float(d.get("x", 0.0)), float(d.get("z", 0.0)))
 			if d.has("id") and people.has(int(d.id)): want = people[int(d.id)].pos
@@ -1136,7 +1176,11 @@ func _ground(screen: Vector2) -> Vector2:
 
 ## Clicked on a chair / the tea bar / an arcade: walk there and use it.
 func _click_thing(screen: Vector2) -> bool:
-	var g := _ground(screen)
+	if OfficeRides.busy_act(my_act): return false      # driving: a click is where to drive
+	return _click_at(_ground(screen))
+
+
+func _click_at(g: Vector2) -> bool:
 	if g == Vector2.INF: return false
 	var best := 0.75; var act := ""
 	for i in seats.size():
@@ -1144,7 +1188,8 @@ func _click_thing(screen: Vector2) -> bool:
 		if d < best and not _taken("sit:%d" % i): best = d; act = "sit:%d" % i
 	for i in stations.size():
 		var d := g.distance_to(stations[i].p)
-		if d < best and not (stations[i].solo and _taken("st:%d" % i)): best = d; act = "st:%d" % i
+		if stations[i].has("hit") and g.distance_to(stations[i].hit) < float(stations[i].hit_r): d = minf(d, 0.2)   # clicked on the thing itself
+		if d < best and _st_free(i): best = d; act = "st:%d" % i
 	if act == "": return false
 	if my_act != "": _stand_up()
 	pending = act
@@ -1222,6 +1267,14 @@ func _person_at(screen: Vector2) -> int:
 
 
 func _keys() -> Vector2:
+	if _fake_keys != "":     # desktop checks: --keys=w,1.5;d,0.6
+		_fake_t += get_process_delta_time()
+		var acc := 0.0
+		for part in _fake_keys.split(";"):
+			var kv := part.split(",")
+			acc += float(kv[1])
+			if _fake_t < acc: return {"w": Vector2(0, -1), "s": Vector2(0, 1), "a": Vector2(-1, 0), "d": Vector2(1, 0), "wd": Vector2(1, -1), "wa": Vector2(-1, -1), "sd": Vector2(1, 1), "sa": Vector2(-1, 1)}.get(kv[0], Vector2.ZERO)
+		return Vector2.ZERO
 	if not get_window().has_focus(): return Vector2.ZERO
 	var k := func(keys: Array) -> bool:
 		for key in keys:
@@ -1235,6 +1288,32 @@ func _keys() -> Vector2:
 ## smoothly together: on a fast screen a physics-rate position steps between frames, and the
 ## camera chasing it flickered side to side when walking left or right.
 func _move(dt: float) -> void:
+	if my_act.begins_with("drive:"): _drive(dt)
+	elif my_act == "jump" or my_act == "chute": _jump_tick()
+	else: _walk(dt)
+	# an emote plays once (a dance twice), then you're back to standing
+	if my_act.begins_with("e:"):
+		my_act_t += dt
+		var clip: String = EMOTES.get(my_act.substr(2), "in_wave")
+		if my_act_t > Fighter._len(clip) * (2.0 if clip == "in_dance" else 1.0): _set_act("")
+	else:
+		my_act_t += dt
+	_update_prompt()
+	var room := room_at(my_pos)
+	if my_room == "ceo" and room != "ceo": ceo_let_in = false     # leaving: next time you knock again
+	var lv := OfficeFloors.level_of(my_pos.x)
+	if lv != level:
+		level = lv; floors.show_level(level)
+	_send_t -= dt
+	var now := {x = snappedf(my_pos.x, 0.01), z = snappedf(my_pos.y, 0.01), dx = snappedf(my_dir.x, 0.01), dz = snappedf(my_dir.y, 0.01), m = 1 if my_moving else 0, room = room, a = my_act}
+	if _send_t <= 0.0 and (now != _sent or room != my_room):
+		_send_t = 0.1
+		_sent = now; my_room = room
+		_post({t = "pos", x = now.x, z = now.z, dx = now.dx, dz = now.dz, m = now.m, room = room, a = my_act})
+
+
+## Walking: keys, or towards where you clicked.
+func _walk(dt: float) -> void:
 	var mv := _keys()
 	if picker != null and picker.visible: mv = Vector2.ZERO
 	if mv != Vector2.ZERO:
@@ -1272,25 +1351,45 @@ func _move(dt: float) -> void:
 			stuck_t += minf(dt, 0.05); route_t = 0.0
 			if stuck_t > 1.0: target = Vector2.INF; my_moving = false; pending = ""; stuck_t = 0.0
 	if not my_moving or mv == Vector2.ZERO: stuck_t = 0.0
-	# an emote plays once (a dance twice), then you're back to standing
-	if my_act.begins_with("e:"):
-		my_act_t += dt
-		var clip: String = EMOTES.get(my_act.substr(2), "in_wave")
-		if my_act_t > Fighter._len(clip) * (2.0 if clip == "in_dance" else 1.0): _set_act("")
-	else:
-		my_act_t += dt
-	_update_prompt()
-	var room := room_at(my_pos)
-	if my_room == "ceo" and room != "ceo": ceo_let_in = false     # leaving: next time you knock again
-	var lv := OfficeFloors.level_of(my_pos.x)
-	if lv != level:
-		level = lv; floors.show_level(level)
-	_send_t -= dt
-	var now := {x = snappedf(my_pos.x, 0.01), z = snappedf(my_pos.y, 0.01), dx = snappedf(my_dir.x, 0.01), dz = snappedf(my_dir.y, 0.01), m = 1 if my_moving else 0, room = room, a = my_act}
-	if _send_t <= 0.0 and (now != _sent or room != my_room):
-		_send_t = 0.1
-		_sent = now; my_room = room
-		_post({t = "pos", x = now.x, z = now.z, dx = now.dx, dz = now.dz, m = now.m, room = room, a = my_act})
+
+
+
+## Driving a car / riding a bike round the parking (OfficeRides).
+func _drive(dt: float) -> void:
+	var vi := OfficeRides.vehicle_of(my_act)
+	var mv := _keys()
+	if picker != null and picker.visible: mv = Vector2.ZERO
+	if mv != Vector2.ZERO: target = Vector2.INF
+	var r := rides.drive(dt, vi, my_pos, my_dir, mv, target, _driven(true))
+	my_pos = r[0]; my_dir = r[1]
+	if target != Vector2.INF and my_pos.distance_to(target) < 1.4 and absf(rides.speed) < 0.4: target = Vector2.INF
+	my_moving = absf(rides.speed) > 0.3
+
+
+## The rooftop jump, then coming down over the parking (OfficeRides): the act's clock runs it.
+func _jump_tick() -> void:
+	my_moving = false; target = Vector2.INF; pending = ""
+	if my_act == "jump" and my_act_t >= OfficeRides.JUMP_T:
+		my_pos = OfficeRides.LAND; my_dir = Vector2(0, 1)
+		level = 0; floors.show_level(level); cam.position = Vector3.ZERO
+		fade.color = Color(INK, 1.0)
+		create_tween().tween_property(fade, "color", Color(INK, 0.0), 0.5)
+		_set_act("chute")
+	elif my_act == "chute" and my_act_t >= OfficeRides.CHUTE_T:
+		_set_act("")
+
+
+## Which parked vehicles are out (being driven): {index: true}. mine = count yours too.
+func _driven(others_only := false) -> Dictionary:
+	var out := {}
+	for id in people:
+		var vi := OfficeRides.vehicle_of(String(people[id].act))
+		if vi >= 0: out[vi] = true
+	if not others_only:
+		var mine := OfficeRides.vehicle_of(my_act)
+		if mine >= 0: out[mine] = true
+	return out
+
 
 
 ## What someone doing `act` looks like (plus whether they're talking, for the meeting room).
@@ -1306,7 +1405,7 @@ func _act_clip(act: String, talking: bool, status: String, moving: bool) -> Stri
 	if act.begins_with("st:"):
 		var st: Dictionary = stations[clampi(int(act.substr(3)), 0, stations.size() - 1)]
 		match String(st.kind):
-			"tea": return "in_drinking"
+			"tea", "cake": return "in_drinking"
 			"smoke", "vape": return "in_drinking"      # hand to mouth (office_floors.gd puffs the smoke)
 			"grill": return "in_tablet"
 			"present": return "in_point" if talking else "in_thinking"
@@ -1339,8 +1438,12 @@ func _process(dt: float) -> void:
 	var C: Dictionary = my_rig.get_meta("C")
 	var running := Input.is_physical_key_pressed(KEY_SHIFT) or (target != Vector2.INF and my_pos.distance_to(target) > 8.0)
 	var my_clip := ("m_run" if running else "m_walk") if my_moving else _act_clip(my_act, false, "working", false)
+	var ride := rides.pose(-1, my_act, my_rig, my_dir, my_act_t)      # driving / the parachute jump
+	if String(ride[0]) != "": my_clip = ride[0]
+	var my_up := maxf(float(ride[1]), 0.0)
 	_animate(my_rig, C, my_clip, my_act_t if my_act != "" else _anim_t)
-	my_tag.position = V(my_pos, 2.35 * float(C.get("scale", 1.0)))
+	my_tag.position = V(my_pos, 2.35 * float(C.get("scale", 1.0)) + float(ride[1]) + (0.9 if my_act.begins_with("drive:") else 0.0))
+	my_tag.visible = float(ride[1]) > -3.0
 	party.tick(dt)
 	if my_dress != null:
 		my_dress.position = my_rig.position; my_dress.rotation.y = my_rig.rotation.y
@@ -1364,9 +1467,12 @@ func _process(dt: float) -> void:
 		v.t += dt; v.act_t += dt
 		var talking: bool = float(v.talk) > 0.08
 		var clip := _act_clip(String(v.act), talking, String(v.status), moving)
+		var their := rides.pose(id, String(v.act), rig, dir, float(v.act_t))
+		if String(their[0]) != "": clip = their[0]
 		_animate(rig, v.C, clip, v.act_t if String(v.act) != "" else v.t)
 		var tag: Label3D = v.tag
-		tag.position = Vector3(rig.position.x, 2.35 * float(v.C.get("scale", 1.0)), rig.position.z)
+		tag.position = Vector3(rig.position.x, 2.35 * float(v.C.get("scale", 1.0)) + maxf(float(their[1]), 0.0) + (0.9 if String(v.act).begins_with("drive:") else 0.0), rig.position.z)
+		tag.visible = float(their[1]) > -3.0
 		if v.dress != null:
 			(v.dress as Node3D).position = rig.position; (v.dress as Node3D).rotation.y = rig.rotation.y
 		var talk: float = v.talk
@@ -1380,12 +1486,15 @@ func _process(dt: float) -> void:
 	for a in [my_act] + people.values().map(func(v): return String(v.act)):
 		if String(a).begins_with("st:"): busy[int(String(a).substr(3))] = true
 	floors.tick(dt, busy)
+	party.plates(stations, busy)
+	rides.show_parked(_driven())
 	# the camera follows you smoothly at a fixed angle: it never turns, so walking sideways can't make it swing
 	var off := Vector3(0, 11.0, 7.5) * zoom
-	var want := V(my_pos) + off
+	var want := V(my_pos, my_up * 0.7) + off
 	if cam.position == Vector3.ZERO or cam.position.distance_to(want) > 30.0: cam.position = want    # arriving, or another level
 	else: cam.position = cam.position.lerp(want, 1.0 - exp(-dt * 8.0))
 	cam.look_at(cam.position - off + Vector3(0, 0.8, 0), Vector3.UP)
+	if my_dress != null: my_dress.visible = my_rig.visible
 
 
 func _animate(rig, C: Dictionary, clip: String, t: float) -> void:
@@ -1439,6 +1548,20 @@ func _start_demo() -> void:
 			for j in mini(int(a.substr(8)), mini(spots.size(), ids.size())):
 				people[ids[j]].act = "st:%d" % spots[j]; people[ids[j]].pos = stations[spots[j]].p; people[ids[j]].goal = stations[spots[j]].p
 		if a == "--picker": _open_picker("lift")
+		if a.begins_with("--drive="): _do("st:%d" % _station_of("drive", int(a.substr(8))))    # --drive=n: in parked vehicle n
+		if a == "--jump": _do("st:%d" % _station_of("jump", 0))
+		if a == "--others-ride":     # colleagues seen driving, on a bike and coming down under a parachute
+			for k in [[11, "drive:3", Vector2(-120.0, 2.0), Vector2(1, 0)], [12, "drive:12", Vector2(-114.0, 4.0), Vector2(-1, 0)], [13, "chute", Vector2(-108.0, -1.0), Vector2(0, 1)]]:
+				people[k[0]].act = k[1]; people[k[0]].pos = k[2]; people[k[0]].goal = k[2]; people[k[0]].dir = k[3]; people[k[0]].act_t = 0.0
+				if k[1] == "chute": people[k[0]].act_t = -1.6     # mid-way down when the picture is taken
+		if a.begins_with("--wait="): _jump_wait = float(a.substr(7))
+		if a.begins_with("--keys="): _fake_keys = a.substr(7)          # --keys=w,1.5;d,0.6: hold W 1.5 s, then D 0.6 s
+		if a.begins_with("--click="):     # walk / drive towards a map point, as a click would
+			var cz := a.substr(8).split(",")
+			target = Vector2(float(cz[0]), float(cz[1])); route_t = 0.0
+		if a.begins_with("--clickthing="):
+			var tz := a.substr(13).split(",")
+			print("clicked thing: ", _click_at(Vector2(float(tz[0]), float(tz[1]))), " pending ", pending)
 		if a == "--check-seats":   # every seat and station must have somewhere free to stand up to
 			var bad := 0
 			for st in seats + stations:
@@ -1476,10 +1599,19 @@ func _goto_check(id: int) -> void:
 
 
 func _shot_later(path: String) -> void:
-	await get_tree().create_timer(4.0).timeout
+	await get_tree().create_timer(4.0 if _jump_wait <= 0.0 else _jump_wait).timeout
 	print("prompt: ", _prompt, " at ", my_pos, " closed ", _ceo_closed(), " moving ", my_moving, " target ", target, " act ", my_act)
 	get_viewport().get_texture().get_image().save_png(path)
 	get_tree().quit()
+
+
+## The n-th station of a kind (desktop checks).
+func _station_of(kind: String, n: int) -> int:
+	for i in stations.size():
+		if String(stations[i].kind) == kind:
+			if n == 0: return i
+			n -= 1
+	return 0
 
 
 func _first_seat(kind: String) -> int:
