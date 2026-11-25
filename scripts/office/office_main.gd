@@ -854,6 +854,7 @@ func _nearby() -> Array:
 	for i in stations.size():
 		var st: Dictionary = stations[i]
 		var d := my_pos.distance_to(st.p)
+		if st.has("box"): d = minf(d, _rect_dist(st.box, my_pos) + 0.2)     # beside a car / bike, any side
 		if d < best and _st_free(i):
 			best = d; out = ["st:%d" % i, String(st.name)]
 	return out
@@ -1164,11 +1165,18 @@ func _unhandled_input(e: InputEvent) -> void:
 		zoom = clampf(zoom / (e as InputEventMagnifyGesture).factor, 0.55, 1.8)
 
 
-func _ground(screen: Vector2) -> Vector2:
+static func _rect_dist(r: Rect2, p: Vector2) -> float:
+	var dx := maxf(maxf(r.position.x - p.x, 0.0), p.x - r.end.x)
+	var dz := maxf(maxf(r.position.y - p.y, 0.0), p.y - r.end.y)
+	return Vector2(dx, dz).length()
+
+
+## Where a click lands at height y (0 = the floor; a car's roof is about 1.2 up).
+func _ground(screen: Vector2, y := 0.0) -> Vector2:
 	var from := cam.project_ray_origin(screen)
 	var dir := cam.project_ray_normal(screen)
 	if absf(dir.y) < 0.001: return Vector2.INF
-	var t := -from.y / dir.y
+	var t := (y - from.y) / dir.y
 	if t <= 0: return Vector2.INF
 	var hit := from + dir * t
 	return Vector2(hit.x, hit.z)
@@ -1177,10 +1185,11 @@ func _ground(screen: Vector2) -> Vector2:
 ## Clicked on a chair / the tea bar / an arcade: walk there and use it.
 func _click_thing(screen: Vector2) -> bool:
 	if OfficeRides.busy_act(my_act): return false      # driving: a click is where to drive
-	return _click_at(_ground(screen))
+	return _click_at(_ground(screen), _ground(screen, 1.0))
 
 
-func _click_at(g: Vector2) -> bool:
+## g: where the click meets the floor; g_up: where it meets waist height (the body / roof of a car).
+func _click_at(g: Vector2, g_up := Vector2.INF) -> bool:
 	if g == Vector2.INF: return false
 	var best := 0.75; var act := ""
 	for i in seats.size():
@@ -1189,6 +1198,7 @@ func _click_at(g: Vector2) -> bool:
 	for i in stations.size():
 		var d := g.distance_to(stations[i].p)
 		if stations[i].has("hit") and g.distance_to(stations[i].hit) < float(stations[i].hit_r): d = minf(d, 0.2)   # clicked on the thing itself
+		if stations[i].has("box") and (_rect_dist(stations[i].box, g) < 0.3 or (g_up != Vector2.INF and _rect_dist(stations[i].box, g_up) < 0.3)): d = minf(d, 0.2)
 		if d < best and _st_free(i): best = d; act = "st:%d" % i
 	if act == "": return false
 	if my_act != "": _stand_up()
@@ -1324,7 +1334,8 @@ func _walk(dt: float) -> void:
 		if room_at(target) == "ceo" and _ceo_closed():     # someone's in: walk to the door and knock
 			target = CEO_DOOR; pending = ""
 		var to := target - my_pos
-		if to.length() < 0.25 or (pending != "" and to.length() < 0.9):
+		var by_car: bool = pending.begins_with("st:") and stations[int(pending.substr(3))].has("box") and _rect_dist(stations[int(pending.substr(3))].box, my_pos) < 1.0
+		if to.length() < 0.25 or (pending != "" and to.length() < 0.9) or by_car:
 			target = Vector2.INF
 			if pending != "": _do(pending)
 		else:
@@ -1550,6 +1561,7 @@ func _start_demo() -> void:
 		if a == "--picker": _open_picker("lift")
 		if a.begins_with("--drive="): _do("st:%d" % _station_of("drive", int(a.substr(8))))    # --drive=n: in parked vehicle n
 		if a == "--jump": _do("st:%d" % _station_of("jump", 0))
+		if a.begins_with("--press-e="): _press_e_later(float(a.substr(10)))      # --press-e=secs: press E then
 		if a == "--others-ride":     # colleagues seen driving, on a bike and coming down under a parachute
 			for k in [[11, "drive:3", Vector2(-120.0, 2.0), Vector2(1, 0)], [12, "drive:12", Vector2(-114.0, 4.0), Vector2(-1, 0)], [13, "chute", Vector2(-108.0, -1.0), Vector2(0, 1)]]:
 				people[k[0]].act = k[1]; people[k[0]].pos = k[2]; people[k[0]].goal = k[2]; people[k[0]].dir = k[3]; people[k[0]].act_t = 0.0
@@ -1596,6 +1608,13 @@ func _goto_check(id: int) -> void:
 		if i % 2 == 0: print("  t=", i / 2, " at ", my_pos, " step ", route_step, " target ", target, " moving ", my_moving, " act ", my_act)
 		if target == Vector2.INF: break
 	print("goto result: at ", my_pos, " distance to person ", my_pos.distance_to(people[id].pos), " still walking ", target != Vector2.INF)
+
+
+func _press_e_later(secs: float) -> void:
+	await get_tree().create_timer(secs).timeout
+	print("E at ", my_pos, " act ", my_act)
+	_act_key()
+	print("after E at ", my_pos, " act ", my_act, " blocked ", _blocked(my_pos), " room ", room_at(my_pos))
 
 
 func _shot_later(path: String) -> void:

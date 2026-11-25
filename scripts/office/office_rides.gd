@@ -115,7 +115,6 @@ func drive(dt: float, i: int, pos: Vector2, h: Vector2, keys: Vector2, target: V
 
 ## Where to step out of a vehicle at p (heading h): beside it, else behind or in front.
 func get_out_spot(p: Vector2, h: Vector2, car: bool) -> Vector2:
-	if p.y > AREA.end.y - 1.2: return Vector2((GATE.x + GATE.y) / 2.0, AREA.end.y - 1.6)   # out on the road: back inside the gate
 	var side := Vector2(-h.y, h.x)
 	var off := 1.5 if car else 0.9
 	for q in [p - side * off, p + side * off, p - h * (off + 1.4), p + h * (off + 1.4), p - side * (off + 1.2), p + side * (off + 1.2)]:

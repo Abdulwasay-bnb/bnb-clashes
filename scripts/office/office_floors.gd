@@ -307,7 +307,11 @@ static func vehicle_walls() -> Array:
 	# the banks on the ground floor (you can't go in), and the railing between the parking and the road
 	out.append(Rect2(-150.6, -21.0, 38.4, 9.0))
 	out.append(Rect2(-95.8, -21.0, 5.6, 9.0))
-	out.append(Rect2(-151.0, 8.0, 62.0, 0.3))
+	# the railing has a gate at its east end (OfficeRides.GATE) onto the service road; on foot you can
+	# use the service road too, but the median's kerb keeps you off the main road
+	out.append(Rect2(-151.0, 8.0, 54.0, 0.3))
+	out.append(Rect2(-90.5, 8.0, 1.5, 0.3))
+	out.append(Rect2(-151.0, 12.3, 62.0, 0.3))
 	return out
 
 
@@ -335,7 +339,8 @@ static func stations() -> Array:
 		var vp: Vector2 = vs[i].p
 		var car: bool = vs[i].kind == "car"
 		out.append({p = vp + (Vector2(0, 2.75) if car else Vector2(0, -1.45)), face = Vector2(0, -1) if car else Vector2(0, 1),
-			kind = "drive", name = "Drive this car" if car else "Ride this bike", solo = true, game = "", vehicle = i, hit = vp, hit_r = 1.8 if car else 0.8})
+			kind = "drive", name = "Drive this car" if car else "Ride this bike", solo = true, game = "", vehicle = i, hit = vp, hit_r = 1.8 if car else 0.8,
+			box = Rect2(vp.x - 0.95, vp.y - 2.15, 1.9, 4.3) if car else Rect2(vp.x - 0.2, vp.y - 0.95, 0.4, 1.9)})   # get in from any side
 	# the parachute jump off the rooftop's west edge, down to the parking
 	out.append({p = JUMP, face = Vector2(-1, 0), kind = "jump", name = "Parachute down to the parking", solo = true, game = "", hit = JUMP, hit_r = 1.4})
 	return out
